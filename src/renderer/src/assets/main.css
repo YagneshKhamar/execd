@@ -1,4 +1,5 @@
 @import './base.css';
+@import 'tailwindcss';
 
 body {
   display: flex;
@@ -168,4 +169,28 @@ code {
   .actions {
     display: none;
   }
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.capture-mode body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px;
+}
+
+.capture-mode * {
+  visibility: hidden !important;
+}
+
+.capture-mode [data-report-capture='daily-report'],
+.capture-mode [data-report-capture='daily-report'] * {
+  visibility: visible !important;
 }

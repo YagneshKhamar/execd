@@ -1,35 +1,65 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import Setup from './pages/Setup'
+import Goals from './pages/Goals'
+import MonthlyPlan from './pages/MonthlyPlan'
+import Today from './pages/Today'
+import DailyReport from './pages/DailyReport'
+import WeeklyReport from './pages/WeeklyReport'
 
-function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+function AppRouter(): React.JSX.Element {
+  const [startPath, setStartPath] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function checkSetup(): Promise<void> {
+      try {
+        const config = await window.api.config.get()
+        console.log('config:', config)
+        if (!config) {
+          setStartPath('/setup')
+          return
+        }
+
+        const month = new Date().toISOString().slice(0, 7)
+        const goals = (await window.api.goals.get(month)) as unknown[]
+        if (goals && goals.length > 0) {
+          setStartPath('/today')
+        } else {
+          setStartPath('/goals')
+        }
+      } catch (e) {
+        console.log('error:', e)
+        setStartPath('/setup')
+      }
+    }
+    checkSetup()
+  }, [])
+
+  if (startPath === null) {
+    return (
+      <div className="h-screen w-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-gray-600 text-sm">Loading...</div>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
+    <Routes>
+      <Route path="/" element={<Navigate to={startPath} replace />} />
+      <Route path="/setup" element={<Setup />} />
+      <Route path="/goals" element={<Goals />} />
+      <Route path="/plan" element={<MonthlyPlan />} />
+      <Route path="/today" element={<Today />} />
+      <Route path="/report/daily" element={<DailyReport />} />
+      <Route path="/report/weekly" element={<WeeklyReport />} />
+    </Routes>
   )
 }
 
-export default App
+export default function App(): React.JSX.Element {
+  return (
+    <div className="h-screen w-screen bg-gray-950 text-white overflow-hidden">
+      <AppRouter />
+    </div>
+  )
+}

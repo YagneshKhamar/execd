@@ -1,74 +1,199 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+import { getDatabase, closeDatabase } from './db/database'
+import { registerConfigHandlers } from './ipc/config.ipc'
+import { registerAIHandlers } from './ipc/ai.ipc'
+import { registerGoalsHandlers } from './ipc/goals.ipc'
+import { registerTasksHandlers } from './ipc/tasks.ipc'
+import { registerReportsHandlers } from './ipc/reports.ipc'
 
-function createWindow(): void {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+let mainWindow: BrowserWindow | null = null
+let tray: Tray | null = null
+let overlayWindow: BrowserWindow | null = null
+
+function createMainWindow(): BrowserWindow {
+  const win = new BrowserWindow({
+    width: 1100,
+    height: 750,
+    minWidth: 900,
+    minHeight: 600,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+    },
+  })
+
+  win.on('ready-to-show', () => {
+    win.show()
+  })
+
+  win.on('close', (event) => {
+    if (tray) {
+      event.preventDefault()
+      win.hide()
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
+  win.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    win.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return win
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+function createOverlayWindow(): BrowserWindow {
+  const win = new BrowserWindow({
+    width: 280,
+    height: 380,
+    x: 20,
+    y: 20,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: false,
+    skipTaskbar: true,
+    show: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+    },
+  })
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
+  win.on('ready-to-show', () => {
+    win.show()
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    win.loadURL(process.env['ELECTRON_RENDERER_URL'] + '/overlay.html')
+  } else {
+    win.loadFile(join(__dirname, '../renderer/overlay.html'))
+  }
+
+  return win
+}
+
+function createTray(): void {
+  const icon = nativeImage.createFromPath(join(__dirname, '../../resources/icon.png'))
+  tray = new Tray(icon.resize({ width: 16, height: 16 }))
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Open Work Planner',
+      click: () => {
+        mainWindow?.show()
+        mainWindow?.focus()
+      },
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit',
+      click: () => {
+        tray?.destroy()
+        app.quit()
+      },
+    },
+  ])
+
+  tray.setToolTip('Work Planner')
+  tray.setContextMenu(contextMenu)
+
+  tray.on('click', () => {
+    mainWindow?.show()
+    mainWindow?.focus()
+  })
+}
+
+function fireTaskCheckNotification(): void {
+  const db = getDatabase()
+  const today = new Date().toISOString().slice(0, 10)
+
+  const plan = db.prepare('SELECT locked FROM day_plans WHERE date = ?').get(today) as
+    | { locked: number }
+    | undefined
+
+  if (!plan || plan.locked !== 1) return
+
+  const rows = db
+    .prepare("SELECT status FROM tasks WHERE scheduled_date = ? AND status != 'dropped'")
+    .all(today) as { status: string }[]
+
+  if (rows.length === 0) return
+
+  const total = rows.length
+  const completed = rows.filter((r) => r.status === 'completed').length
+  const pending = total - completed
+  const score = Math.round((completed / total) * 100)
+
+  new Notification({
+    title: 'ExecOS — Task Check',
+    body: `${pending} task${pending !== 1 ? 's' : ''} remaining (${score}% complete)`,
+  }).show()
+}
+
+app.whenReady().then(() => {
+  electronApp.setAppUserModelId('com.work-planner')
+
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
+  // Initialize database
+  getDatabase()
 
-  createWindow()
+  registerConfigHandlers()
+  registerGoalsHandlers()
+  registerAIHandlers()
+  registerTasksHandlers()
+  registerReportsHandlers()
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  ipcMain.handle('overlay:open-main', () => {
+    mainWindow?.show()
+    mainWindow?.focus()
+  })
+
+  ipcMain.handle('capture-report', async (_, rect) => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (!win) throw new Error('No active window')
+
+    const image = await win.webContents.capturePage(rect)
+
+    return image.toPNG().toString('base64')
+  })
+
+  mainWindow = createMainWindow()
+  createTray()
+
+  overlayWindow = createOverlayWindow()
+
+  setInterval(fireTaskCheckNotification, 60 * 60 * 1000)
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      mainWindow = createMainWindow()
+    }
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    closeDatabase()
     app.quit()
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+app.on('before-quit', () => {
+  closeDatabase()
+})
+
+// Suppress unused variable warning — ipcMain will be used in next steps
+ipcMain.on('ping', () => console.log('pong'))
