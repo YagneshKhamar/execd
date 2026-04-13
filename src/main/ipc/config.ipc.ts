@@ -15,7 +15,7 @@ export function registerConfigHandlers(): void {
         working_days: string[]
         break_start: string
         break_end: string
-      }
+      },
     ) => {
       const db = getDatabase()
 
@@ -34,7 +34,7 @@ export function registerConfigHandlers(): void {
           break_end = ?,
           updated_at = datetime('now')
         WHERE id = 1
-      `
+      `,
         ).run(
           data.ai_provider,
           data.api_key,
@@ -42,7 +42,7 @@ export function registerConfigHandlers(): void {
           data.working_end,
           JSON.stringify(data.working_days),
           data.break_start,
-          data.break_end
+          data.break_end,
         )
       } else {
         db.prepare(
@@ -52,7 +52,7 @@ export function registerConfigHandlers(): void {
           working_start, working_end, working_days,
           break_start, break_end
         ) VALUES (1, ?, ?, ?, ?, ?, ?, ?)
-      `
+      `,
         ).run(
           data.ai_provider,
           data.api_key,
@@ -60,12 +60,12 @@ export function registerConfigHandlers(): void {
           data.working_end,
           JSON.stringify(data.working_days),
           data.break_start,
-          data.break_end
+          data.break_end,
         )
       }
 
       return { success: true }
-    }
+    },
   )
 
   ipcMain.handle('config:get', () => {

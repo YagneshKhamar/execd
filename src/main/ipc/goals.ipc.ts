@@ -11,7 +11,7 @@ export function registerGoalsHandlers(): void {
         title: string
         type: string
         month: string
-      }[]
+      }[],
     ) => {
       const db = getDatabase()
 
@@ -40,7 +40,7 @@ export function registerGoalsHandlers(): void {
 
       const ids = insertMany(goals)
       return { success: true, ids }
-    }
+    },
   )
 
   ipcMain.handle('goals:get', (_event, month: string) => {
@@ -53,7 +53,7 @@ export function registerGoalsHandlers(): void {
     db.prepare(
       `
       UPDATE goals SET ai_validated = ?, ai_validation_note = ? WHERE id = ?
-    `
+    `,
     ).run(valid ? 1 : 0, note, id)
     return { success: true }
   })
@@ -66,7 +66,7 @@ export function registerGoalsHandlers(): void {
         goal_id: string
         title: string
         priority: string
-      }[]
+      }[],
     ) => {
       const db = getDatabase()
 
@@ -83,7 +83,7 @@ export function registerGoalsHandlers(): void {
 
       insertMany(subgoals)
       return { success: true }
-    }
+    },
   )
 
   ipcMain.handle('subgoals:get-by-goal', (_event, goalId: string) => {

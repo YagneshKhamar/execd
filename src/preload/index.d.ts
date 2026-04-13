@@ -16,21 +16,21 @@ export interface IElectronAPI {
   }
   ai: {
     validateGoal: (
-      title: string
+      title: string,
     ) => Promise<{ success: boolean; data?: { valid: boolean; note: string }; error?: string }>
     generateSubgoals: (
       title: string,
-      type: string
+      type: string,
     ) => Promise<{ success: boolean; data?: { title: string; priority: string }[]; error?: string }>
     generateDailyTasks: (
-      context: unknown
+      context: unknown,
     ) => Promise<{ success: boolean; data?: unknown; error?: string }>
     endOfDayFeedback: (
-      context: unknown
+      context: unknown,
     ) => Promise<{ success: boolean; data?: string; error?: string }>
     suggestGoalFix: (
       title: string,
-      note: string
+      note: string,
     ) => Promise<{ success: boolean; data?: string; error?: string }>
   }
   tasks: {

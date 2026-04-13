@@ -73,7 +73,7 @@ export default function Goals(): React.JSX.Element {
       validationNote: '',
       subgoals: [],
       loadingSubgoals: false,
-    }))
+    })),
   )
 
   const [step, setStep] = useState<'input' | 'subgoals'>('input')
@@ -96,8 +96,8 @@ export default function Goals(): React.JSX.Element {
   function updateGoalTitle(index: number, title: string): void {
     setGoals((prev) =>
       prev.map((g, i) =>
-        i === index ? { ...g, title, validationState: 'idle', validationNote: '' } : g
-      )
+        i === index ? { ...g, title, validationState: 'idle', validationNote: '' } : g,
+      ),
     )
   }
 
@@ -105,7 +105,7 @@ export default function Goals(): React.JSX.Element {
     goalIndex: number,
     subIndex: number,
     field: keyof SubgoalItem,
-    value: string
+    value: string,
   ): void {
     setGoals((prev) =>
       prev.map((g, i) =>
@@ -114,24 +114,26 @@ export default function Goals(): React.JSX.Element {
               ...g,
               subgoals: g.subgoals.map((s, j) => (j === subIndex ? { ...s, [field]: value } : s)),
             }
-          : g
-      )
+          : g,
+      ),
     )
   }
 
   function removeSubgoal(goalIndex: number, subIndex: number): void {
     setGoals((prev) =>
       prev.map((g, i) =>
-        i === goalIndex ? { ...g, subgoals: g.subgoals.filter((_, j) => j !== subIndex) } : g
-      )
+        i === goalIndex ? { ...g, subgoals: g.subgoals.filter((_, j) => j !== subIndex) } : g,
+      ),
     )
   }
 
   function addSubgoal(goalIndex: number): void {
     setGoals((prev) =>
       prev.map((g, i) =>
-        i === goalIndex ? { ...g, subgoals: [...g.subgoals, { title: '', priority: 'medium' }] } : g
-      )
+        i === goalIndex
+          ? { ...g, subgoals: [...g.subgoals, { title: '', priority: 'medium' }] }
+          : g,
+      ),
     )
   }
 
@@ -232,7 +234,7 @@ export default function Goals(): React.JSX.Element {
 
     try {
       const result = await window.api.goals.save(
-        goals.map((g) => ({ title: g.title, type: g.type, month }))
+        goals.map((g) => ({ title: g.title, type: g.type, month })),
       )
 
       if (!result.success) {
@@ -248,7 +250,7 @@ export default function Goals(): React.JSX.Element {
         const subgoals = goals[i].subgoals.filter((s) => s.title.trim())
         if (subgoals.length > 0) {
           await window.api.subgoals.save(
-            subgoals.map((s) => ({ goal_id: goalId, title: s.title, priority: s.priority }))
+            subgoals.map((s) => ({ goal_id: goalId, title: s.title, priority: s.priority })),
           )
         }
       }
@@ -443,7 +445,9 @@ export default function Goals(): React.JSX.Element {
                             .trim()
                           updateGoalTitle(index, clean)
                           setGoals((prev) =>
-                            prev.map((g, i) => (i === index ? { ...g, aiSuggestionUsed: true } : g))
+                            prev.map((g, i) =>
+                              i === index ? { ...g, aiSuggestionUsed: true } : g,
+                            ),
                           )
                         }}
                         className="text-blue-400 hover:text-blue-300 text-xs cursor-pointer transition-colors"

@@ -1,6 +1,7 @@
+useTabs: false
+tabWidth: 2
+endOfLine: lf
 printWidth: 100
 semi: false
 singleQuote: true
-tabWidth: 2
-trailingComma: es5
-endOfLine: lf
+trailingComma: all

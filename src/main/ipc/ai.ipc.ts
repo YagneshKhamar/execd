@@ -144,7 +144,7 @@ Generate 5 subgoals that break this down into concrete 1-2 week deliverables.`
         subgoals: { id: string; title: string; priority: string }[]
         carryOvers: { title: string; effort: string }[]
         behaviorFlags: string[]
-      }
+      },
     ) => {
       const systemPrompt = `You are an execution coach generating daily tasks.
 Respond ONLY with valid JSON array in this exact format:
@@ -169,7 +169,7 @@ Generate 3-5 tasks. Max 2 carry-overs. Prioritize high-priority subgoals.`
       } catch (e) {
         return { success: false, error: String(e) }
       }
-    }
+    },
   )
 
   ipcMain.handle(
@@ -182,7 +182,7 @@ Generate 3-5 tasks. Max 2 carry-overs. Prioritize high-priority subgoals.`
         missed: { title: string }[]
         flags: string[]
         history: { date: string; score: number; missed: string[] }[]
-      }
+      },
     ) => {
       try {
         const raw = await generateEndOfDayFeedback(context)
@@ -190,7 +190,7 @@ Generate 3-5 tasks. Max 2 carry-overs. Prioritize high-priority subgoals.`
       } catch (e) {
         return { success: false, error: String(e) }
       }
-    }
+    },
   )
 
   ipcMain.handle(
@@ -211,6 +211,6 @@ Write an improved version that fixes the problem.`
       } catch (e) {
         return { success: false, error: String(e) }
       }
-    }
+    },
   )
 }

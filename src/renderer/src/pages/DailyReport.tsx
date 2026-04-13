@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-
+// to check for Olama or open router so no extra keys payment needs to be added
 interface Task {
   id: string
   title: string
@@ -10,16 +10,6 @@ interface Task {
 }
 
 const EFFORT_WEIGHT: Record<string, number> = { light: 1, medium: 2, heavy: 3 }
-const COLOR_STYLE_PROPERTIES = [
-  'color',
-  'backgroundColor',
-  'borderTopColor',
-  'borderRightColor',
-  'borderBottomColor',
-  'borderLeftColor',
-  'outlineColor',
-  'textDecorationColor',
-] as const
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10)
@@ -37,54 +27,6 @@ function formatDate(iso: string): string {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
-  })
-}
-
-function resolveColorForCanvas(
-  property: (typeof COLOR_STYLE_PROPERTIES)[number],
-  value: string
-): string {
-  if (!value || value === 'transparent' || !/(oklch|oklab|color\()/i.test(value)) {
-    return value
-  }
-
-  const probe = document.createElement('div')
-  probe.style.position = 'fixed'
-  probe.style.opacity = '0'
-  probe.style.pointerEvents = 'none'
-
-  if (property.startsWith('border')) {
-    probe.style.borderTopStyle = 'solid'
-    probe.style.borderTopWidth = '1px'
-  }
-
-  ;(probe.style as CSSStyleDeclaration & Record<string, string>)[property] = value
-  document.body.appendChild(probe)
-
-  const resolved = (getComputedStyle(probe) as CSSStyleDeclaration & Record<string, string>)[
-    property
-  ]
-
-  probe.remove()
-  return resolved || value
-}
-
-function sanitizeCloneColors(sourceRoot: HTMLElement, clonedRoot: HTMLElement): void {
-  const sourceElements = [sourceRoot, ...Array.from(sourceRoot.querySelectorAll<HTMLElement>('*'))]
-  const clonedElements = [clonedRoot, ...Array.from(clonedRoot.querySelectorAll<HTMLElement>('*'))]
-
-  sourceElements.forEach((sourceEl, index) => {
-    const clonedEl = clonedElements[index]
-    if (!clonedEl) return
-
-    const computedStyle = getComputedStyle(sourceEl)
-    for (const property of COLOR_STYLE_PROPERTIES) {
-      const value = (computedStyle as CSSStyleDeclaration & Record<string, string>)[property]
-      const safeValue = resolveColorForCanvas(property, value)
-      if (safeValue) {
-        ;(clonedEl.style as CSSStyleDeclaration & Record<string, string>)[property] = safeValue
-      }
-    }
   })
 }
 
@@ -143,41 +85,6 @@ export default function DailyReport(): React.JSX.Element {
       document.body.classList.remove('capture-mode')
       setSaving(false)
     }
-  }
-
-  function sanitizeColors(source: HTMLElement, clone: HTMLElement): void {
-    const computed = window.getComputedStyle(source)
-
-    const fix = (value: string) => (value.includes('oklch') ? 'rgb(255,255,255)' : value)
-
-    // color fixes
-    clone.style.color = fix(computed.color)
-    clone.style.backgroundColor = fix(computed.backgroundColor)
-    clone.style.borderColor = fix(computed.borderColor)
-
-    // layout-critical (minimal but necessary)
-    clone.style.display = computed.display
-    clone.style.position = computed.position
-    clone.style.flex = computed.flex || ''
-    clone.style.alignItems = computed.alignItems
-    clone.style.justifyContent = computed.justifyContent
-    clone.style.padding = computed.padding
-    clone.style.margin = computed.margin
-    clone.style.fontSize = computed.fontSize
-    clone.style.fontWeight = computed.fontWeight
-    clone.style.lineHeight = computed.lineHeight
-
-    // recursively map children by index SAFELY
-    const sourceChildren = Array.from(source.children)
-    const cloneChildren = Array.from(clone.children)
-
-    sourceChildren.forEach((srcChild, i) => {
-      const clChild = cloneChildren[i]
-
-      if (srcChild instanceof HTMLElement && clChild instanceof HTMLElement) {
-        sanitizeColors(srcChild, clChild)
-      }
-    })
   }
 
   function statusLabel(status: Task['status']): React.JSX.Element {

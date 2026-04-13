@@ -180,7 +180,7 @@ export default function Today(): React.JSX.Element {
           ...t,
           scheduled_date: getToday(),
           status: 'pending',
-        }))
+        })),
       )
 
       await loadTodayData()

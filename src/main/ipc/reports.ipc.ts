@@ -14,13 +14,13 @@ export function detectBehaviorPatterns(date: string): void {
     if (taskId) {
       return !!db
         .prepare(
-          `SELECT id FROM behavior_flags WHERE flag_type = ? AND task_id = ? AND resolved = 0`
+          `SELECT id FROM behavior_flags WHERE flag_type = ? AND task_id = ? AND resolved = 0`,
         )
         .get(flagType, taskId)
     }
     return !!db
       .prepare(
-        `SELECT id FROM behavior_flags WHERE flag_type = ? AND detected_on = ? AND resolved = 0`
+        `SELECT id FROM behavior_flags WHERE flag_type = ? AND detected_on = ? AND resolved = 0`,
       )
       .get(flagType, date)
   }
@@ -31,7 +31,7 @@ export function detectBehaviorPatterns(date: string): void {
       `SELECT id, title, carry_count FROM tasks
        WHERE carry_count >= 3
          AND scheduled_date <= ?
-         AND scheduled_date >= date(?, '-6 days')`
+         AND scheduled_date >= date(?, '-6 days')`,
     )
     .all(date, date) as { id: string; title: string; carry_count: number }[]
 
@@ -42,7 +42,7 @@ export function detectBehaviorPatterns(date: string): void {
         'avoidance',
         `"${task.title}" has been carried ${task.carry_count} times without completion`,
         task.id,
-        date
+        date,
       )
     }
   }
@@ -52,7 +52,7 @@ export function detectBehaviorPatterns(date: string): void {
     .prepare(
       `SELECT date, execution_score FROM day_logs
        WHERE date <= ? AND date >= date(?, '-6 days')
-       ORDER BY date ASC`
+       ORDER BY date ASC`,
     )
     .all(date, date) as { date: string; execution_score: number }[]
 
@@ -66,7 +66,7 @@ export function detectBehaviorPatterns(date: string): void {
           'overload',
           `Execution score below 40% for ${streak} consecutive days`,
           null,
-          date
+          date,
         )
         break
       }
@@ -83,7 +83,7 @@ export function detectBehaviorPatterns(date: string): void {
          AND scheduled_date <= ?
          AND scheduled_date >= date(?, '-6 days')
        GROUP BY title
-       HAVING MAX(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) = 0`
+       HAVING MAX(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) = 0`,
     )
     .all(date, date) as { title: string; id: string }[]
 
@@ -94,7 +94,7 @@ export function detectBehaviorPatterns(date: string): void {
         'category_skip',
         `"${task.title}" requires a link proof but was never completed this week`,
         task.id,
-        date
+        date,
       )
     }
   }
@@ -109,7 +109,7 @@ export function registerReportsHandlers(): void {
         `SELECT date, execution_score, tasks_completed, tasks_missed
          FROM day_logs
          WHERE date <= ? AND date >= date(?, '-6 days')
-         ORDER BY date ASC`
+         ORDER BY date ASC`,
       )
       .all(endDate, endDate)
 
@@ -123,7 +123,7 @@ export function registerReportsHandlers(): void {
            AND tl.date >= date(?, '-6 days')
          GROUP BY t.title
          HAVING COUNT(*) >= 2
-         ORDER BY miss_count DESC`
+         ORDER BY miss_count DESC`,
       )
       .all(endDate, endDate)
 

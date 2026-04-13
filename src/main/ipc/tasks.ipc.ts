@@ -24,25 +24,25 @@ export function registerTasksHandlers(): void {
       data: {
         date: string
         available_minutes: number
-      }
+      },
     ) => {
       const db = getDatabase()
       const existing = db.prepare('SELECT id FROM day_plans WHERE date = ?').get(data.date)
       if (existing) {
         db.prepare('UPDATE day_plans SET available_minutes = ? WHERE date = ?').run(
           data.available_minutes,
-          data.date
+          data.date,
         )
       } else {
         db.prepare(
           `
         INSERT INTO day_plans (id, date, available_minutes, locked, replan_used)
         VALUES (?, ?, ?, 0, 0)
-      `
+      `,
         ).run(uuidv4(), data.date, data.available_minutes)
       }
       return { success: true }
-    }
+    },
   )
 
   ipcMain.handle(
@@ -57,12 +57,12 @@ export function registerTasksHandlers(): void {
         scheduled_date: string
         scheduled_time_slot: string
         status: string
-      }[]
+      }[],
     ) => {
       const db = getDatabase()
       db.prepare('DELETE FROM tasks WHERE scheduled_date = ? AND status = ?').run(
         tasks[0].scheduled_date,
-        'pending'
+        'pending',
       )
 
       const insert = db.prepare(`
@@ -83,14 +83,14 @@ export function registerTasksHandlers(): void {
             t.proof_type,
             t.scheduled_date,
             t.scheduled_time_slot,
-            t.status
+            t.status,
           )
         }
       })
 
       insertMany(tasks)
       return { success: true }
-    }
+    },
   )
 
   ipcMain.handle('tasks:lock-day-plan', (_event, date: string) => {
@@ -98,7 +98,7 @@ export function registerTasksHandlers(): void {
     db.prepare(
       `
       UPDATE day_plans SET locked = 1, locked_at = datetime('now') WHERE date = ?
-    `
+    `,
     ).run(date)
     return { success: true }
   })
@@ -112,7 +112,7 @@ export function registerTasksHandlers(): void {
         proof_value = ?,
         completed_at = datetime('now')
       WHERE id = ?
-    `
+    `,
     ).run(proofValue, taskId)
 
     const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId) as Record<
@@ -124,7 +124,7 @@ export function registerTasksHandlers(): void {
       `
       INSERT INTO task_logs (id, task_id, date, action, proof_type, proof_value, carry_count_at_time)
       VALUES (?, ?, date('now'), 'completed', ?, ?, ?)
-    `
+    `,
     ).run(uuidv4(), taskId, task.proof_type, proofValue, task.carry_count)
 
     return { success: true }
@@ -138,7 +138,7 @@ export function registerTasksHandlers(): void {
     SELECT * FROM tasks 
     WHERE scheduled_date = ? AND status = 'pending'
     ORDER BY rowid
-  `
+  `,
       )
       .all(date)
   })
@@ -149,7 +149,7 @@ export function registerTasksHandlers(): void {
       .prepare(
         `
     SELECT * FROM tasks WHERE scheduled_date = ? AND status = 'pending'
-  `
+  `,
       )
       .all(date) as Record<string, unknown>[]
 
@@ -191,7 +191,7 @@ export function registerTasksHandlers(): void {
       scheduled_date, scheduled_time_slot, status,
       proof_value, carried_over_from, carry_count
     ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', null, ?, ?)
-  `
+  `,
     ).run(
       newId,
       original.subgoal_id,
@@ -201,14 +201,14 @@ export function registerTasksHandlers(): void {
       toDate,
       original.scheduled_time_slot,
       taskId,
-      newCarryCount
+      newCarryCount,
     )
 
     db.prepare(
       `
     INSERT INTO task_logs (id, task_id, date, action, proof_type, proof_value, carry_count_at_time)
     VALUES (?, ?, ?, 'carried', null, null, ?)
-  `
+  `,
     ).run(uuidv4(), taskId, toDate, newCarryCount)
 
     db.prepare(`UPDATE tasks SET status = 'carried' WHERE id = ?`).run(taskId)
@@ -229,7 +229,7 @@ export function registerTasksHandlers(): void {
       `
     INSERT INTO task_logs (id, task_id, date, action, proof_type, proof_value, carry_count_at_time)
     VALUES (?, ?, ?, 'dropped', null, null, ?)
-  `
+  `,
     ).run(uuidv4(), taskId, date, task.carry_count)
 
     return { success: true }
@@ -242,7 +242,7 @@ export function registerTasksHandlers(): void {
         `
     SELECT COUNT(*) as count FROM tasks
     WHERE scheduled_date = ? AND carried_over_from IS NOT NULL AND status = 'pending'
-  `
+  `,
       )
       .get(date) as { count: number }
     return result.count
@@ -263,7 +263,7 @@ export function registerTasksHandlers(): void {
 
     const allTasks = db
       .prepare(
-        `SELECT * FROM tasks WHERE scheduled_date = ? AND status NOT IN ('dropped', 'carried')`
+        `SELECT * FROM tasks WHERE scheduled_date = ? AND status NOT IN ('dropped', 'carried')`,
       )
       .all(date) as TaskRow[]
 
@@ -312,7 +312,7 @@ export function registerTasksHandlers(): void {
           total_weight = ?, completed_weight = ?, execution_score = ?,
           ai_feedback = ?, tasks_completed = ?, tasks_missed = ?
         WHERE date = ?
-      `
+      `,
       ).run(
         totalWeight,
         completedWeight,
@@ -320,13 +320,13 @@ export function registerTasksHandlers(): void {
         feedback,
         completedTasks.length,
         pendingTasks.length,
-        date
+        date,
       )
     } else {
       db.prepare(
         `INSERT INTO day_logs
           (id, date, total_weight, completed_weight, execution_score, ai_feedback, tasks_completed, tasks_missed, tasks_carried, tasks_dropped)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
       ).run(
         uuidv4(),
         date,
@@ -335,7 +335,7 @@ export function registerTasksHandlers(): void {
         score,
         feedback,
         completedTasks.length,
-        pendingTasks.length
+        pendingTasks.length,
       )
     }
 
