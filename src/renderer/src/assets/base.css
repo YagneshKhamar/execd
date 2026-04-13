@@ -1,4 +1,5 @@
 :root {
+  --spacing: 0.25rem;
   --bg-base: #0a0a0a;
   --bg-surface: #111111;
   --bg-elevated: #1a1a1a;
@@ -24,6 +25,4 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
 }

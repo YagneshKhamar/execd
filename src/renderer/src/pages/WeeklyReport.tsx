@@ -62,7 +62,7 @@ export default function WeeklyReport(): React.JSX.Element {
 
   return (
     <div className="h-screen w-screen overflow-y-auto bg-[var(--bg-base)]">
-      <div className="max-w-2xl mx-auto px-8 py-8">
+      <div className="max-w-2xl px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-1">
@@ -80,14 +80,22 @@ export default function WeeklyReport(): React.JSX.Element {
             >
               {avgScore}%
             </p>
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">avg score</p>
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">
+              avg score
+            </p>
           </div>
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 text-center">
-            <p className="font-mono text-3xl font-semibold text-[var(--accent-green)]">{totalCompleted}</p>
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">completed</p>
+            <p className="font-mono text-3xl font-semibold text-[var(--accent-green)]">
+              {totalCompleted}
+            </p>
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">
+              completed
+            </p>
           </div>
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 text-center">
-            <p className="font-mono text-3xl font-semibold text-[var(--accent-red)]">{totalMissed}</p>
+            <p className="font-mono text-3xl font-semibold text-[var(--accent-red)]">
+              {totalMissed}
+            </p>
             <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">missed</p>
           </div>
         </div>
@@ -110,12 +118,17 @@ export default function WeeklyReport(): React.JSX.Element {
                 >
                   <div className="flex items-center">
                     <span className="font-mono text-xs text-[var(--text-secondary)] w-10 shrink-0">
-                      {new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short' })}
+                      {new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                      })}
                     </span>
                     <div className="flex-1 h-1 bg-[var(--border-default)] rounded mx-3 overflow-hidden">
                       <div
                         className="h-full rounded"
-                        style={{ width: `${pct}%`, backgroundColor: scoreColor(day.execution_score) }}
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: scoreColor(day.execution_score),
+                        }}
                       />
                     </div>
                     <span
@@ -143,7 +156,9 @@ export default function WeeklyReport(): React.JSX.Element {
             <div className="space-y-2">
               {patterns.map((p) => (
                 <div key={p.title} className="flex items-center justify-between">
-                  <p className="text-[var(--text-primary)] text-sm truncate flex-1 mr-4">{p.title}</p>
+                  <p className="text-[var(--text-primary)] text-sm truncate flex-1 mr-4">
+                    {p.title}
+                  </p>
                   <span className="font-mono text-xs text-[var(--accent-red)] font-semibold shrink-0">
                     missed {p.miss_count}×
                   </span>

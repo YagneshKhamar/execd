@@ -333,7 +333,7 @@ export default function Goals(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen bg-[var(--bg-base)] flex items-center justify-center">
+      <div className="h-full w-full bg-[var(--bg-base)] flex items-center justify-center">
         <p className="text-[var(--text-muted)] text-sm font-mono">loading...</p>
       </div>
     )
@@ -341,37 +341,41 @@ export default function Goals(): React.JSX.Element {
 
   if (view === 'empty') {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[var(--bg-base)]">
-        <Target className="w-10 h-10 text-[var(--text-muted)] mb-4" />
-        <h1 className="text-lg font-semibold text-[var(--text-primary)] mb-2">No goals set</h1>
-        <p className="text-sm text-[var(--text-secondary)] mb-6 text-center max-w-xs">
-          Define your monthly goals to generate daily tasks. You need goals before the app can plan
-          your day.
-        </p>
-        <div className="flex gap-2 mb-8">
-          <span className="font-mono text-xs px-3 py-1.5 rounded border border-blue-500/30 text-blue-400 bg-blue-500/10">
-            {goalConfig.business} Business
-          </span>
-          <span className="font-mono text-xs px-3 py-1.5 rounded border border-purple-500/30 text-purple-400 bg-purple-500/10">
-            {goalConfig.personal} Personal
-          </span>
-          <span className="font-mono text-xs px-3 py-1.5 rounded border border-[var(--accent-green)]/30 text-[var(--accent-green)] bg-[var(--accent-green)]/10">
-            {goalConfig.family} Family
-          </span>
+      <div className="h-full w-full flex items-center justify-center bg-[var(--bg-base)] px-6">
+        <div className="w-full max-w-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-8 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+          <div className="w-14 h-14 rounded-full border border-[var(--border-default)] bg-[var(--bg-elevated)] mx-auto mb-5 flex items-center justify-center">
+            <Target className="w-7 h-7 text-[var(--text-muted)]" />
+          </div>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">No goals set</h1>
+          <p className="text-sm text-[var(--text-secondary)] mb-7 text-center max-w-md mx-auto leading-relaxed">
+            Define your monthly goals to generate daily tasks. You need goals before the app can plan
+            your day.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
+            <span className="font-mono text-xs px-3 py-1.5 rounded border border-blue-500/30 text-blue-400 bg-blue-500/10">
+              {goalConfig.business} Business
+            </span>
+            <span className="font-mono text-xs px-3 py-1.5 rounded border border-purple-500/30 text-purple-400 bg-purple-500/10">
+              {goalConfig.personal} Personal
+            </span>
+            <span className="font-mono text-xs px-3 py-1.5 rounded border border-[var(--accent-green)]/30 text-[var(--accent-green)] bg-[var(--accent-green)]/10">
+              {goalConfig.family} Family
+            </span>
+          </div>
+          <button
+            onClick={startAddFlow}
+            className="mt-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors"
+          >
+            Set Goals for {getMonthLabel(month)}
+          </button>
         </div>
-        <button
-          onClick={startAddFlow}
-          className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white px-6 py-2.5 rounded text-sm font-medium cursor-pointer transition-colors"
-        >
-          Set Goals for {getMonthLabel(month)}
-        </button>
       </div>
     )
   }
 
   if (view === 'review') {
     return (
-      <div className="h-screen w-screen overflow-y-auto bg-[var(--bg-base)]">
+      <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)]">
         <div className="max-w-4xl mx-auto px-8 py-8">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -446,7 +450,7 @@ export default function Goals(): React.JSX.Element {
 
   if (step === 'subgoals') {
     return (
-      <div className="h-screen w-screen overflow-y-auto bg-[var(--bg-base)]">
+      <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)]">
         <div className="max-w-4xl mx-auto px-8 py-8">
           <p className="font-mono text-xs text-[var(--text-muted)] mb-1">STEP 2 OF 2 - REVIEW SUBGOALS</p>
           <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-6">Review Subgoals</h1>
@@ -526,7 +530,7 @@ export default function Goals(): React.JSX.Element {
   }
 
   return (
-    <div className="h-screen w-screen overflow-y-auto bg-[var(--bg-base)]">
+    <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)]">
       <div className="max-w-4xl mx-auto px-8 py-8">
         <button
           onClick={() => setView('empty')}

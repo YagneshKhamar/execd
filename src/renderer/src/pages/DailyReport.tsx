@@ -140,11 +140,7 @@ export default function DailyReport(): React.JSX.Element {
 
   return (
     <div className="h-screen w-screen overflow-y-auto bg-[var(--bg-base)]">
-      <div
-        ref={reportRef}
-        data-report-capture="daily-report"
-        className="max-w-2xl mx-auto px-8 py-8"
-      >
+      <div ref={reportRef} data-report-capture="daily-report" className="max-w-2xl px-8 py-8">
         <div className="mb-6">
           <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-1">
             DAILY REPORT
