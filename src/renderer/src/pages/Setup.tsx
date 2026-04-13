@@ -14,7 +14,9 @@ const DAY_LABELS: Record<string, string> = {
 }
 
 export default function Setup(): React.JSX.Element {
-  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'ollama' | 'openrouter'>('openai')
+  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'ollama' | 'openrouter'>(
+    'openai',
+  )
   const [apiKey, setApiKey] = useState('')
   const [workingStart, setWorkingStart] = useState('09:00')
   const [workingEnd, setWorkingEnd] = useState('18:00')
@@ -126,7 +128,9 @@ export default function Setup(): React.JSX.Element {
     <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)] p-5">
       <div className="mx-auto bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-5 w-full max-w-5xl mb-6">
         <div className="mb-4">
-          <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-1">EXECOS</p>
+          <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-1">
+            EXECOS
+          </p>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">Setup</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
             Configure your AI provider and schedule.
@@ -365,7 +369,9 @@ export default function Setup(): React.JSX.Element {
                   />
                 </div>
               </div>
-              <p className="text-[var(--text-muted)] text-xs">Minimum: 3 business, 1 personal, 1 family.</p>
+              <p className="text-[var(--text-muted)] text-xs">
+                Minimum: 3 business, 1 personal, 1 family.
+              </p>
             </div>
           </section>
         </div>
@@ -375,9 +381,9 @@ export default function Setup(): React.JSX.Element {
         <div className="pt-4">
           <button
             onClick={handleSave}
-            className="w-full xl:w-auto xl:min-w-56 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white font-medium py-2.5 px-6 rounded text-sm cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full xl:w-auto xl:min-w-56 bg-(--accent-blue) hover:bg-[--accent-blue-dim] text-white font-medium py-2.5 px-6 rounded text-sm cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Save & Continue →
+            Save Settings
           </button>
         </div>
       </div>

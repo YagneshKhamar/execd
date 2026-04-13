@@ -134,4 +134,115 @@ export function registerReportsHandlers(): void {
     const db = getDatabase()
     return db.prepare('SELECT * FROM day_logs WHERE date = ?').get(date) || null
   })
+
+  ipcMain.handle('reports:year', (_event, year: string) => {
+    const db = getDatabase()
+
+    const days = db
+      .prepare(
+        `
+    SELECT date, execution_score, tasks_completed, tasks_missed, tasks_carried
+    FROM day_logs
+    WHERE date >= ? AND date <= ?
+    ORDER BY date ASC
+  `,
+      )
+      .all(`${year}-01-01`, `${year}-12-31`)
+
+    const months = db
+      .prepare(
+        `
+    SELECT
+      strftime('%m', date) as month,
+      AVG(execution_score) as avg_score,
+      SUM(tasks_completed) as total_completed,
+      SUM(tasks_missed) as total_missed,
+      COUNT(*) as days_logged
+    FROM day_logs
+    WHERE date >= ? AND date <= ?
+    GROUP BY strftime('%m', date)
+    ORDER BY month ASC
+  `,
+      )
+      .all(`${year}-01-01`, `${year}-12-31`)
+
+    const topMissed = db
+      .prepare(
+        `
+    SELECT t.title, COUNT(*) as miss_count
+    FROM task_logs tl
+    JOIN tasks t ON t.id = tl.task_id
+    WHERE tl.action = 'missed'
+      AND tl.date >= ? AND tl.date <= ?
+    GROUP BY t.title
+    HAVING COUNT(*) >= 3
+    ORDER BY miss_count DESC
+    LIMIT 5
+  `,
+      )
+      .all(`${year}-01-01`, `${year}-12-31`)
+
+    return { days, months, topMissed }
+  })
+
+  ipcMain.handle('reports:analytics', (_event, days: number) => {
+    const db = getDatabase()
+    const since = new Date()
+    since.setDate(since.getDate() - (days - 1))
+    const sinceStr = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, '0')}-${String(
+      since.getDate(),
+    ).padStart(2, '0')}`
+
+    const trend = db
+      .prepare(
+        `
+    SELECT date, execution_score, tasks_completed, tasks_missed
+    FROM day_logs
+    WHERE date >= ?
+    ORDER BY date ASC
+  `,
+      )
+      .all(sinceStr)
+
+    const byEffort = db
+      .prepare(
+        `
+    SELECT effort,
+      COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+      COUNT(CASE WHEN status = 'missed' THEN 1 END) as missed
+    FROM tasks
+    WHERE scheduled_date >= ?
+    AND status IN ('completed', 'missed')
+    GROUP BY effort
+  `,
+      )
+      .all(sinceStr)
+
+    const bySlot = db
+      .prepare(
+        `
+    SELECT scheduled_time_slot as slot,
+      COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed,
+      COUNT(CASE WHEN status = 'missed' THEN 1 END) as missed
+    FROM tasks
+    WHERE scheduled_date >= ?
+    AND status IN ('completed', 'missed')
+    GROUP BY scheduled_time_slot
+  `,
+      )
+      .all(sinceStr)
+
+    const carryTrend = db
+      .prepare(
+        `
+    SELECT date, tasks_carried
+    FROM day_logs
+    WHERE date >= ?
+    ORDER BY date ASC
+  `,
+      )
+      .all(sinceStr)
+
+    return { trend, byEffort, bySlot, carryTrend }
+  })
 }

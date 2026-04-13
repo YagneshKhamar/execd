@@ -1,7 +1,11 @@
-appId: com.electron.app
-productName: execd
+appId: com.execd.app
+productName: Execd
+copyright: Copyright © 2026 Execd
+
 directories:
-  buildResources: build
+  buildResources: resources
+  output: dist
+
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -9,16 +13,29 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+
 asarUnpack:
   - resources/**
+
 win:
-  executableName: execd
+  executableName: Execd
+  icon: resources/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  artifactName: Execd-Setup-${version}.exe
+  shortcutName: Execd
+  uninstallDisplayName: Execd
   createDesktopShortcut: always
+  createStartMenuShortcut: true
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+
 mac:
+  icon: resources/icon.png
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -26,8 +43,15 @@ mac:
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: Execd-${version}.dmg
+
 linux:
   target:
     - AppImage
@@ -35,9 +59,13 @@ linux:
     - deb
   maintainer: electronjs.org
   category: Utility
+  icon: resources/icon.png
+
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: Execd-${version}.${ext}
+
 npmRebuild: false
+
 publish:
   provider: generic
   url: https://example.com/auto-updates

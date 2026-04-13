@@ -271,4 +271,44 @@ Write an improved version that fixes the problem.`
       }
     },
   )
+
+  ipcMain.handle(
+    'ai:analytics-insight',
+    async (
+      _event,
+      context: {
+        avgScore: number
+        trend: string
+        topMissedEffort: string
+        topMissedSlot: string
+        carryRate: number
+        days: number
+      },
+    ) => {
+      const systemPrompt = `You are a brutal execution analyst.
+Respond ONLY with valid JSON: {"heading": "string", "body": "string"}
+heading: 4-6 words max. A sharp, specific label that names the dominant pattern.
+Not a question. Not motivational. A diagnosis. Examples:
+"Afternoon execution is collapsing", "Heavy tasks are being avoided",
+"Carry-overs are becoming a habit", "Consistent but light work only".
+body: 1-2 sentences max. Brutally honest. Reference specific numbers.
+No encouragement. No hedging. State what is actually happening.`
+
+      const prompt = `Last ${context.days} days:
+Avg execution score: ${Math.round(context.avgScore * 100)}%
+Score trend: ${context.trend}
+Most missed effort level: ${context.topMissedEffort}
+Most missed time slot: ${context.topMissedSlot}
+Carry-over rate: ${Math.round(context.carryRate * 100)}% of days had carry-overs
+Generate the insight JSON.`
+
+      try {
+        const raw = await callAI(prompt, systemPrompt)
+        const cleaned = raw.replace(/```json|```/g, '').trim()
+        return { success: true, data: JSON.parse(cleaned) }
+      } catch (e) {
+        return { success: false, error: String(e) }
+      }
+    },
+  )
 }

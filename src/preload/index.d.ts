@@ -32,6 +32,11 @@ export interface IElectronAPI {
       title: string,
       note: string,
     ) => Promise<{ success: boolean; data?: string; error?: string }>
+    generateAnalyticsInsight: (context: unknown) => Promise<{
+      success: boolean
+      data?: { heading: string; body: string }
+      error?: string
+    }>
   }
   tasks: {
     getByDate: (date: string) => Promise<unknown[]>
@@ -68,6 +73,48 @@ export interface IElectronAPI {
       tasks_completed: number
       tasks_missed: number
     } | null>
+    year: (year: string) => Promise<{
+      days: {
+        date: string
+        execution_score: number
+        tasks_completed: number
+        tasks_missed: number
+        tasks_carried: number
+      }[]
+      months: {
+        month: string
+        avg_score: number
+        total_completed: number
+        total_missed: number
+        days_logged: number
+      }[]
+      topMissed: {
+        title: string
+        miss_count: number
+      }[]
+    }>
+    analytics: (days: number) => Promise<{
+      trend: {
+        date: string
+        execution_score: number
+        tasks_completed: number
+        tasks_missed: number
+      }[]
+      byEffort: {
+        effort: string
+        completed: number
+        missed: number
+      }[]
+      bySlot: {
+        slot: string
+        completed: number
+        missed: number
+      }[]
+      carryTrend: {
+        date: string
+        tasks_carried: number
+      }[]
+    }>
   }
   overlay: {
     openMain: () => Promise<void>

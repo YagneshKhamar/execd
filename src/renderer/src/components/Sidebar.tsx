@@ -3,8 +3,10 @@ import {
   LayoutDashboard,
   Target,
   CalendarDays,
+  Calendar,
   FileText,
   BarChart2,
+  LineChart as LineChartIcon,
   Settings,
 } from 'lucide-react'
 
@@ -14,6 +16,8 @@ const NAV_ITEMS = [
   { icon: CalendarDays, label: 'Plan', to: '/plan' },
   { icon: FileText, label: 'Daily Report', to: '/report/daily' },
   { icon: BarChart2, label: 'Weekly Report', to: '/report/weekly' },
+  { icon: Calendar, label: 'Year Report', to: '/report/yearly' },
+  { icon: LineChartIcon, label: 'Analytics', to: '/analytics' },
 ]
 
 export default function Sidebar(): React.JSX.Element {

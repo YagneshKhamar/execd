@@ -23,10 +23,12 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@types/recharts": "^1.8.29",
     "better-sqlite3": "^12.8.0",
     "electron-updater": "^6.3.9",
     "lucide-react": "^1.8.0",
     "react-router-dom": "^7.14.0",
+    "recharts": "^3.8.1",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

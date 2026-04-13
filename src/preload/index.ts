@@ -27,6 +27,8 @@ contextBridge.exposeInMainWorld('api', {
     endOfDayFeedback: (context: unknown) => ipcRenderer.invoke('ai:end-of-day-feedback', context),
     suggestGoalFix: (title: string, note: string) =>
       ipcRenderer.invoke('ai:suggest-goal-fix', title, note),
+    generateAnalyticsInsight: (context: unknown) =>
+      ipcRenderer.invoke('ai:analytics-insight', context),
   },
   tasks: {
     getByDate: (date: string) => ipcRenderer.invoke('tasks:get-by-date', date),
@@ -47,6 +49,8 @@ contextBridge.exposeInMainWorld('api', {
   reports: {
     week: (endDate: string) => ipcRenderer.invoke('reports:week', endDate),
     dayLog: (date: string) => ipcRenderer.invoke('reports:day-log', date),
+    year: (year: string) => ipcRenderer.invoke('reports:year', year),
+    analytics: (days: number) => ipcRenderer.invoke('reports:analytics', days),
   },
   overlay: {
     openMain: () => ipcRenderer.invoke('overlay:open-main'),

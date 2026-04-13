@@ -25,6 +25,7 @@ interface SubgoalItem {
 interface GoalWithSubgoals extends GoalInput {
   subgoals: SubgoalItem[]
   loadingSubgoals: boolean
+  lastValidatedTitle: string
   suggestedFix?: string
   aiSuggestionUsed?: boolean
 }
@@ -96,7 +97,7 @@ function buildGoalSlots(counts: {
     ...createForType('business', counts.business),
     ...createForType('personal', counts.personal),
     ...createForType('family', counts.family),
-  ].map((goal) => ({ ...goal, subgoals: [], loadingSubgoals: false }))
+  ].map((goal) => ({ ...goal, subgoals: [], loadingSubgoals: false, lastValidatedTitle: '' }))
 }
 
 export default function Goals(): React.JSX.Element {
@@ -164,7 +165,14 @@ export default function Goals(): React.JSX.Element {
   function updateGoalTitle(index: number, title: string): void {
     setGoals((prev) =>
       prev.map((g, i) =>
-        i === index ? { ...g, title, validationState: 'idle', validationNote: '' } : g,
+        i === index
+          ? {
+              ...g,
+              title,
+              validationState: g.validationState === 'valid' ? 'idle' : 'idle',
+              validationNote: '',
+            }
+          : g,
       ),
     )
   }
@@ -216,6 +224,13 @@ export default function Goals(): React.JSX.Element {
     const updated = [...goals]
 
     for (let i = 0; i < updated.length; i++) {
+      if (
+        updated[i].validationState === 'valid' &&
+        updated[i].title === updated[i].lastValidatedTitle
+      ) {
+        continue
+      }
+
       updated[i] = { ...updated[i], validationState: 'validating' }
       setGoals([...updated])
 
@@ -226,6 +241,7 @@ export default function Goals(): React.JSX.Element {
           ...updated[i],
           validationState: 'valid',
           validationNote: 'Accepted via AI suggestion.',
+          lastValidatedTitle: updated[i].title,
           suggestedFix: undefined,
         }
         setGoals([...updated])
@@ -247,6 +263,7 @@ export default function Goals(): React.JSX.Element {
           ...updated[i],
           validationState: isValid ? 'valid' : 'invalid',
           validationNote: result.data.note,
+          lastValidatedTitle: isValid ? updated[i].title : updated[i].lastValidatedTitle,
           suggestedFix,
         }
       } else {
@@ -330,6 +347,9 @@ export default function Goals(): React.JSX.Element {
   }
 
   const totalSubgoals = savedGoals.reduce((sum, goal) => sum + (subgoalMap[goal.id]?.length ?? 0), 0)
+  const toValidate = goals.filter(
+    (g) => g.title.trim() && !(g.validationState === 'valid' && g.title === g.lastValidatedTitle),
+  ).length
 
   if (loading) {
     return (
@@ -617,14 +637,10 @@ export default function Goals(): React.JSX.Element {
 
         <button
           onClick={handleValidateAndContinue}
-          disabled={validating}
+          disabled={validating || toValidate === 0}
           className="w-full bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded text-sm cursor-pointer transition-colors mt-4"
         >
-          {validating
-            ? 'Validating with AI...'
-            : goals.every((g) => g.validationState === 'valid')
-              ? 'Continue ->'
-              : 'Validate & Generate Subgoals ->'}
+          {validating ? 'Validating with AI...' : toValidate === 0 ? 'All Validated ✓' : `Validate (${toValidate})`}
         </button>
       </div>
     </div>
