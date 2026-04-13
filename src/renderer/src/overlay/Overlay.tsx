@@ -50,13 +50,24 @@ export default function Overlay(): React.JSX.Element {
         style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       >
         <span className="text-white text-xs font-bold">{score}%</span>
-        <button
-          onClick={() => window.api.overlay.openMain()}
-          className="no-drag text-gray-500 hover:text-gray-300 text-xs cursor-pointer transition-colors"
+        <div
+          className="no-drag flex items-center gap-3"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          Open App →
-        </button>
+          <button
+            onClick={() => window.api.overlay.openMain()}
+            className="text-gray-500 hover:text-gray-300 text-xs cursor-pointer transition-colors"
+          >
+            Open App →
+          </button>
+          <button
+            onClick={() => window.api.overlay.hide()}
+            className="text-gray-600 hover:text-gray-300 text-xs cursor-pointer transition-colors"
+            title="Hide overlay"
+          >
+            —
+          </button>
+        </div>
       </div>
 
       {/* Progress */}

@@ -34,10 +34,28 @@ function createMainWindow(): BrowserWindow {
     overlayWindow = null
   })
 
+  // Both close and minimize send the app to tray
   win.on('close', (event) => {
     if (tray) {
       event.preventDefault()
       win.hide()
+    }
+  })
+
+  win.on('minimize', () => {
+    win.hide()
+  })
+
+  // Show overlay when main hides, hide overlay when main shows
+  win.on('hide', () => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.show()
+    }
+  })
+
+  win.on('show', () => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.hide()
     }
   })
 
@@ -74,10 +92,6 @@ function createOverlayWindow(): BrowserWindow {
     },
   })
 
-  win.on('ready-to-show', () => {
-    win.show()
-  })
-
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#/overlay`)
   } else {
@@ -97,6 +111,14 @@ function createTray(): void {
       click: () => {
         mainWindow?.show()
         mainWindow?.focus()
+      },
+    },
+    {
+      label: 'Show Overlay',
+      click: () => {
+        if (overlayWindow && !overlayWindow.isDestroyed()) {
+          overlayWindow.show()
+        }
       },
     },
     { type: 'separator' },
@@ -164,6 +186,10 @@ app.whenReady().then(() => {
   ipcMain.handle('overlay:open-main', () => {
     mainWindow?.show()
     mainWindow?.focus()
+  })
+
+  ipcMain.handle('overlay:hide', () => {
+    overlayWindow?.hide()
   })
 
   ipcMain.handle('capture-report', async (_, rect) => {

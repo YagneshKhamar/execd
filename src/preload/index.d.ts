@@ -45,6 +45,12 @@ export interface IElectronAPI {
     carryOver: (taskId: string, toDate: string) => Promise<{ success: boolean; newTaskId?: string }>
     drop: (taskId: string, date: string) => Promise<{ success: boolean }>
     getCarryOverCount: (date: string) => Promise<number>
+    endOfDay: (date: string) => Promise<{
+      score: number
+      feedback: string
+      completed: unknown[]
+      missed: unknown[]
+    }>
   }
   reports: {
     week: (endDate: string) => Promise<{
@@ -59,6 +65,7 @@ export interface IElectronAPI {
   }
   overlay: {
     openMain: () => Promise<void>
+    hide: () => Promise<void>
   }
   electronAPI: {
     captureReport: () => Promise<string>

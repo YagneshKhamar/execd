@@ -42,12 +42,14 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('tasks:carry-over', taskId, toDate),
     drop: (taskId: string, date: string) => ipcRenderer.invoke('tasks:drop', taskId, date),
     getCarryOverCount: (date: string) => ipcRenderer.invoke('tasks:get-carryover-count', date),
+    endOfDay: (date: string) => ipcRenderer.invoke('tasks:end-of-day', date),
   },
   reports: {
     week: (endDate: string) => ipcRenderer.invoke('reports:week', endDate),
   },
   overlay: {
     openMain: () => ipcRenderer.invoke('overlay:open-main'),
+    hide: () => ipcRenderer.invoke('overlay:hide'),
   },
   electronAPI: {
     captureReport: () => ipcRenderer.invoke('capture-report'),

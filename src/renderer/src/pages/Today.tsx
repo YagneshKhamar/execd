@@ -50,6 +50,12 @@ export default function Today(): React.JSX.Element {
   const [missedFromYesterday, setMissedFromYesterday] = useState<Task[]>([])
   const [showCarryOver, setShowCarryOver] = useState(false)
   const [carryOverProcessing, setCarryOverProcessing] = useState(false)
+  const [endingDay, setEndingDay] = useState(false)
+  const [dayEnded, setDayEnded] = useState(false)
+  const [endDayResult, setEndDayResult] = useState<{
+    score: number
+    feedback: string
+  } | null>(null)
 
   useEffect(() => {
     loadTodayData()
@@ -189,6 +195,22 @@ export default function Today(): React.JSX.Element {
       console.error(e)
     } finally {
       setGenerating(false)
+    }
+  }
+
+  async function handleEndDay(): Promise<void> {
+    setEndingDay(true)
+    setError('')
+    try {
+      const result = await window.api.tasks.endOfDay(getToday())
+      setEndDayResult({ score: result.score, feedback: result.feedback })
+      setDayEnded(true)
+      await loadTodayData()
+    } catch (e) {
+      setError('Failed to end the day. Try again.')
+      console.error(e)
+    } finally {
+      setEndingDay(false)
     }
   }
 
@@ -455,7 +477,35 @@ export default function Today(): React.JSX.Element {
             </button>
           )}
 
-          {isLocked && tasks.every((t) => t.status === 'completed') && (
+          {isLocked && tasks.length > 0 && !dayEnded && (
+            <button
+              onClick={handleEndDay}
+              disabled={endingDay}
+              className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-800 disabled:text-gray-600 text-gray-300 font-semibold py-3 rounded-lg transition-colors text-sm cursor-pointer"
+            >
+              {endingDay ? 'Ending day...' : 'End Day'}
+            </button>
+          )}
+
+          {dayEnded && endDayResult && (
+            <div className="bg-gray-900 border border-gray-700 rounded-xl p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-xs">Execution score</span>
+                <span className="text-white font-bold text-sm">
+                  {Math.round(endDayResult.score * 100)}%
+                </span>
+              </div>
+              <p className="text-gray-400 text-xs leading-relaxed">{endDayResult.feedback}</p>
+              <button
+                onClick={() => navigate('/report/daily')}
+                className="text-blue-500 hover:text-blue-400 text-xs cursor-pointer transition-colors"
+              >
+                View full report →
+              </button>
+            </div>
+          )}
+
+          {isLocked && !dayEnded && tasks.every((t) => t.status === 'completed') && (
             <div className="bg-green-950 border border-green-800 rounded-xl p-4 text-center">
               <p className="text-green-400 font-semibold text-sm">All tasks complete. 100%.</p>
             </div>
