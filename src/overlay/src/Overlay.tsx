@@ -40,20 +40,30 @@ export default function Overlay(): React.JSX.Element {
   const pending = tasks.filter((t) => t.status === 'pending')
 
   return (
-    <div className="h-screen w-screen bg-gray-950/90 backdrop-blur-sm flex flex-col p-3 select-none overflow-hidden">
+    <div
+      className="h-screen w-screen bg-gray-950/90 backdrop-blur-sm flex flex-col p-3 select-none overflow-hidden"
+      style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
+      <div
+        className="flex items-center justify-between mb-2"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      >
         <span className="text-white text-xs font-bold">{score}%</span>
         <button
           onClick={() => window.api.overlay.openMain()}
           className="text-gray-500 hover:text-gray-300 text-xs cursor-pointer transition-colors"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
           Open App →
         </button>
       </div>
 
       {/* Progress */}
-      <div className="h-1 bg-gray-800 rounded-full mb-3 overflow-hidden">
+      <div
+        className="h-1 bg-gray-800 rounded-full mb-3 overflow-hidden"
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      >
         <div
           className="h-full bg-blue-600 rounded-full transition-all duration-500"
           style={{ width: `${score}%` }}
@@ -70,7 +80,10 @@ export default function Overlay(): React.JSX.Element {
           <p className="text-gray-700 text-xs">No tasks today. Open app to generate.</p>
         </div>
       ) : (
-        <div className="flex-1 space-y-1.5 overflow-hidden">
+        <div
+          className="flex-1 space-y-1.5 overflow-hidden"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
           {tasks.slice(0, 5).map((task) => (
             <div
               key={task.id}
@@ -103,7 +116,10 @@ export default function Overlay(): React.JSX.Element {
 
       {/* Footer nudge */}
       {pending.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-gray-800">
+        <div
+          className="mt-2 pt-2 border-t border-gray-800"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
           <p className="text-gray-600 text-xs">
             {pending.length} task{pending.length > 1 ? 's' : ''} remaining
           </p>

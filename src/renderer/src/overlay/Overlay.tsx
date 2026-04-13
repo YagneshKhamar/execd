@@ -40,20 +40,41 @@ export default function Overlay(): React.JSX.Element {
   const pending = tasks.filter((t) => t.status === 'pending')
 
   return (
-    <div className="drag-region h-screen w-screen bg-gray-950/90 backdrop-blur-sm flex flex-col p-3 select-none overflow-hidden">
+    <div
+      className="drag-region h-full w-full bg-gray-950/90 backdrop-blur-sm flex flex-col p-3 select-none overflow-hidden"
+      style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
+      <div
+        className="drag-region flex items-center justify-between mb-2"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      >
         <span className="text-white text-xs font-bold">{score}%</span>
-        <button
-          onClick={() => window.api.overlay.openMain()}
-          className="no-drag text-gray-500 hover:text-gray-300 text-xs cursor-pointer transition-colors"
+        <div
+          className="no-drag flex items-center gap-3"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          Open App →
-        </button>
+          <button
+            onClick={() => window.api.overlay.openMain()}
+            className="text-gray-500 hover:text-gray-300 text-xs cursor-pointer transition-colors"
+          >
+            Open App →
+          </button>
+          <button
+            onClick={() => window.api.overlay.hide()}
+            className="text-gray-600 hover:text-gray-300 text-xs cursor-pointer transition-colors"
+            title="Hide overlay"
+          >
+            —
+          </button>
+        </div>
       </div>
 
       {/* Progress */}
-      <div className="no-drag h-1 bg-gray-800 rounded-full mb-3 overflow-hidden">
+      <div
+        className="no-drag h-1 bg-gray-800 rounded-full mb-3 overflow-hidden"
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      >
         <div
           className="h-full bg-blue-600 rounded-full transition-all duration-500"
           style={{ width: `${score}%` }}
@@ -70,7 +91,10 @@ export default function Overlay(): React.JSX.Element {
           <p className="text-gray-700 text-xs">No tasks today. Open app to generate.</p>
         </div>
       ) : (
-        <div className="no-drag flex-1 space-y-1.5 overflow-hidden">
+        <div
+          className="no-drag flex-1 space-y-1.5 overflow-hidden"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
           {tasks.slice(0, 5).map((task) => (
             <div
               key={task.id}
@@ -99,7 +123,10 @@ export default function Overlay(): React.JSX.Element {
 
       {/* Footer */}
       {pending.length > 0 && (
-        <div className="no-drag mt-2 pt-2 border-t border-gray-800">
+        <div
+          className="no-drag mt-2 pt-2 border-t border-gray-800"
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        >
           <p className="text-gray-600 text-xs">
             {pending.length} task{pending.length > 1 ? 's' : ''} remaining
           </p>

@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Setup from './pages/Setup'
 import Goals from './pages/Goals'
 import MonthlyPlan from './pages/MonthlyPlan'
 import Today from './pages/Today'
 import DailyReport from './pages/DailyReport'
 import WeeklyReport from './pages/WeeklyReport'
+import Overlay from './overlay/Overlay'
 
 function AppRouter(): React.JSX.Element {
+  const location = useLocation()
   const [startPath, setStartPath] = useState<string | null>(null)
+  const isOverlayRoute = location.pathname === '/overlay'
 
   useEffect(() => {
+    if (isOverlayRoute) {
+      return
+    }
+
     async function checkSetup(): Promise<void> {
       try {
         const config = await window.api.config.get()
@@ -33,9 +40,17 @@ function AppRouter(): React.JSX.Element {
       }
     }
     checkSetup()
-  }, [])
+  }, [isOverlayRoute])
 
-  if (startPath === null) {
+  useEffect(() => {
+    document.body.classList.toggle('overlay-window', isOverlayRoute)
+
+    return () => {
+      document.body.classList.remove('overlay-window')
+    }
+  }, [isOverlayRoute])
+
+  if (!isOverlayRoute && startPath === null) {
     return (
       <div className="h-screen w-screen bg-gray-950 flex items-center justify-center">
         <div className="text-gray-600 text-sm">Loading...</div>
@@ -52,6 +67,7 @@ function AppRouter(): React.JSX.Element {
       <Route path="/today" element={<Today />} />
       <Route path="/report/daily" element={<DailyReport />} />
       <Route path="/report/weekly" element={<WeeklyReport />} />
+      <Route path="/overlay" element={<Overlay />} />
     </Routes>
   )
 }
