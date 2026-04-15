@@ -127,6 +127,20 @@ If you hit this issue, either:
 - Or add this line to `callAI()` in `src/main/ipc/ai.ipc.ts`:
   `raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()`
 
+## macOS Installation
+
+macOS will show "unverified developer" on first launch because the app
+is not notarized with an Apple Developer certificate.
+
+To open it anyway:
+
+1. Right-click the .dmg file → Open
+2. Click "Open" in the dialog that appears
+3. The app will launch and macOS remembers the exception going forward
+
+Or via Terminal:
+xattr -cr /Applications/Execd.app
+
 ## Philosophy
 
 Most founders do not fail because they cannot plan. They fail because nothing enforces execution once the plan exists. Execd is built to close that gap between planning and doing, day after day. No motivational language, no streak systems for vanity, no gamification loop. Proof or it did not happen.

@@ -55,9 +55,8 @@ dmg:
 linux:
   target:
     - AppImage
-    - snap
     - deb
-  maintainer: electronjs.org
+  maintainer: yagnesh.khamar@appunik.com
   category: Utility
   icon: resources/icon.png
 
