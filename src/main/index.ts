@@ -140,7 +140,7 @@ function createTray(): void {
       },
     },
     {
-      label: 'Show Overlay',
+      label: 'Show Todays Tasks',
       click: () => {
         if (overlayWindow && !overlayWindow.isDestroyed()) {
           overlayWindow.show()
