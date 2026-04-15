@@ -1,46 +1,54 @@
 # Project Structure
 
-This file maps the repository as it exists today.
+This document reflects the repository structure as it exists right now.
 
-## Top-Level Layout
+## 1. Top-Level Layout
 
 ```text
 execd/
+├── .github/
+├── .vscode/
 ├── build/
 ├── resources/
+├── screenshots/
 ├── src/
-├── .claude/
-├── .code-review-graph/
-├── .vscode/
+├── .editorconfig
+├── .gitignore
+├── .prettierignore
+├── .prettierrc.yaml
+├── CONTRIBUTING.md
+├── dev-app-update.yml
 ├── electron-builder.yml
 ├── electron.vite.config.ts
 ├── eslint.config.mjs
-├── package.json
 ├── package-lock.json
+├── package.json
+├── PROJECT_STRUCTURE.md
 ├── README.md
 ├── tsconfig.json
 ├── tsconfig.node.json
 └── tsconfig.web.json
 ```
 
-## Source Tree
+## 2. Source Tree
 
 ```text
 src/
 ├── main/
+│   ├── index.ts
 │   ├── db/
 │   │   ├── database.ts
 │   │   ├── migrations/
 │   │   │   └── 001_initial.ts
-│   │   └── queries/
-│   ├── ipc/
-│   │   ├── ai.ipc.ts
-│   │   ├── config.ipc.ts
-│   │   ├── goals.ipc.ts
-│   │   ├── planning.ipc.ts
-│   │   ├── reports.ipc.ts
-│   │   └── tasks.ipc.ts
-│   └── index.ts
+│   │   └── queries/                    (empty)
+│   └── ipc/
+│       ├── ai.ipc.ts
+│       ├── config.ipc.ts
+│       ├── goals.ipc.ts
+│       ├── planning.ipc.ts
+│       ├── reports.ipc.ts
+│       ├── tasks.ipc.ts
+│       └── team.ipc.ts
 ├── overlay/
 │   ├── index.html
 │   └── src/
@@ -51,159 +59,117 @@ src/
 │   └── index.ts
 ├── renderer/
 │   ├── index.html
+│   ├── overlay.html
 │   └── src/
 │       ├── App.tsx
-│       ├── assets/
-│       │   ├── base.css
-│       │   ├── electron.svg
-│       │   ├── main.css
-│       │   └── wavy-lines.svg
-│       ├── components/
-│       │   └── Versions.tsx
-│       ├── hooks/
-│       ├── overlay/
-│       │   └── Overlay.tsx
-│       ├── pages/
-│       │   ├── DailyReport.tsx
-│       │   ├── Goals.tsx
-│       │   ├── MonthlyPlan.tsx
-│       │   ├── Setup.tsx
-│       │   ├── Today.tsx
-│       │   └── WeeklyReport.tsx
 │       ├── env.d.ts
 │       ├── main.tsx
-│       └── overlay-main.tsx
+│       ├── overlay-main.tsx
+│       ├── assets/
+│       │   ├── base.css
+│       │   └── main.css
+│       ├── components/
+│       │   ├── Sidebar.tsx
+│       │   ├── Toast.tsx
+│       │   └── Versions.tsx
+│       ├── hooks/                      (empty)
+│       ├── overlay/
+│       │   └── Overlay.tsx
+│       └── pages/
+│           ├── Analytics.tsx
+│           ├── DailyReport.tsx
+│           ├── Goals.tsx
+│           ├── MonthlyPlan.tsx
+│           ├── Setup.tsx
+│           ├── Team.tsx
+│           ├── Today.tsx
+│           ├── WeeklyReport.tsx
+│           └── YearlyReport.tsx
 └── shared/
     ├── constants.ts
     └── types/
         └── index.ts
 ```
 
-## File Responsibilities
+## 3. File Responsibilities
 
-| Path                                       | Responsibility                                                                                      | Current status                      |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| `src/main/index.ts`                        | Electron app bootstrap, main window, tray, overlay window, report capture IPC, hourly notifications | Active                              |
-| `src/main/db/database.ts`                  | Opens SQLite DB and runs initial migration                                                          | Active                              |
-| `src/main/db/migrations/001_initial.ts`    | Creates all core tables                                                                             | Active                              |
-| `src/main/db/queries/`                     | Intended query layer                                                                                | Empty                               |
-| `src/main/ipc/config.ipc.ts`               | Save/load configuration                                                                             | Active                              |
-| `src/main/ipc/ai.ipc.ts`                   | AI provider requests and AI-backed business logic                                                   | Active                              |
-| `src/main/ipc/goals.ipc.ts`                | Goal and subgoal persistence                                                                        | Active                              |
-| `src/main/ipc/tasks.ipc.ts`                | Task CRUD-like flows, locking, carry-over, end-of-day logging                                       | Active                              |
-| `src/main/ipc/reports.ipc.ts`              | Weekly report query and behavior-flag detection                                                     | Active                              |
-| `src/main/ipc/planning.ipc.ts`             | Future monthly planning IPC                                                                         | Empty                               |
-| `src/preload/index.ts`                     | Secure renderer bridge via `window.api`                                                             | Active                              |
-| `src/preload/index.d.ts`                   | Type definitions for `window.api`                                                                   | Active                              |
-| `src/renderer/index.html`                  | Main renderer shell HTML                                                                            | Active                              |
-| `src/renderer/src/main.tsx`                | Main renderer entry                                                                                 | Active                              |
-| `src/renderer/src/App.tsx`                 | Route registration and startup redirect logic                                                       | Active                              |
-| `src/renderer/src/pages/Setup.tsx`         | First-run configuration UI                                                                          | Active                              |
-| `src/renderer/src/pages/Goals.tsx`         | Monthly goals and subgoal review flow                                                               | Active                              |
-| `src/renderer/src/pages/Today.tsx`         | Daily execution workflow                                                                            | Active                              |
-| `src/renderer/src/pages/DailyReport.tsx`   | Daily summary view and image export                                                                 | Active                              |
-| `src/renderer/src/pages/WeeklyReport.tsx`  | Weekly summary UI from `day_logs`                                                                   | Partially active                    |
-| `src/renderer/src/pages/MonthlyPlan.tsx`   | Monthly planning page                                                                               | Placeholder                         |
-| `src/renderer/src/assets/base.css`         | Base variables and resets                                                                           | Active                              |
-| `src/renderer/src/assets/main.css`         | Tailwind import, shared styling, overlay drag rules, capture-mode CSS                               | Active                              |
-| `src/renderer/src/components/Versions.tsx` | Electron starter scaffold component                                                                 | Legacy / unused                     |
-| `src/renderer/src/hooks/`                  | Intended renderer hooks folder                                                                      | Empty                               |
-| `src/renderer/src/overlay-main.tsx`        | Active overlay renderer entry                                                                       | Active                              |
-| `src/renderer/src/overlay/Overlay.tsx`     | Active overlay UI                                                                                   | Active                              |
-| `src/overlay/index.html`                   | Secondary overlay HTML shell                                                                        | Present but not primary active path |
-| `src/overlay/src/main.tsx`                 | Secondary overlay entry                                                                             | Present but not primary active path |
-| `src/overlay/src/Overlay.tsx`              | Secondary overlay component copy                                                                    | Present but not primary active path |
-| `src/shared/constants.ts`                  | Shared execution constants                                                                          | Present                             |
-| `src/shared/types/index.ts`                | Shared domain types                                                                                 | Active                              |
+| Path | Responsibility | Status |
+|---|---|---|
+| `src/main/index.ts` | Electron bootstrap, window/tray lifecycle, IPC registration, overlay wiring | Active |
+| `src/main/db/database.ts` | SQLite initialization, migrations execution, DB lifecycle management | Active |
+| `src/main/db/migrations/001_initial.ts` | Creates initial schema/tables/indexes | Active |
+| `src/main/ipc/ai.ipc.ts` | AI-provider orchestration and AI-related IPC handlers | Active |
+| `src/main/ipc/config.ipc.ts` | App config get/save IPC handlers | Active |
+| `src/main/ipc/goals.ipc.ts` | Goals and subgoals IPC CRUD/validation operations | Active |
+| `src/main/ipc/planning.ipc.ts` | Reserved planning IPC module (no implementation) | Empty |
+| `src/main/ipc/reports.ipc.ts` | Daily/weekly/yearly/analytics reporting queries + behavior patterns | Active |
+| `src/main/ipc/tasks.ipc.ts` | Day plan + task lifecycle IPC (generate, lock, complete, carry, drop, EOD) | Active |
+| `src/main/ipc/team.ipc.ts` | Team members/tasks/followups IPC handlers | Active |
+| `src/overlay/index.html` | Secondary overlay HTML shell (older path) | Legacy |
+| `src/overlay/src/main.tsx` | Secondary overlay React entrypoint | Legacy |
+| `src/overlay/src/Overlay.tsx` | Secondary overlay UI component | Legacy |
+| `src/preload/index.d.ts` | Type declarations for exposed `window.api` preload contract | Active |
+| `src/preload/index.ts` | `contextBridge` API surface exposed to renderer and overlay | Active |
+| `src/renderer/index.html` | Main renderer HTML entry document | Active |
+| `src/renderer/overlay.html` | Active overlay HTML entry document | Active |
+| `src/renderer/src/App.tsx` | Main route map and startup redirects | Active |
+| `src/renderer/src/env.d.ts` | Vite/Electron ambient renderer typings | Active |
+| `src/renderer/src/main.tsx` | Main renderer React bootstrap (`HashRouter`, providers) | Active |
+| `src/renderer/src/overlay-main.tsx` | Active overlay React bootstrap | Active |
+| `src/renderer/src/assets/base.css` | Base tokens/reset/foundation styles | Active |
+| `src/renderer/src/assets/main.css` | Global app styles and mode-specific overrides | Active |
+| `src/renderer/src/components/Sidebar.tsx` | App left navigation/sidebar UI | Active |
+| `src/renderer/src/components/Toast.tsx` | Toast context/provider + notification rendering | Active |
+| `src/renderer/src/components/Versions.tsx` | Version display widget (not wired into current app UI) | Placeholder |
+| `src/renderer/src/overlay/Overlay.tsx` | Active overlay task/status widget UI | Active |
+| `src/renderer/src/pages/Analytics.tsx` | Analytics and trend page | Active |
+| `src/renderer/src/pages/DailyReport.tsx` | Daily report page with image export | Active |
+| `src/renderer/src/pages/Goals.tsx` | Monthly goal setup and subgoal workflows | Active |
+| `src/renderer/src/pages/MonthlyPlan.tsx` | Monthly plan page | Active |
+| `src/renderer/src/pages/Setup.tsx` | First-run setup page (provider/API configuration) | Active |
+| `src/renderer/src/pages/Team.tsx` | Team assignment and follow-up management page | Active |
+| `src/renderer/src/pages/Today.tsx` | Core daily execution flow page | Active |
+| `src/renderer/src/pages/WeeklyReport.tsx` | Weekly report page | Active |
+| `src/renderer/src/pages/YearlyReport.tsx` | Yearly report page | Active |
+| `src/shared/constants.ts` | Cross-process constants | Active |
+| `src/shared/types/index.ts` | Cross-process domain/type definitions | Active |
 
-## Functional Grouping
+## 4. Route Map
 
-### App shell and platform
+| Route | Page File | Status |
+|---|---|---|
+| `/` | `src/renderer/src/App.tsx` (runtime redirect to start path) | Active |
+| `/setup` | `src/renderer/src/pages/Setup.tsx` | Active |
+| `/goals` | `src/renderer/src/pages/Goals.tsx` | Active |
+| `/plan` | `src/renderer/src/pages/MonthlyPlan.tsx` | Active |
+| `/today` | `src/renderer/src/pages/Today.tsx` | Active |
+| `/report/daily` | `src/renderer/src/pages/DailyReport.tsx` | Active |
+| `/report/weekly` | `src/renderer/src/pages/WeeklyReport.tsx` | Active |
+| `/report/yearly` | `src/renderer/src/pages/YearlyReport.tsx` | Active |
+| `/analytics` | `src/renderer/src/pages/Analytics.tsx` | Active |
+| `/team` | `src/renderer/src/pages/Team.tsx` | Active |
 
-- `src/main/index.ts`
-- `src/preload/index.ts`
-- `src/preload/index.d.ts`
-- `electron.vite.config.ts`
-- `electron-builder.yml`
+## 5. IPC Surface
 
-### Persistence
+| Namespace | Handlers |
+|---|---|
+| `config` | `save`, `get` |
+| `goals` | `save`, `get`, `updateValidation` |
+| `subgoals` | `save`, `getByGoal`, `delete`, `update` |
+| `ai` | `validateGoal`, `generateSubgoals`, `generateDailyTasks`, `endOfDayFeedback`, `suggestGoalFix`, `generateAnalyticsInsight` |
+| `tasks` | `getByDate`, `getDayPlan`, `saveDayPlan`, `saveTasks`, `lockDayPlan`, `completeTask`, `uncompleteTask`, `getMissed`, `markMissed`, `carryOver`, `drop`, `getCarryOverCount`, `endOfDay` |
+| `reports` | `week`, `dayLog`, `year`, `analytics` |
+| `team` | `getMembers`, `addMember`, `removeMember`, `getTasks`, `getAllTasks`, `addTask`, `updateTaskStatus`, `addNote`, `getFollowups`, `addFollowup`, `completeFollowup`, `getOverdue` |
+| `overlay` | `openMain`, `hide` |
+| `electronAPI` | `captureReport` |
 
-- `src/main/db/database.ts`
-- `src/main/db/migrations/001_initial.ts`
-- `src/shared/types/index.ts`
+## 6. Known Structural Debt
 
-### AI and planning logic
-
-- `src/main/ipc/ai.ipc.ts`
-- `src/main/ipc/goals.ipc.ts`
-- `src/main/ipc/tasks.ipc.ts`
-- `src/main/ipc/reports.ipc.ts`
-- `src/shared/constants.ts`
-
-### Main product UI
-
-- `src/renderer/src/pages/Setup.tsx`
-- `src/renderer/src/pages/Goals.tsx`
-- `src/renderer/src/pages/Today.tsx`
-- `src/renderer/src/pages/DailyReport.tsx`
-- `src/renderer/src/pages/WeeklyReport.tsx`
-
-### Overlay UI
-
-- `src/renderer/src/overlay-main.tsx`
-- `src/renderer/src/overlay/Overlay.tsx`
-
-## Route Map
-
-| Route            | Source file                               | Status      |
-| ---------------- | ----------------------------------------- | ----------- |
-| `/`              | `src/renderer/src/App.tsx` redirect logic | Active      |
-| `/setup`         | `src/renderer/src/pages/Setup.tsx`        | Active      |
-| `/goals`         | `src/renderer/src/pages/Goals.tsx`        | Active      |
-| `/today`         | `src/renderer/src/pages/Today.tsx`        | Active      |
-| `/report/daily`  | `src/renderer/src/pages/DailyReport.tsx`  | Active      |
-| `/report/weekly` | `src/renderer/src/pages/WeeklyReport.tsx` | Partial     |
-| `/plan`          | `src/renderer/src/pages/MonthlyPlan.tsx`  | Placeholder |
-
-## IPC Surface Exposed To Renderer
-
-Renderer-accessible namespaces from `window.api`:
-
-- `config`
-- `goals`
-- `subgoals`
-- `ai`
-- `tasks`
-- `reports`
-- `overlay`
-- `electronAPI`
-
-Notable mismatch:
-
-- `tasks:end-of-day` exists in the main process but is not exposed in preload, so renderer code cannot currently trigger the end-of-day pipeline.
-
-## Daily Report Export Files
-
-The image export feature currently spans these files:
-
-- `src/renderer/src/pages/DailyReport.tsx`
-- `src/renderer/src/assets/main.css`
-- `src/preload/index.ts`
-- `src/preload/index.d.ts`
-- `src/main/index.ts`
-
-Current flow:
-
-1. Mark body with `capture-mode`.
-2. Keep only `[data-report-capture='daily-report']` visible.
-3. Call Electron IPC `capture-report`.
-4. Capture the focused window into PNG.
-5. Download the base64 PNG in the renderer.
-
-## Known Structural Debt
-
-1. Duplicate overlay source exists in both `src/overlay/` and `src/renderer/src/overlay/`.
-2. `src/main/db/queries/` is empty although the README rules mention it.
-3. `src/renderer/src/hooks/` is empty.
-4. `src/main/ipc/planning.ipc.ts` is empty.
-5. `src/renderer/src/components/Versions.tsx` remains from the starter template.
+- `src/main/ipc/planning.ipc.ts` exists but is empty.
+- `src/main/db/queries/` exists but is empty.
+- `src/renderer/src/hooks/` exists but is empty.
+- Duplicate overlay implementations exist:
+  - Active path: `src/renderer/overlay.html` + `src/renderer/src/overlay-main.tsx` + `src/renderer/src/overlay/Overlay.tsx`
+  - Legacy path: `src/overlay/index.html` + `src/overlay/src/main.tsx` + `src/overlay/src/Overlay.tsx`
+  - Action: delete the entire `src/overlay/` directory — it is not loaded by any active code path
+- `src/renderer/src/components/Versions.tsx` appears to be a placeholder/unused component.

@@ -9,3 +9,17 @@ out
 
 .claude/
 *.zip
+
+# Build artifacts
+dist/
+out/
+
+# AI tool artifacts
+.claude/
+.code-review-graph/
+
+# Environment
+.env
+
+# Temporary files
+*.zip
