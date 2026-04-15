@@ -84,15 +84,17 @@ function createMainWindow(): BrowserWindow {
 
 function createOverlayWindow(): BrowserWindow {
   const win = new BrowserWindow({
-    width: 280,
-    height: 380,
+    width: 300,
+    height: 520,
+    minHeight: 200,
+    maxHeight: 900,
     x: 20,
     y: 20,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
     movable: true,
-    resizable: false,
+    resizable: true,
     skipTaskbar: true,
     show: false,
     icon: getAppIconPath(),

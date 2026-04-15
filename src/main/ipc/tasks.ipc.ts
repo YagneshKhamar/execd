@@ -126,6 +126,17 @@ export function registerTasksHandlers(): void {
     return { success: true }
   })
 
+  ipcMain.handle('tasks:uncomplete', (_event, taskId: string) => {
+    const db = getDatabase()
+    db.prepare(
+      `
+    UPDATE tasks SET status = 'pending', proof_value = null, completed_at = null
+    WHERE id = ?
+  `,
+    ).run(taskId)
+    return { success: true }
+  })
+
   ipcMain.handle('tasks:get-missed', (_event, date: string) => {
     const db = getDatabase()
     return db

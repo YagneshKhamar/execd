@@ -45,6 +45,7 @@ export interface IElectronAPI {
     saveTasks: (tasks: unknown) => Promise<{ success: boolean }>
     lockDayPlan: (date: string) => Promise<{ success: boolean }>
     completeTask: (id: string, proof: string | null) => Promise<{ success: boolean }>
+    uncompleteTask: (id: string) => Promise<{ success: boolean }>
     getMissed: (date: string) => Promise<unknown[]>
     markMissed: (date: string) => Promise<{ success: boolean }>
     carryOver: (taskId: string, toDate: string) => Promise<{ success: boolean; newTaskId?: string }>
@@ -139,7 +140,7 @@ export interface IElectronAPI {
     hide: () => Promise<void>
   }
   electronAPI: {
-    captureReport: () => Promise<string>
+    captureReport: (rect?: { x: number; y: number; width: number; height: number }) => Promise<string>
   }
 }
 

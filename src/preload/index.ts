@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('api', {
     lockDayPlan: (date: string) => ipcRenderer.invoke('tasks:lock-day-plan', date),
     completeTask: (id: string, proof: string | null) =>
       ipcRenderer.invoke('tasks:complete', id, proof),
+    uncompleteTask: (id: string) => ipcRenderer.invoke('tasks:uncomplete', id),
     getMissed: (date: string) => ipcRenderer.invoke('tasks:get-missed', date),
     markMissed: (date: string) => ipcRenderer.invoke('tasks:mark-missed', date),
     carryOver: (taskId: string, toDate: string) =>
@@ -73,6 +74,6 @@ contextBridge.exposeInMainWorld('api', {
     hide: () => ipcRenderer.invoke('overlay:hide'),
   },
   electronAPI: {
-    captureReport: () => ipcRenderer.invoke('capture-report'),
+    captureReport: (rect?: unknown) => ipcRenderer.invoke('capture-report', rect),
   },
 })

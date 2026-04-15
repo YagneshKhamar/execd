@@ -16,12 +16,6 @@ function getToday(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function getTomorrow(): string {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().slice(0, 10)
-}
-
 function formatDate(iso: string): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'long',
@@ -34,7 +28,6 @@ function formatDate(iso: string): string {
 export default function DailyReport(): React.JSX.Element {
   const reportRef = useRef<HTMLDivElement>(null)
   const [todayTasks, setTodayTasks] = useState<Task[]>([])
-  const [tomorrowTasks, setTomorrowTasks] = useState<Task[]>([])
   const [dayLog, setDayLog] = useState<{
     execution_score: number
     ai_feedback: string
@@ -47,13 +40,11 @@ export default function DailyReport(): React.JSX.Element {
 
   useEffect(() => {
     async function load(): Promise<void> {
-      const [today, tomorrow, log] = await Promise.all([
+      const [today, log] = await Promise.all([
         window.api.tasks.getByDate(getToday()) as Promise<Task[]>,
-        window.api.tasks.getByDate(getTomorrow()) as Promise<Task[]>,
         window.api.reports.dayLog(getToday()),
       ])
       setTodayTasks(today)
-      setTomorrowTasks(tomorrow)
       setDayLog(log)
       setLoading(false)
     }
@@ -73,16 +64,20 @@ export default function DailyReport(): React.JSX.Element {
     try {
       setSaving(true)
 
-      // 1. Enable isolate mode
       document.body.classList.add('capture-mode')
-
-      // 2. Wait for DOM update (important)
+      await new Promise((r) => setTimeout(r, 150))
+      await new Promise((r) => requestAnimationFrame(r))
       await new Promise((r) => requestAnimationFrame(r))
 
-      // 3. Capture FULL window (no rect)
-      const base64 = await window.api.electronAPI.captureReport()
+      const rect = reportRef.current.getBoundingClientRect()
 
-      // 4. Download
+      const base64 = await window.api.electronAPI.captureReport({
+        x: Math.floor(rect.left),
+        y: Math.floor(rect.top),
+        width: Math.ceil(rect.width),
+        height: Math.ceil(reportRef.current.scrollHeight),
+      })
+
       const link = document.createElement('a')
       link.download = `daily-report-${getToday()}.png`
       link.href = `data:image/png;base64,${base64}`
@@ -92,7 +87,6 @@ export default function DailyReport(): React.JSX.Element {
       console.error('Failed to capture report:', captureError)
       error('Failed to capture report image.')
     } finally {
-      // 5. Always cleanup
       document.body.classList.remove('capture-mode')
       setSaving(false)
     }
@@ -139,35 +133,88 @@ export default function DailyReport(): React.JSX.Element {
   }
 
   return (
-    <div className="h-screen w-screen overflow-y-auto bg-[var(--bg-base)]">
-      <div ref={reportRef} data-report-capture="daily-report" className="max-w-2xl px-8 py-8">
-        <div className="mb-6">
-          <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-1">
-            DAILY REPORT
-          </p>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">
-            {formatDate(getToday())}
-          </h1>
-        </div>
-
-        <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-6 mb-6">
-          <div
-            className={`font-mono text-6xl font-semibold leading-none ${
-              score >= 80
-                ? 'text-[var(--accent-green)]'
-                : score >= 50
-                  ? 'text-[var(--accent-yellow)]'
-                  : 'text-[var(--accent-red)]'
-            }`}
-          >
-            {score}%
+    <div className="h-screen w-full overflow-y-auto bg-[var(--bg-base)]">
+      {/* Save button — outside capture area, always visible at top */}
+      <div className="w-full px-6 pt-5 pb-4 flex items-center gap-4" data-hide-on-capture>
+        <div className="flex items-end gap-4">
+          <div>
+            <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase mb-1">
+              Daily Report
+            </p>
+            <h1 className="text-lg font-semibold text-[var(--text-primary)]">
+              {formatDate(getToday())}
+            </h1>
           </div>
-          <p className="font-mono text-sm text-[var(--text-muted)] mt-1">
-            {completedWeight} / {totalWeight} weight
-          </p>
-          <div className="h-0.5 bg-[var(--border-default)] rounded mt-4">
+          <button
+            onClick={handleSaveImage}
+            disabled={saving}
+            className="flex items-center gap-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors mb-0.5"
+          >
+            <Download className="w-4 h-4" />
+            {saving ? 'Saving...' : 'Save as Image'}
+          </button>
+        </div>
+      </div>
+
+      {/* CAPTURE AREA — everything below save button */}
+      <div
+        ref={reportRef}
+        data-report-capture="daily-report"
+        className="w-full px-6 pb-8 bg-[var(--bg-base)]"
+      >
+        {/* Score card — full width */}
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-5">
+          <div className="flex items-start gap-8 flex-wrap mb-4">
+            <div>
+              <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase mb-2">
+                Execution Score
+              </p>
+              <div
+                className={`font-mono text-5xl font-bold leading-none ${
+                  score >= 80
+                    ? 'text-[var(--accent-green)]'
+                    : score >= 50
+                      ? 'text-[var(--accent-yellow)]'
+                      : 'text-[var(--accent-red)]'
+                }`}
+              >
+                {score}%
+              </div>
+              <p className="font-mono text-xs text-[var(--text-muted)] mt-2">
+                {completedWeight} / {totalWeight} weight
+              </p>
+            </div>
+            <div className="flex gap-6 pt-1">
+              {[
+                {
+                  label: 'done',
+                  value: todayTasks.filter((t) => t.status === 'completed').length,
+                  color: 'text-[var(--accent-green)]',
+                },
+                {
+                  label: 'missed',
+                  value: todayTasks.filter((t) => t.status === 'missed').length,
+                  color: 'text-[var(--accent-red)]',
+                },
+                {
+                  label: 'pending',
+                  value: todayTasks.filter((t) => t.status === 'pending').length,
+                  color: 'text-[var(--text-secondary)]',
+                },
+                { label: 'total', value: todayTasks.length, color: 'text-[var(--text-secondary)]' },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="text-center">
+                  <p className={`font-mono text-2xl font-semibold ${color}`}>{value}</p>
+                  <p className="font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-wider mt-1">
+                    {label}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="h-0.5 bg-[var(--border-default)] rounded">
             <div
-              className={`h-full rounded ${
+              className={`h-full rounded transition-all ${
                 score >= 80
                   ? 'bg-[var(--accent-green)]'
                   : score >= 50
@@ -177,35 +224,39 @@ export default function DailyReport(): React.JSX.Element {
               style={{ width: `${score}%` }}
             />
           </div>
+          {dayLog && dayLog.ai_feedback && (
+            <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
+              <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase mb-2">
+                AI Feedback
+              </p>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed italic">
+                {dayLog.ai_feedback}
+              </p>
+            </div>
+          )}
         </div>
 
-        {dayLog && dayLog.ai_feedback && (
-          <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-6">
-            <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-3">
-              AI Feedback
-            </p>
-            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-              {dayLog.ai_feedback}
-            </p>
-          </div>
-        )}
-
-        <section className="mb-6">
-          <h2 className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-3">
-            Today
-          </h2>
-          {todayTasks.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)] py-2">No tasks recorded.</p>
-          ) : (
+        {/* Tasks — two equal columns, NO scroll, full height */}
+        <div className="grid grid-cols-2 gap-5">
+          {/* Left column */}
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase">
+                Today&apos;s Tasks
+              </p>
+              <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                1 - {Math.ceil(todayTasks.length / 2)}
+              </span>
+            </div>
             <div>
-              {todayTasks.map((task) => (
+              {todayTasks.slice(0, Math.ceil(todayTasks.length / 2)).map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-start justify-between gap-4 py-3 border-b border-[var(--border-subtle)]"
+                  className="flex items-start justify-between gap-3 py-2.5 border-b border-[var(--border-subtle)] last:border-0"
                 >
                   <div className="flex-1 min-w-0">
                     <p
-                      className={`text-sm ${
+                      className={`text-sm leading-snug ${
                         task.status === 'completed'
                           ? 'text-[var(--text-muted)] line-through'
                           : task.status === 'missed'
@@ -221,49 +272,78 @@ export default function DailyReport(): React.JSX.Element {
                       </p>
                     )}
                   </div>
-                  <div className="shrink-0">{statusLabel(task.status)}</div>
+                  <div className="shrink-0 flex flex-col items-end gap-1 mt-0.5">
+                    {statusLabel(task.status)}
+                    <span
+                      className={`font-mono text-[9px] ${
+                        task.effort === 'light'
+                          ? 'text-[var(--accent-green)]'
+                          : task.effort === 'medium'
+                            ? 'text-[var(--accent-yellow)]'
+                            : 'text-[var(--accent-red)]'
+                      }`}
+                    >
+                      {task.effort === 'light' ? '30m' : task.effort === 'medium' ? '1h' : '2h'}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
-          )}
-        </section>
+          </div>
 
-        <section>
-          <h2 className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-3">
-            Tomorrow
-          </h2>
-          {tomorrowTasks.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)] py-2">No tasks planned.</p>
-          ) : (
+          {/* Right column */}
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase">
+                Today&apos;s Tasks
+              </p>
+              <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                {Math.ceil(todayTasks.length / 2) + 1} - {todayTasks.length}
+              </span>
+            </div>
             <div>
-              {tomorrowTasks.map((task) => (
+              {todayTasks.slice(Math.ceil(todayTasks.length / 2)).map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-start justify-between gap-4 py-3 border-b border-[var(--border-subtle)]"
+                  className="flex items-start justify-between gap-3 py-2.5 border-b border-[var(--border-subtle)] last:border-0"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[var(--text-primary)]">{task.title}</p>
+                    <p
+                      className={`text-sm leading-snug ${
+                        task.status === 'completed'
+                          ? 'text-[var(--text-muted)] line-through'
+                          : task.status === 'missed'
+                            ? 'text-[var(--text-secondary)]'
+                            : 'text-[var(--text-primary)]'
+                      }`}
+                    >
+                      {task.title}
+                    </p>
                     {task.proof_value && (
                       <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">
                         {task.proof_value}
                       </p>
                     )}
                   </div>
-                  <div className="shrink-0">{statusLabel(task.status)}</div>
+                  <div className="shrink-0 flex flex-col items-end gap-1 mt-0.5">
+                    {statusLabel(task.status)}
+                    <span
+                      className={`font-mono text-[9px] ${
+                        task.effort === 'light'
+                          ? 'text-[var(--accent-green)]'
+                          : task.effort === 'medium'
+                            ? 'text-[var(--accent-yellow)]'
+                            : 'text-[var(--accent-red)]'
+                      }`}
+                    >
+                      {task.effort === 'light' ? '30m' : task.effort === 'medium' ? '1h' : '2h'}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
-          )}
-        </section>
-
-        <button
-          onClick={handleSaveImage}
-          disabled={saving}
-          className="flex items-center gap-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white text-sm font-medium px-5 py-2.5 rounded cursor-pointer transition-colors mt-6"
-        >
-          <Download className="w-4 h-4" />
-          {saving ? 'Saving...' : 'Save as Image'}
-        </button>
+          </div>
+        </div>
       </div>
     </div>
   )

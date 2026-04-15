@@ -32,11 +32,14 @@ body {
   -webkit-app-region: no-drag;
 }
 
-.capture-mode body {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 40px;
+body.capture-mode {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+body.capture-mode #root {
+  overflow: visible !important;
+  height: auto !important;
 }
 
 .capture-mode * {
@@ -46,6 +49,16 @@ body {
 .capture-mode [data-report-capture='daily-report'],
 .capture-mode [data-report-capture='daily-report'] * {
   visibility: visible !important;
+}
+
+.capture-mode [data-hide-on-capture] {
+  display: none !important;
+}
+
+.capture-mode [data-report-capture='daily-report'] .task-scroll {
+  overflow: visible !important;
+  max-height: none !important;
+  padding-right: 0 !important;
 }
 
 ::-webkit-scrollbar {
@@ -59,6 +72,32 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--border-active);
   border-radius: 2px;
+}
+
+.task-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+
+.task-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.task-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-active);
+  border-radius: 2px;
+}
+
+.task-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.overlay-scroll::-webkit-scrollbar {
+  width: 2px;
+}
+
+.overlay-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 @keyframes slideIn {
