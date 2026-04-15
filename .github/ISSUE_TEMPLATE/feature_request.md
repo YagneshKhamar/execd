@@ -1,0 +1,13 @@
+---
+name: Feature Request
+about: Suggest a new feature or improvement
+labels: enhancement
+---
+
+**What problem does this solve:**
+
+**Proposed solution:**
+
+**Alternatives you considered:**
+
+**Additional context:**

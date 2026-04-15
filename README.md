@@ -2,6 +2,8 @@
 
 Execution enforcement for founders. Not a task manager.
 
+[![Build](https://github.com/YagneshKhamar/execd/actions/workflows/build.yml/badge.svg)](https://github.com/YagneshKhamar/execd/actions/workflows/build.yml)
+
 `Platform: Windows · macOS · Linux`  
 `Stack: Electron · React · TypeScript · SQLite`  
 `Status: v1.1.0`
@@ -49,7 +51,7 @@ Monthly Goals -> AI Subgoals -> Daily Tasks -> Lock Plan -> Execute with Proof -
 
 ### Daily Report
 
-![Daily Report](screenshots/daily-reports.png)
+![Daily Report](screenshots/daily-report.png)
 
 ### Goals
 
@@ -167,20 +169,6 @@ locally on your machine.
 This feature is designed for founders managing a small team who need
 a lightweight way to delegate and follow up without switching tools.
 
-## macOS Installation
-
-macOS will show "unverified developer" on first launch because the app
-is not notarized with an Apple Developer certificate.
-
-To open it anyway:
-
-1. Right-click the .dmg file → Open
-2. Click "Open" in the dialog that appears
-3. The app will launch and macOS remembers the exception going forward
-
-Or via Terminal:
-xattr -cr /Applications/Execd.app
-
 ## Known Limitations
 
 - API key stored as plaintext — encryption planned for a future release
@@ -188,8 +176,27 @@ xattr -cr /Applications/Execd.app
 - Monthly plan page is read-only
 - No data export or backup yet
 - Auto-update not configured
-- macOS builds are not notarized — see macOS Installation section
 - OpenRouter reasoning models may cause JSON parse errors — see AI Provider Notes
+
+## Roadmap
+
+### v1.2.0
+- [ ] API key encryption via Electron safeStorage
+- [ ] Auto-update UI — check for new releases from inside the app
+- [ ] Analytics empty state handling for new users
+- [ ] Data export to CSV
+
+### v1.3.0
+- [ ] Hosted AI option — no API key needed
+- [ ] Monthly goal editing with confirmation flow
+- [ ] Goal carry-over between months
+
+### Help Wanted
+Good first issues for contributors:
+- Add keyboard shortcuts for common actions (lock plan, complete task)
+- Improve error messages across all pages
+- Add more chart types to Analytics page
+- Write unit tests for IPC handlers
 
 ## Philosophy
 
