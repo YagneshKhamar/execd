@@ -2,9 +2,9 @@
 
 Execution enforcement for founders. Not a task manager.
 
-`Platform: Windows · macOS`  
+`Platform: Windows · macOS · Linux`  
 `Stack: Electron · React · TypeScript · SQLite`  
-`Status: Beta`
+`Status: v1.1.0`
 
 ## What This Is
 
@@ -30,6 +30,12 @@ Monthly Goals -> AI Subgoals -> Daily Tasks -> Lock Plan -> Execute with Proof -
 - Weekly, monthly, and yearly reports — multi-level performance visibility.
 - Analytics with AI pattern diagnosis — charted trends plus AI interpretation.
 - Works with OpenAI, Anthropic, Ollama (local, free), OpenRouter — choose cloud or local models.
+- Team task management — assign tasks to up to 10 team members, track weekly progress, schedule follow-ups.
+- Follow-up notifications — hourly reminders for pending team follow-ups scheduled for today.
+- Manual task adding — add tasks manually for today or tomorrow directly from the dashboard.
+- Configurable daily task limit — set between 5 and 15 tasks per day in settings.
+- Replan once per day — regenerate tasks once if the plan needs adjustment, carry-overs preserved.
+- Dev/prod database separation — development and production use separate SQLite databases automatically.
 
 ## Screenshots
 
@@ -43,6 +49,7 @@ Pre-built installers are available on the [Releases page](../../releases).
 | -------- | ----------------------- |
 | Windows  | `Execd-Setup-x.x.x.exe` |
 | macOS    | `Execd-x.x.x.dmg`       |
+| Linux    | `Execd-x.x.x.AppImage` or `execd_x.x.x_amd64.deb` |
 
 Download the file for your platform, run the installer, and launch Execd.
 No Node.js or technical setup required.
@@ -51,7 +58,7 @@ No Node.js or technical setup required.
 
 ### Prerequisites
 
-- Node.js 20 or higher
+- Node.js 22 or higher
 - npm
 
 ### Start in Development
@@ -69,6 +76,7 @@ npm run dev
 npm run build        # current platform
 npm run build:win    # Windows installer
 npm run build:mac    # macOS DMG
+npm run build:linux  # Linux AppImage + deb
 ```
 
 Output goes to the `dist/` folder.
@@ -87,11 +95,11 @@ Output goes to the `dist/` folder.
 | ------------------------ | -------------------------------- | ------------------------------------------------- |
 | OpenAI (gpt-4o-mini)     | Pay per use (~$0.01/day typical) | API key from platform.openai.com                  |
 | Anthropic (claude-haiku) | Pay per use (~$0.01/day typical) | API key from console.anthropic.com                |
-| Ollama                   | Free, runs locally               | Install from ollama.com, run `ollama pull llama3` |
-| OpenRouter               | Free tier available              | API key from openrouter.ai                        |
+| Ollama                   | Free, runs locally               | Install from ollama.com, pull any model           |
+| OpenRouter               | Free tier available — use non-reasoning models to avoid JSON parse issues (see AI Provider Notes) | API key from openrouter.ai                        |
 
 Recommended for most users: Ollama (free, private, no API key).  
-Recommended if you want best AI quality: OpenAI gpt-4o-mini.
+Recommended if you want best AI quality: OpenAI gpt-4o-mini or Anthropic claude-haiku.
 
 ## Project Structure
 
@@ -127,6 +135,24 @@ If you hit this issue, either:
 - Or add this line to `callAI()` in `src/main/ipc/ai.ipc.ts`:
   `raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()`
 
+## Team Feature
+
+The Team page lets you track task assignments across up to 10 team
+members without requiring separate logins. Everything is tracked
+locally on your machine.
+
+- Add members with name, role, and email
+- Assign tasks with effort level and due date per week
+- Track task status (pending / completed / blocked)
+- Add notes to tasks for context
+- Schedule follow-ups with a date and note
+- Today's follow-ups appear as a reminder banner on the Dashboard
+- Overdue tasks surface automatically in the weekly view
+- Hourly notifications fire when follow-ups are pending for today
+
+This feature is designed for founders managing a small team who need
+a lightweight way to delegate and follow up without switching tools.
+
 ## macOS Installation
 
 macOS will show "unverified developer" on first launch because the app
@@ -140,6 +166,16 @@ To open it anyway:
 
 Or via Terminal:
 xattr -cr /Applications/Execd.app
+
+## Known Limitations
+
+- API key stored as plaintext — encryption planned for a future release
+- Goals cannot be edited once set for the month
+- Monthly plan page is read-only
+- No data export or backup yet
+- Auto-update not configured
+- macOS builds are not notarized — see macOS Installation section
+- OpenRouter reasoning models may cause JSON parse errors — see AI Provider Notes
 
 ## Philosophy
 
