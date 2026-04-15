@@ -39,17 +39,31 @@ Monthly Goals -> AI Subgoals -> Daily Tasks -> Lock Plan -> Execute with Proof -
 
 ## Screenshots
 
-> Screenshots coming soon.
+### Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Overlay
+
+![Overlay](screenshots/overlay.png)
+
+### Daily Report
+
+![Daily Report](screenshots/daily-reports.png)
+
+### Goals
+
+![Goals](screenshots/goals.png)
 
 ## Download
 
 Pre-built installers are available on the [Releases page](../../releases).
 
-| Platform | File                    |
-| -------- | ----------------------- |
-| Windows  | `Execd-Setup-x.x.x.exe` |
-| macOS    | `Execd-x.x.x.dmg`       |
-| Linux    | `Execd-x.x.x.AppImage` or `execd_x.x.x_amd64.deb` |
+| Platform | File                                              |
+| -------- | ------------------------------------------------- |
+| Windows  | `Execd-Setup-1.1.0.exe`                           |
+| macOS    | `Execd-1.1.0.dmg`                                 |
+| Linux    | `Execd-1.1.0.AppImage` or `execd_1.1.0_amd64.deb` |
 
 Download the file for your platform, run the installer, and launch Execd.
 No Node.js or technical setup required.
@@ -91,12 +105,12 @@ Output goes to the `dist/` folder.
 
 ## AI Provider Options
 
-| Provider                 | Cost                             | Setup                                             |
-| ------------------------ | -------------------------------- | ------------------------------------------------- |
-| OpenAI (gpt-4o-mini)     | Pay per use (~$0.01/day typical) | API key from platform.openai.com                  |
-| Anthropic (claude-haiku) | Pay per use (~$0.01/day typical) | API key from console.anthropic.com                |
-| Ollama                   | Free, runs locally               | Install from ollama.com, pull any model           |
-| OpenRouter               | Free tier available — use non-reasoning models to avoid JSON parse issues (see AI Provider Notes) | API key from openrouter.ai                        |
+| Provider                 | Cost                                                                                              | Setup                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| OpenAI (gpt-4o-mini)     | Pay per use (~$0.01/day typical)                                                                  | API key from platform.openai.com        |
+| Anthropic (claude-haiku) | Pay per use (~$0.01/day typical)                                                                  | API key from console.anthropic.com      |
+| Ollama                   | Free, runs locally                                                                                | Install from ollama.com, pull any model |
+| OpenRouter               | Free tier available — use non-reasoning models to avoid JSON parse issues (see AI Provider Notes) | API key from openrouter.ai              |
 
 Recommended for most users: Ollama (free, private, no API key).  
 Recommended if you want best AI quality: OpenAI gpt-4o-mini or Anthropic claude-haiku.
