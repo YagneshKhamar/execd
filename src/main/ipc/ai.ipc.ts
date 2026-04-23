@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, safeStorage } from 'electron'
 import { getDatabase } from '../db/database'
 
 interface GoalValidationResult {
@@ -23,8 +23,19 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
 
   if (!config) throw new Error('No config found. Complete setup first.')
 
-  const apiKey = config.api_key_encrypted
+  const encryptedApiKey = config.api_key_encrypted || ''
+  const apiKeyIsEncrypted = Number(config.api_key_is_encrypted) === 1
+  const shouldDecrypt = apiKeyIsEncrypted && safeStorage.isEncryptionAvailable()
+  const apiKey =
+    shouldDecrypt && encryptedApiKey
+      ? safeStorage.decryptString(Buffer.from(encryptedApiKey, 'base64'))
+      : encryptedApiKey
+
   const provider = config.ai_provider
+
+  if (provider !== 'ollama' && !apiKey) {
+    throw new Error('API key is missing after resolution. Please set it in the config.')
+  }
 
   if (provider === 'openai') {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

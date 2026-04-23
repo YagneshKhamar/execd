@@ -357,4 +357,76 @@ export function registerTasksHandlers(): void {
 
     return { score, feedback, completed: completedTasks, missed: pendingTasks }
   })
+
+  ipcMain.handle(
+    'tasks:get-history',
+    (
+      _event,
+      filters: {
+        month?: string
+        date?: string
+        status?: 'completed' | 'missed' | 'pending' | 'dropped' | 'carried' | 'all'
+      },
+    ) => {
+      const db = getDatabase()
+      const where: string[] = []
+      const params: unknown[] = []
+
+      if (filters.date) {
+        where.push('tasks.scheduled_date = ?')
+        params.push(filters.date)
+      } else if (filters.month) {
+        where.push('tasks.scheduled_date LIKE ?')
+        params.push(`${filters.month}-%`)
+      }
+
+      if (filters.status && filters.status !== 'all') {
+        where.push('tasks.status = ?')
+        params.push(filters.status)
+      }
+
+      const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''
+
+      return db
+        .prepare(
+          `
+          SELECT
+            tasks.id,
+            tasks.title,
+            tasks.effort,
+            tasks.proof_type,
+            tasks.proof_value,
+            tasks.status,
+            tasks.scheduled_date,
+            tasks.scheduled_time_slot,
+            tasks.carry_count,
+            subgoals.title AS subgoal_title,
+            goals.title AS goal_title,
+            tasks.completed_at
+          FROM tasks
+          LEFT JOIN subgoals ON tasks.subgoal_id = subgoals.id
+          LEFT JOIN goals ON subgoals.goal_id = goals.id
+          ${whereClause}
+          ORDER BY tasks.scheduled_date DESC, tasks.created_at DESC
+        `,
+        )
+        .all(...params)
+    },
+  )
+
+  ipcMain.handle('tasks:update-proof', (_event, taskId: string, proof: string) => {
+    const db = getDatabase()
+    const today = new Date().toISOString().slice(0, 10)
+
+    db.prepare('UPDATE tasks SET proof_value = ? WHERE id = ?').run(proof, taskId)
+
+    db.prepare(
+      `
+      INSERT INTO task_logs (id, task_id, date, action, proof_type, proof_value, carry_count_at_time)
+      VALUES (?, ?, ?, 'proof_updated', (SELECT proof_type FROM tasks WHERE id = ?), ?, 0)
+    `,
+    ).run(uuidv4(), taskId, today, taskId, proof)
+
+    return { success: true }
+  })
 }

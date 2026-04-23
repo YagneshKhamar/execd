@@ -31,9 +31,15 @@ const ICONS = {
 }
 
 const STYLES = {
-  error: 'border-[var(--accent-red)]/30 bg-[var(--accent-red)]/5 text-[var(--accent-red)]',
-  success: 'border-[var(--accent-green)]/30 bg-[var(--accent-green)]/5 text-[var(--accent-green)]',
-  info: 'border-[var(--border-default)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]',
+  error: 'border-[var(--accent-red)]/50 bg-[#1a0a0a] text-[var(--accent-red)]',
+  success: 'border-[var(--accent-green)]/50 bg-[#0a1a0a] text-[var(--accent-green)]',
+  info: 'border-[var(--border-active)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]',
+}
+
+const ICON_STYLES = {
+  error: 'text-[var(--accent-red)]',
+  success: 'text-[var(--accent-green)]',
+  info: 'text-[var(--text-primary)]',
 }
 
 function ToastItem({
@@ -49,13 +55,14 @@ function ToastItem({
   }, [item.id, onRemove])
 
   const Icon = ICONS[item.type]
+  const iconStyle = ICON_STYLES[item.type]
 
   return (
     <div
-      className={`flex items-start gap-3 px-4 py-3 rounded border text-sm max-w-sm w-full shadow-lg ${STYLES[item.type]}`}
+      className={`flex items-start gap-3 px-4 py-3 rounded border text-sm max-w-sm w-full shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-sm ${STYLES[item.type]}`}
       style={{ animation: 'slideIn 0.15s ease-out' }}
     >
-      <Icon className="w-4 h-4 mt-0.5 shrink-0" />
+      <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${iconStyle}`} />
       <p
         className="flex-1 leading-snug overflow-hidden"
         style={{
@@ -95,7 +102,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }): Reac
   return (
     <ToastContext.Provider value={{ toast, error, success, info }}>
       {children}
-      <div className="fixed bottom-5 right-5 z-[100] flex flex-col gap-2 items-end">
+      <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 items-end">
         {toasts.map((item) => (
           <ToastItem key={item.id} item={item} onRemove={remove} />
         ))}

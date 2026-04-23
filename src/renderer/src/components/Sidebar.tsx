@@ -4,6 +4,7 @@ import {
   Target,
   CalendarDays,
   Calendar,
+  History,
   FileText,
   BarChart2,
   LineChart as LineChartIcon,
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { icon: FileText, label: 'Daily Report', to: '/report/daily' },
   { icon: BarChart2, label: 'Weekly Report', to: '/report/weekly' },
   { icon: Calendar, label: 'Year Report', to: '/report/yearly' },
+  { icon: History, label: 'History', to: '/history' },
   { icon: LineChartIcon, label: 'Analytics', to: '/analytics' },
   { icon: Users, label: 'Team', to: '/team' },
 ]
