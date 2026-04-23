@@ -312,9 +312,24 @@ app.whenReady().then(() => {
   })
 
   autoUpdater.on('error', (err) => {
+    const message = err.message || ''
+    const isNetworkError = [
+      'net::',
+      'ENOTFOUND',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'ENOENT',
+      'getaddrinfo',
+    ].some((token) => message.includes(token))
+
+    if (isNetworkError) {
+      console.warn('Auto-updater network error (suppressed):', message)
+      return
+    }
+
     mainWindow?.webContents.send('updater:status', {
       status: 'error',
-      message: err.message,
+      message,
     })
   })
 

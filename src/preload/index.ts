@@ -48,6 +48,10 @@ contextBridge.exposeInMainWorld('api', {
     drop: (taskId: string, date: string) => ipcRenderer.invoke('tasks:drop', taskId, date),
     getCarryOverCount: (date: string) => ipcRenderer.invoke('tasks:get-carryover-count', date),
     endOfDay: (date: string) => ipcRenderer.invoke('tasks:end-of-day', date),
+    getHistory: (filters: { month?: string; date?: string; status?: string }) =>
+      ipcRenderer.invoke('tasks:get-history', filters),
+    updateProof: (taskId: string, proof: string) =>
+      ipcRenderer.invoke('tasks:update-proof', taskId, proof),
   },
   reports: {
     week: (endDate: string) => ipcRenderer.invoke('reports:week', endDate),

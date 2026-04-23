@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle, FileText, Users } from 'lucide-react'
 import { useToast } from '../components/Toast'
@@ -67,8 +67,8 @@ export default function Today(): React.JSX.Element {
   const [generating, setGenerating] = useState(false)
   const [locking, setLocking] = useState(false)
   const [completingId, setCompletingId] = useState<string | null>(null)
-  const [proofInput, setProofInput] = useState<Record<string, string>>({})
-  const [showProof, setShowProof] = useState<Record<string, boolean>>({})
+  const [openProofTaskId, setOpenProofTaskId] = useState<string | null>(null)
+  const [proofInputs, setProofInputs] = useState<Record<string, string>>({})
   const [showNotes, setShowNotes] = useState<Record<string, boolean>>({})
   const [notesInput, setNotesInput] = useState<Record<string, string>>({})
   const [savingNotes, setSavingNotes] = useState<string | null>(null)
@@ -312,25 +312,13 @@ export default function Today(): React.JSX.Element {
   }
 
   async function handleComplete(task: Task): Promise<void> {
-    if (task.proof_type !== 'none') {
-      setShowProof((prev) => ({ ...prev, [task.id]: true }))
+    if (task.status === 'completed') {
+      await window.api.tasks.uncompleteTask(task.id)
+      await loadTodayData()
       return
     }
-    await completeTask(task, null)
-  }
-
-  async function handleProofSubmit(task: Task): Promise<void> {
-    const proof = proofInput[task.id]?.trim()
-    if (!proof) {
-      error('Proof is required to complete this task.')
-      return
-    }
-    if (task.proof_type === 'link' && !proof.startsWith('http')) {
-      error('Please enter a valid URL starting with http.')
-      return
-    }
-    await completeTask(task, proof)
-    setShowProof((prev) => ({ ...prev, [task.id]: false }))
+    const proof = proofInputs[task.id]?.trim()
+    await completeTask(task, proof || null)
   }
 
   async function completeTask(task: Task, proof: string | null): Promise<void> {
@@ -674,140 +662,181 @@ export default function Today(): React.JSX.Element {
 
         {tasks.length > 0 && (
           <div className="mb-6">
+            {!isLocked && tasks.length > 0 && (
+              <div className="mb-2 border-l-2 border-[var(--accent-yellow)] bg-[var(--bg-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+                Lock your plan to begin execution
+              </div>
+            )}
             {tasks.map((task) => (
-              <div
-                key={task.id}
-                className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] rounded-xl p-4 mb-2 transition-colors ${
-                  task.status === 'completed' ? 'opacity-50' : ''
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <button
-                    onClick={() => task.status !== 'completed' && handleComplete(task)}
-                    disabled={task.status === 'completed' || completingId === task.id || !isLocked}
-                    className={`mt-0.5 w-4 h-4 rounded-sm border border-[var(--border-default)] flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
-                      task.status === 'completed'
-                        ? 'bg-[var(--accent-green)] text-white'
-                        : 'bg-transparent'
-                    }`}
-                  >
-                    {task.status === 'completed' && (
-                      <span className="text-[10px] leading-none">✓</span>
-                    )}
-                  </button>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-2">
-                      <p
-                        className={`flex-1 text-sm ${
-                          task.status === 'completed'
-                            ? 'text-[var(--text-secondary)] line-through'
-                            : 'text-[var(--text-primary)]'
-                        }`}
-                      >
-                        {task.title}
-                      </p>
-                      <span className={`${EFFORT_COLORS[task.effort]} shrink-0`}>
-                        {EFFORT_LABELS[task.effort]}
-                      </span>
-                      <span className="text-xs text-[var(--text-secondary)] capitalize shrink-0">
-                        {task.scheduled_time_slot}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {task.carry_count > 0 && (
-                        <span className="font-mono text-[10px] text-[var(--accent-orange)]">
-                          ×{task.carry_count} carried
-                        </span>
-                      )}
-                    </div>
-
+              <Fragment key={task.id}>
+                <div
+                  className={`bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-default)] rounded-xl p-4 mb-2 transition-colors ${
+                    task.status === 'completed' ? 'opacity-50' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
                     <button
-                      onClick={() =>
-                        setShowNotes((prev) => ({
-                          ...prev,
-                          [task.id]: !prev[task.id],
-                        }))
+                      onClick={() => handleComplete(task)}
+                      disabled={completingId === task.id || !isLocked}
+                      title={
+                        !isLocked ? 'Lock your plan first to start completing tasks' : undefined
                       }
-                      className={`flex items-center gap-1 text-[10px] font-mono cursor-pointer transition-colors mt-1.5 ${
-                        task.notes
-                          ? 'text-[var(--accent-blue)]'
-                          : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                      className={`mt-0.5 w-4 h-4 rounded-sm border border-[var(--border-default)] flex items-center justify-center shrink-0 transition-colors ${
+                        task.status === 'completed'
+                          ? 'bg-[var(--accent-green)] text-white'
+                          : 'bg-transparent'
+                      } ${!isLocked ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${
+                        completingId === task.id ? 'cursor-not-allowed opacity-40' : ''
                       }`}
                     >
-                      <FileText className="w-3 h-3" />
-                      {task.notes ? 'notes' : 'add note'}
+                      {task.status === 'completed' && (
+                        <span className="text-[10px] leading-none">✓</span>
+                      )}
                     </button>
 
-                    {showNotes[task.id] && (
-                      <div className="mt-2">
-                        <textarea
-                          value={notesInput[task.id] || ''}
-                          onChange={(e) =>
-                            setNotesInput((prev) => ({ ...prev, [task.id]: e.target.value }))
-                          }
-                          placeholder="Add notes, links, context..."
-                          rows={3}
-                          className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none resize-none transition-colors font-mono"
-                        />
-                        <button
-                          onClick={async () => {
-                            setSavingNotes(task.id)
-                            await window.api.tasks.updateNotes(task.id, notesInput[task.id] || '')
-                            await loadTodayData()
-                            setSavingNotes(null)
-                          }}
-                          disabled={savingNotes === task.id}
-                          className="mt-1.5 text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white px-3 py-1 rounded cursor-pointer transition-colors"
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-2">
+                        <p
+                          className={`flex-1 text-sm ${
+                            task.status === 'completed'
+                              ? 'text-[var(--text-secondary)] line-through'
+                              : 'text-[var(--text-primary)]'
+                          }`}
                         >
-                          {savingNotes === task.id ? 'Saving...' : 'Save'}
-                        </button>
+                          {task.title}
+                        </p>
+                        <span className={`${EFFORT_COLORS[task.effort]} shrink-0`}>
+                          {EFFORT_LABELS[task.effort]}
+                        </span>
+                        <span className="text-xs text-[var(--text-secondary)] capitalize shrink-0">
+                          {task.scheduled_time_slot}
+                        </span>
+                        {task.proof_type !== 'none' && (
+                          <button
+                            onClick={() =>
+                              setOpenProofTaskId((prev) => (prev === task.id ? null : task.id))
+                            }
+                            title={task.proof_value ? 'View proof' : 'Add proof'}
+                            className={`shrink-0 cursor-pointer transition-colors ${
+                              task.proof_value
+                                ? 'text-[var(--accent-blue)]/70'
+                                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                            }`}
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
-                    )}
 
-                    {task.notes && !showNotes[task.id] && (
-                      <p className="text-[10px] text-[var(--text-muted)] font-mono mt-1 truncate max-w-xs">
-                        {task.notes}
-                      </p>
-                    )}
-
-                    {isLocked && task.status === 'pending' && task.proof_type !== 'none' && (
-                      <p className="text-xs text-[var(--text-muted)] mt-1">
-                        {task.proof_type === 'link' ? 'requires link' : 'requires comment'}
-                      </p>
-                    )}
-
-                    {task.status === 'completed' && task.proof_value && (
-                      <p className="text-xs text-[var(--text-muted)] mt-1.5 truncate">
-                        {task.proof_value}
-                      </p>
-                    )}
-
-                    {showProof[task.id] && task.status !== 'completed' && (
-                      <div className="mt-3 space-y-2">
-                        <input
-                          type={task.proof_type === 'link' ? 'url' : 'text'}
-                          placeholder={
-                            task.proof_type === 'link' ? 'https://...' : 'Describe what you did...'
-                          }
-                          value={proofInput[task.id] || ''}
-                          onChange={(e) =>
-                            setProofInput((prev) => ({ ...prev, [task.id]: e.target.value }))
-                          }
-                          className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
-                        />
-                        <button
-                          onClick={() => handleProofSubmit(task)}
-                          className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white text-xs font-medium px-4 py-1.5 rounded cursor-pointer transition-colors"
-                        >
-                          Mark Complete
-                        </button>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        {task.carry_count > 0 && (
+                          <span className="font-mono text-[10px] text-[var(--accent-orange)]">
+                            ×{task.carry_count} carried
+                          </span>
+                        )}
                       </div>
-                    )}
+
+                      <button
+                        onClick={() =>
+                          setShowNotes((prev) => ({
+                            ...prev,
+                            [task.id]: !prev[task.id],
+                          }))
+                        }
+                        className={`flex items-center gap-1 text-[10px] font-mono cursor-pointer transition-colors mt-1.5 ${
+                          task.notes
+                            ? 'text-[var(--accent-blue)]'
+                            : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        <FileText className="w-3 h-3" />
+                        {task.notes ? 'notes' : 'add note'}
+                      </button>
+
+                      {showNotes[task.id] && (
+                        <div className="mt-2">
+                          <textarea
+                            value={notesInput[task.id] || ''}
+                            onChange={(e) =>
+                              setNotesInput((prev) => ({ ...prev, [task.id]: e.target.value }))
+                            }
+                            placeholder="Add notes, links, context..."
+                            rows={3}
+                            className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none resize-none transition-colors font-mono"
+                          />
+                          <button
+                            onClick={async () => {
+                              setSavingNotes(task.id)
+                              await window.api.tasks.updateNotes(task.id, notesInput[task.id] || '')
+                              await loadTodayData()
+                              setSavingNotes(null)
+                            }}
+                            disabled={savingNotes === task.id}
+                            className="mt-1.5 text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white px-3 py-1 rounded cursor-pointer transition-colors"
+                          >
+                            {savingNotes === task.id ? 'Saving...' : 'Save'}
+                          </button>
+                        </div>
+                      )}
+
+                      {task.notes && !showNotes[task.id] && (
+                        <p className="text-[10px] text-[var(--text-muted)] font-mono mt-1 truncate max-w-xs">
+                          {task.notes}
+                        </p>
+                      )}
+
+                      {isLocked && task.status === 'pending' && task.proof_type !== 'none' && (
+                        <p className="text-xs text-[var(--text-muted)] mt-1">
+                          {task.proof_type === 'link' ? 'requires link' : 'requires comment'}
+                        </p>
+                      )}
+
+                      {task.status === 'completed' && task.proof_value && (
+                        <p className="text-xs text-[var(--text-muted)] mt-1.5 truncate">
+                          {task.proof_value}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+                {openProofTaskId === task.id && task.proof_type !== 'none' && (
+                  <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 mb-2">
+                    <p className="text-xs text-[var(--text-muted)] mb-1.5">Proof (optional)</p>
+                    {task.proof_type === 'link' ? (
+                      <input
+                        type="text"
+                        placeholder="Paste link..."
+                        value={proofInputs[task.id] ?? task.proof_value ?? ''}
+                        onChange={(e) =>
+                          setProofInputs((prev) => ({ ...prev, [task.id]: e.target.value }))
+                        }
+                        className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none transition-colors font-mono"
+                      />
+                    ) : (
+                      <textarea
+                        rows={2}
+                        placeholder="Add note..."
+                        value={proofInputs[task.id] ?? task.proof_value ?? ''}
+                        onChange={(e) =>
+                          setProofInputs((prev) => ({ ...prev, [task.id]: e.target.value }))
+                        }
+                        className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none resize-none transition-colors font-mono"
+                      />
+                    )}
+                    <button
+                      onClick={async () => {
+                        const proof = proofInputs[task.id] ?? task.proof_value ?? ''
+                        await window.api.tasks.updateProof(task.id, proof)
+                        await loadTodayData()
+                        setOpenProofTaskId(null)
+                      }}
+                      className="mt-1.5 text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white px-3 py-1 rounded cursor-pointer transition-colors"
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
+              </Fragment>
             ))}
           </div>
         )}

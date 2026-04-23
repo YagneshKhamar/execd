@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, ExternalLink, FileText } from 'lucide-react'
+import { ChevronDown, ExternalLink, FileText, Paperclip } from 'lucide-react'
 
 interface Task {
   id: string
@@ -7,6 +7,7 @@ interface Task {
   effort: 'light' | 'medium' | 'heavy'
   status: 'pending' | 'completed' | 'carried' | 'dropped' | 'missed'
   proof_type: 'none' | 'comment' | 'link'
+  proof_value: string | null
   carry_count: number
   notes: string
 }
@@ -20,6 +21,8 @@ export default function Overlay(): React.JSX.Element {
   const [loading, setLoading] = useState(true)
   const [completingId, setCompletingId] = useState<string | null>(null)
   const [expandedNote, setExpandedNote] = useState<string | null>(null)
+  const [openProofTaskId, setOpenProofTaskId] = useState<string | null>(null)
+  const [proofInputs, setProofInputs] = useState<Record<string, string>>({})
   const [noteInput, setNoteInput] = useState<Record<string, string>>({})
   const [savingNote, setSavingNote] = useState<string | null>(null)
 
@@ -46,12 +49,6 @@ export default function Overlay(): React.JSX.Element {
   }
 
   async function handleTaskClick(task: Task): Promise<void> {
-    // Tasks requiring proof — open main app
-    if (task.proof_type !== 'none' && task.status !== 'completed') {
-      window.api.overlay.openMain()
-      return
-    }
-
     setCompletingId(task.id)
     try {
       if (task.status === 'completed') {
@@ -132,7 +129,10 @@ export default function Overlay(): React.JSX.Element {
                   }`}
                 >
                   <button
-                    onClick={() => handleTaskClick(task)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleTaskClick(task)
+                    }}
                     disabled={completingId === task.id}
                     className={`mt-0.5 w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-all cursor-pointer ${
                       task.status === 'completed'
@@ -159,9 +159,6 @@ export default function Overlay(): React.JSX.Element {
                       <span className="font-mono text-[10px] text-white/25">
                         {task.effort === 'light' ? 'L' : task.effort === 'medium' ? 'M' : 'H'}
                       </span>
-                      {task.proof_type !== 'none' && task.status !== 'completed' && (
-                        <span className="font-mono text-[9px] text-white/20">↗</span>
-                      )}
                     </div>
                     <button
                       onClick={() => {
@@ -175,6 +172,21 @@ export default function Overlay(): React.JSX.Element {
                     >
                       <FileText className="w-3 h-3" />
                     </button>
+                    {task.proof_type !== 'none' && (
+                      <button
+                        onClick={() => {
+                          setOpenProofTaskId(openProofTaskId === task.id ? null : task.id)
+                        }}
+                        title="Add proof"
+                        className={`no-drag shrink-0 cursor-pointer transition-colors ${
+                          task.proof_value
+                            ? 'text-[var(--accent-blue)]/60 hover:text-white/50'
+                            : 'text-white/20 hover:text-white/50'
+                        }`}
+                      >
+                        <Paperclip className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 </div>
                 {expandedNote === task.id && (
@@ -202,6 +214,42 @@ export default function Overlay(): React.JSX.Element {
                     </button>
                   </div>
                 )}
+                {openProofTaskId === task.id && task.proof_type !== 'none' && (
+                  <div className="no-drag px-1 pb-2">
+                    {task.proof_type === 'link' ? (
+                      <input
+                        type="text"
+                        value={proofInputs[task.id] ?? task.proof_value ?? ''}
+                        onChange={(e) =>
+                          setProofInputs((prev) => ({ ...prev, [task.id]: e.target.value }))
+                        }
+                        placeholder="Paste link..."
+                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[10px] text-white/70 placeholder-white/20 outline-none font-mono"
+                      />
+                    ) : (
+                      <textarea
+                        value={proofInputs[task.id] ?? task.proof_value ?? ''}
+                        onChange={(e) =>
+                          setProofInputs((prev) => ({ ...prev, [task.id]: e.target.value }))
+                        }
+                        placeholder="Add Proof..."
+                        rows={2}
+                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[10px] text-white/70 placeholder-white/20 outline-none resize-none font-mono"
+                      />
+                    )}
+                    <button
+                      onClick={async () => {
+                        const proof = proofInputs[task.id] ?? task.proof_value ?? ''
+                        await window.api.tasks.updateProof(task.id, proof)
+                        await loadTasks()
+                        setOpenProofTaskId(null)
+                      }}
+                      className="no-drag mt-1 text-[10px] bg-[var(--accent-blue)]/80 hover:bg-[var(--accent-blue)] disabled:opacity-40 text-white px-2 py-0.5 rounded cursor-pointer transition-colors"
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -213,7 +261,9 @@ export default function Overlay(): React.JSX.Element {
               pending.length > 0 ? 'text-white/30' : 'text-[var(--accent-green)]/50'
             }`}
           >
-            {pending.length > 0 ? `${completed}/${total} done · ${pending.length} left` : 'all done ✓'}
+            {pending.length > 0
+              ? `${completed}/${total} done · ${pending.length} left`
+              : 'all done ✓'}
           </p>
         </div>
       </div>

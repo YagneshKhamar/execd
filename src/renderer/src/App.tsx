@@ -8,6 +8,7 @@ import Today from './pages/Today'
 import DailyReport from './pages/DailyReport'
 import WeeklyReport from './pages/WeeklyReport'
 import YearlyReport from './pages/YearlyReport'
+import History from './pages/History'
 import Analytics from './pages/Analytics'
 import Team from './pages/Team'
 import UpdateNotifier from './components/UpdateNotifier'
@@ -66,6 +67,7 @@ function AppRouter(): React.JSX.Element {
         <Route path="/report/daily" element={<DailyReport />} />
         <Route path="/report/weekly" element={<WeeklyReport />} />
         <Route path="/report/yearly" element={<YearlyReport />} />
+        <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/team" element={<Team />} />
       </Routes>

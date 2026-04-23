@@ -58,6 +58,25 @@ export interface IElectronAPI {
       completed: unknown[]
       missed: unknown[]
     }>
+    getHistory: (filters: {
+      month?: string
+      date?: string
+      status?: string
+    }) => Promise<{
+      id: string
+      title: string
+      effort: string
+      proof_type: string
+      proof_value: string | null
+      status: string
+      scheduled_date: string
+      scheduled_time_slot: string
+      carry_count: number
+      subgoal_title: string | null
+      goal_title: string | null
+      completed_at: string | null
+    }[]>
+    updateProof: (taskId: string, proof: string) => Promise<{ success: boolean }>
   }
   reports: {
     week: (endDate: string) => Promise<{

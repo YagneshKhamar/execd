@@ -14,6 +14,7 @@ export default function UpdateNotifier(): React.JSX.Element | null {
 
   useEffect(() => {
     window.api.updater.onStatus((data) => {
+      console.log('updater status:', JSON.stringify(data))
       setUpdate(data as UpdateStatus)
       setDismissed(false)
     })
@@ -53,14 +54,18 @@ export default function UpdateNotifier(): React.JSX.Element | null {
 
       {update.status === 'downloading' && (
         <div>
-          <p className="text-sm font-medium text-[var(--text-primary)] mb-2">Downloading update...</p>
+          <p className="text-sm font-medium text-[var(--text-primary)] mb-2">
+            Downloading update...
+          </p>
           <div className="h-1.5 bg-[var(--border-default)] rounded-full overflow-hidden">
             <div
               className="h-full bg-[var(--accent-blue)] rounded-full transition-all duration-300"
               style={{ width: `${update.percent || 0}%` }}
             />
           </div>
-          <p className="font-mono text-xs text-[var(--text-muted)] mt-1.5">{update.percent || 0}%</p>
+          <p className="font-mono text-xs text-[var(--text-muted)] mt-1.5">
+            {update.percent || 0}%
+          </p>
         </div>
       )}
 
@@ -92,7 +97,9 @@ export default function UpdateNotifier(): React.JSX.Element | null {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm font-medium text-[var(--accent-red)]">Update check failed</p>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate max-w-xs">{update.message}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate max-w-xs">
+              {update.message}
+            </p>
           </div>
           <button
             onClick={() => setDismissed(true)}

@@ -87,8 +87,13 @@ export function registerGoalsHandlers(): void {
   )
 
   ipcMain.handle('subgoals:get-by-goal', (_event, goalId: string) => {
-    const db = getDatabase()
-    return db.prepare('SELECT * FROM subgoals WHERE goal_id = ? ORDER BY rowid').all(goalId)
+    try {
+      const db = getDatabase()
+      return db.prepare('SELECT * FROM subgoals WHERE goal_id = ? ORDER BY rowid').all(goalId)
+    } catch (error) {
+      console.error('Error fetching subgoals:', error)
+      throw error
+    }
   })
 
   ipcMain.handle('subgoals:delete', (_event, id: string) => {
