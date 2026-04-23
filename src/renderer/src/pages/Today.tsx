@@ -93,10 +93,24 @@ export default function Today(): React.JSX.Element {
   const [selectedSubgoalId, setSelectedSubgoalId] = useState('')
   const [subgoalOptions, setSubgoalOptions] = useState<SubgoalOption[]>([])
   const [followupCount, setFollowupCount] = useState(0)
+  const [salesEntry, setSalesEntry] = useState('')
+  const [collectionEntry, setCollectionEntry] = useState('')
+  const [savingSales, setSavingSales] = useState(false)
+  const [monthSummary, setMonthSummary] = useState<{
+    sales_done: number
+    sales_target: number
+    collection_done: number
+    collection_target: number
+  } | null>(null)
+  const [todaySales, setTodaySales] = useState<{
+    sales_amount: number
+    collection_amount: number
+  } | null>(null)
   const { error, success } = useToast()
 
   useEffect(() => {
     loadTodayData()
+    loadSalesData()
     loadFollowupCount()
   }, [])
 
@@ -163,6 +177,58 @@ export default function Today(): React.JSX.Element {
       console.error('Failed to load today data:', e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadSalesData(): Promise<void> {
+    try {
+      const currentMonth = getCurrentMonth()
+      const summary = (await window.api.sales.getMonthSummary({ month: currentMonth })) as {
+        sales_done: number
+        sales_target: number
+        collection_done: number
+        collection_target: number
+      }
+      setMonthSummary(summary)
+
+      const dailySales = (await window.api.sales.getDailySales({ month: currentMonth })) as {
+        date: string
+        sales_amount: number
+        collection_amount: number
+        notes: string
+      }[]
+
+      const today = getToday()
+      const todayEntry = dailySales.find((entry) => entry.date === today)
+      if (todayEntry) {
+        setTodaySales({
+          sales_amount: Number(todayEntry.sales_amount || 0),
+          collection_amount: Number(todayEntry.collection_amount || 0),
+        })
+        setSalesEntry(String(todayEntry.sales_amount ?? 0))
+        setCollectionEntry(String(todayEntry.collection_amount ?? 0))
+      } else {
+        setTodaySales(null)
+      }
+    } catch (e) {
+      console.error('Failed to load sales data:', e)
+    }
+  }
+
+  async function saveSalesEntry(): Promise<void> {
+    setSavingSales(true)
+    try {
+      await window.api.sales.saveDailyEntry({
+        date: getToday(),
+        sales_amount: Number(salesEntry) || 0,
+        collection_amount: Number(collectionEntry) || 0,
+      })
+      await loadSalesData()
+      success('Sales entry saved.')
+    } catch {
+      error('Failed to save sales entry.')
+    } finally {
+      setSavingSales(false)
     }
   }
 
@@ -368,6 +434,22 @@ export default function Today(): React.JSX.Element {
   const score = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
   const isLocked = dayPlan?.locked === 1
   const carriedCount = tasks.reduce((sum, task) => sum + task.carry_count, 0)
+  const salesProgress =
+    monthSummary && monthSummary.sales_target > 0
+      ? Math.max(0, Math.min(100, (monthSummary.sales_done / monthSummary.sales_target) * 100))
+      : 0
+  const collectionProgress =
+    monthSummary && monthSummary.collection_target > 0
+      ? Math.max(
+          0,
+          Math.min(100, (monthSummary.collection_done / monthSummary.collection_target) * 100),
+        )
+      : 0
+  const progressColorClass = (progress: number): string => {
+    if (progress >= 80) return 'bg-[var(--accent-green)]'
+    if (progress >= 50) return 'bg-[var(--accent-yellow)]'
+    return 'bg-[var(--accent-red)]'
+  }
 
   if (loading) {
     return (
@@ -575,6 +657,81 @@ export default function Today(): React.JSX.Element {
             {score}%
           </span>
         </div>
+
+        {monthSummary && monthSummary.sales_target > 0 && (
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest">
+                Sales & Collection
+              </p>
+              <p className="font-mono text-xs text-[var(--text-muted)]">
+                {new Date().toLocaleDateString('en-US', { month: 'long' })}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-[var(--text-secondary)] mb-1">Sales Today</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-[var(--text-muted)] font-mono">₹</span>
+                  <input
+                    type="number"
+                    value={salesEntry}
+                    onChange={(e) => setSalesEntry(e.target.value)}
+                    className="bg-[var(--bg-elevated)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none w-full font-mono"
+                  />
+                </div>
+                <div className="h-1.5 bg-[var(--border-default)] rounded-full mt-1 mb-1">
+                  <div
+                    className={`h-full rounded-full transition-all ${progressColorClass(salesProgress)}`}
+                    style={{ width: `${salesProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  ₹{monthSummary.sales_done.toLocaleString('en-IN')} of ₹
+                  {monthSummary.sales_target.toLocaleString('en-IN')} this month
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-[var(--text-secondary)] mb-1">Collection Today</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-[var(--text-muted)] font-mono">₹</span>
+                  <input
+                    type="number"
+                    value={collectionEntry}
+                    onChange={(e) => setCollectionEntry(e.target.value)}
+                    className="bg-[var(--bg-elevated)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none w-full font-mono"
+                  />
+                </div>
+                <div className="h-1.5 bg-[var(--border-default)] rounded-full mt-1 mb-1">
+                  <div
+                    className={`h-full rounded-full transition-all ${progressColorClass(collectionProgress)}`}
+                    style={{ width: `${collectionProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  ₹{monthSummary.collection_done.toLocaleString('en-IN')} of ₹
+                  {monthSummary.collection_target.toLocaleString('en-IN')} this month
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={saveSalesEntry}
+              disabled={savingSales}
+              className="mt-3 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium py-1.5 px-4 rounded cursor-pointer transition-colors"
+            >
+              {savingSales ? 'Saving...' : 'Save'}
+            </button>
+            {todaySales && (
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Today saved: ₹{todaySales.sales_amount.toLocaleString('en-IN')} sales, ₹
+                {todaySales.collection_amount.toLocaleString('en-IN')} collection
+              </p>
+            )}
+          </div>
+        )}
 
         {tasks.length > 0 && isLocked && (
           <div className="grid grid-cols-4 gap-3 mb-6">

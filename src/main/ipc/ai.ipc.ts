@@ -340,4 +340,54 @@ Generate the insight JSON.`
       }
     },
   )
+
+  ipcMain.handle(
+    'ai:generate-monthly-targets',
+    async (
+      _event,
+      context: {
+        yearlyTarget: number
+        collectionTarget: number | null
+        businessType: string
+        fiscalYearStart: number
+        year: number
+      },
+    ) => {
+      const systemPrompt = `You are a business planning assistant.
+Generate realistic monthly sales targets based on business type and seasonal patterns.
+Respond ONLY with valid JSON array, no markdown, no explanation:
+[{"month": "YYYY-MM", "sales_target": number, "collection_target": number}]
+Rules:
+- Generate exactly 12 months starting from the fiscal year start month
+- Total of all sales_target values must equal exactly the yearlyTarget provided
+- Distribute based on realistic seasonal patterns for the business type
+- For textile/trading businesses in India:
+  Sep-Oct-Nov are peak (Navratri, Diwali, wedding season)
+  Dec-Jan are high (winter wedding season)
+  Apr-May-Jun are slow
+  Feb-Mar are slowest (FY closing)
+- For other business types, distribute more evenly with slight Q4 peak
+- collection_target per month = roughly 85-90% of that month's sales_target
+  (collections lag sales slightly)
+- If collectionTarget is provided, total collection must equal collectionTarget
+- Round all values to nearest 1000`
+
+      const prompt = `Business type: ${context.businessType}
+Yearly sales target: ₹${context.yearlyTarget}
+Yearly collection target: ${context.collectionTarget ? '₹' + context.collectionTarget : 'not set'}
+Financial year starts: month ${context.fiscalYearStart} (1=Jan, 4=Apr)
+Current year: ${context.year}
+Generate 12 monthly targets starting from ${context.fiscalYearStart}/${context.year}.
+For months after December, use year ${context.year + 1}.`
+
+      try {
+        const raw = await callAI(prompt, systemPrompt)
+        const cleaned = raw.replace(/```json|```/g, '').trim()
+        const result = JSON.parse(cleaned)
+        return { success: true, data: result }
+      } catch (e) {
+        return { success: false, error: String(e) }
+      }
+    },
+  )
 }

@@ -37,6 +37,17 @@ export interface IElectronAPI {
       data?: { heading: string; body: string }
       error?: string
     }>
+    generateMonthlyTargets: (context: {
+      yearlyTarget: number
+      collectionTarget: number | null
+      businessType: string
+      fiscalYearStart: number
+      year: number
+    }) => Promise<{
+      success: boolean
+      data?: { month: string; sales_target: number; collection_target: number }[]
+      error?: string
+    }>
   }
   tasks: {
     getByDate: (date: string) => Promise<unknown[]>
@@ -146,6 +157,45 @@ export interface IElectronAPI {
       csv: string
       filename: string
     }>
+  }
+  sales: {
+    getMonthlyTargets: (filters: { fiscalYearStart: number; year: number }) => Promise<{
+      year_month: string
+      sales_target: number
+      collection_target: number
+    }[]>
+    saveMonthlyTargets: (targets: {
+      year_month: string
+      sales_target: number
+      collection_target: number
+    }[]) => Promise<{ success: boolean }>
+    getDailySales: (filters: { month: string }) => Promise<{
+      date: string
+      sales_amount: number
+      collection_amount: number
+      notes: string
+    }[]>
+    saveDailyEntry: (data: {
+      date: string
+      sales_amount: number
+      collection_amount: number
+      notes?: string
+    }) => Promise<{ success: boolean }>
+    getMonthSummary: (filters: { month: string }) => Promise<{
+      month: string
+      sales_done: number
+      sales_target: number
+      collection_done: number
+      collection_target: number
+      days_with_entry: number
+    }>
+    getYearlySummary: (filters: { fiscalYearStart: number; year: number }) => Promise<{
+      year_month: string
+      sales_target: number
+      collection_target: number
+      sales_done: number
+      collection_done: number
+    }[]>
   }
   business: {
     get: () => Promise<{

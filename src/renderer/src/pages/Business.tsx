@@ -25,6 +25,7 @@ const LANGUAGES = [
   { value: 'hi', label: 'हिंदी' },
   { value: 'gu', label: 'ગુજરાતી' },
 ]
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 type BusinessProps = {
   isSetup?: boolean
@@ -42,8 +43,16 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
   const [primaryActivities, setPrimaryActivities] = useState<string[]>([])
   const [teamSize, setTeamSize] = useState('1')
   const [language, setLanguage] = useState('en')
+  const [fiscalYearStart, setFiscalYearStart] = useState(4)
+  const [monthlyTargets, setMonthlyTargets] = useState<
+    { year_month: string; sales_target: number; collection_target: number }[]
+  >([])
+  const [generatingTargets, setGeneratingTargets] = useState(false)
+  const [targetsGenerated, setTargetsGenerated] = useState(false)
+  const [savingTargets, setSavingTargets] = useState(false)
   const [saving, setSaving] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const currentYear = new Date().getFullYear()
 
   useEffect(() => {
     async function hydrateBusiness(): Promise<void> {
@@ -75,6 +84,22 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
           setTeamSize(String(data.team_size ?? 1))
           setLanguage(data.language ?? 'en')
         }
+
+        const config = (await window.api.config.get()) as { fiscal_year_start?: number } | null
+        const loadedFiscalYearStart = Number(config?.fiscal_year_start ?? 4)
+        setFiscalYearStart(loadedFiscalYearStart)
+
+        const existingTargets = await window.api.sales.getMonthlyTargets({
+          fiscalYearStart: loadedFiscalYearStart,
+          year: currentYear,
+        })
+        const hasExistingTargets = existingTargets.some(
+          (item) => Number(item.sales_target) > 0 || Number(item.collection_target) > 0,
+        )
+        if (hasExistingTargets) {
+          setMonthlyTargets(existingTargets)
+          setTargetsGenerated(true)
+        }
       } catch {
         error('Failed to load business profile.')
       } finally {
@@ -83,12 +108,58 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
     }
 
     hydrateBusiness()
-  }, [error])
+  }, [currentYear, error])
 
   function toggleActivity(activityId: string): void {
     setPrimaryActivities((prev) =>
       prev.includes(activityId) ? prev.filter((id) => id !== activityId) : [...prev, activityId],
     )
+  }
+
+  async function generateTargets(): Promise<void> {
+    if (!monthlySalesTarget) {
+      error('Yearly sales target is required.')
+      return
+    }
+
+    setGeneratingTargets(true)
+    try {
+      const result = await window.api.ai.generateMonthlyTargets({
+        yearlyTarget: Number(monthlySalesTarget),
+        collectionTarget: collectionTarget ? Number(collectionTarget) : null,
+        businessType,
+        fiscalYearStart,
+        year: currentYear,
+      })
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Failed to generate monthly targets.')
+      }
+
+      const parsedTargets = result.data.map((item) => ({
+        year_month: item.month,
+        sales_target: Number(item.sales_target ?? 0),
+        collection_target: Number(item.collection_target ?? 0),
+      }))
+      setMonthlyTargets(parsedTargets)
+      setTargetsGenerated(true)
+    } catch {
+      error('Failed to generate monthly targets.')
+    } finally {
+      setGeneratingTargets(false)
+    }
+  }
+
+  async function saveTargets(): Promise<void> {
+    setSavingTargets(true)
+    try {
+      await window.api.sales.saveMonthlyTargets(monthlyTargets)
+      success('Monthly targets saved.')
+    } catch {
+      error('Failed to save monthly targets.')
+    } finally {
+      setSavingTargets(false)
+    }
   }
 
   async function handleSave(): Promise<void> {
@@ -132,6 +203,16 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
   const inputClass =
     'w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none'
   const cardClass = 'bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4'
+  const monthlySalesTotal = monthlyTargets.reduce((sum, item) => sum + Number(item.sales_target || 0), 0)
+  const yearlySalesTarget = Number(monthlySalesTarget || 0)
+  const targetDiffRatio =
+    yearlySalesTarget > 0 ? Math.abs(monthlySalesTotal - yearlySalesTarget) / yearlySalesTarget : 0
+  const totalColorClass =
+    monthlySalesTotal === yearlySalesTarget
+      ? 'text-[var(--accent-green)]'
+      : targetDiffRatio < 0.05
+        ? 'text-[var(--accent-yellow)]'
+        : 'text-[var(--accent-red)]'
 
   const formContent = (
     <div className={isSetup ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
@@ -232,37 +313,111 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
 
       <section className={`${cardClass} ${isSetup ? '' : 'md:col-span-2'}`}>
         <label className={sectionLabelClass}>Targets</label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <p className="text-xs text-[var(--text-secondary)] mb-1">
-              Monthly Sales Target (optional)
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--text-muted)] font-mono">₹</span>
-              <input
-                type="number"
-                value={monthlySalesTarget}
-                onChange={(e) => setMonthlySalesTarget(e.target.value)}
-                placeholder="0"
-                className={inputClass}
-              />
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-[var(--text-secondary)] mb-1">Yearly Sales Target (optional)</p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--text-muted)] font-mono">₹</span>
+                <input
+                  type="number"
+                  value={monthlySalesTarget}
+                  onChange={(e) => setMonthlySalesTarget(e.target.value)}
+                  placeholder="0"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-[var(--text-secondary)] mb-1">
+                Yearly Collection Target (optional)
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--text-muted)] font-mono">₹</span>
+                <input
+                  type="number"
+                  value={collectionTarget}
+                  onChange={(e) => setCollectionTarget(e.target.value)}
+                  placeholder="0"
+                  className={inputClass}
+                />
+              </div>
             </div>
           </div>
-          <div>
-            <p className="text-xs text-[var(--text-secondary)] mb-1">
-              Monthly Collection Target (optional)
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--text-muted)] font-mono">₹</span>
-              <input
-                type="number"
-                value={collectionTarget}
-                onChange={(e) => setCollectionTarget(e.target.value)}
-                placeholder="0"
-                className={inputClass}
-              />
+          {monthlySalesTarget && (
+            <button
+              type="button"
+              onClick={generateTargets}
+              disabled={generatingTargets}
+              className="w-full bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)] hover:text-[var(--text-primary)] text-sm py-2.5 px-4 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {generatingTargets ? 'Generating...' : 'Generate Monthly Plan with AI'}
+            </button>
+          )}
+
+          {targetsGenerated && monthlyTargets.length > 0 && (
+            <div className="mt-2 border border-[var(--border-subtle)] rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+                <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest">
+                  Monthly Breakdown
+                </p>
+                <p className={`text-sm font-mono ${totalColorClass}`}>Total: ₹{monthlySalesTotal}</p>
+              </div>
+
+              <div>
+                {monthlyTargets.map((item, index) => {
+                  const monthPart = Number(item.year_month.split('-')[1] ?? 1)
+                  const monthLabel = MONTH_NAMES[Math.max(0, Math.min(11, monthPart - 1))]
+                  return (
+                    <div
+                      key={item.year_month}
+                      className="flex items-center gap-3 py-2 border-b border-[var(--border-subtle)]"
+                    >
+                      <div className="w-32 shrink-0">
+                        <p className="text-sm text-[var(--text-primary)]">{monthLabel}</p>
+                        <p className="text-xs font-mono text-[var(--text-muted)]">{item.year_month}</p>
+                      </div>
+                      <input
+                        type="number"
+                        value={item.sales_target}
+                        onChange={(e) => {
+                          const value = Number(e.target.value || 0)
+                          setMonthlyTargets((prev) =>
+                            prev.map((target, targetIndex) =>
+                              targetIndex === index ? { ...target, sales_target: value } : target,
+                            ),
+                          )
+                        }}
+                        className={inputClass}
+                      />
+                      <input
+                        type="number"
+                        value={item.collection_target}
+                        onChange={(e) => {
+                          const value = Number(e.target.value || 0)
+                          setMonthlyTargets((prev) =>
+                            prev.map((target, targetIndex) =>
+                              targetIndex === index ? { ...target, collection_target: value } : target,
+                            ),
+                          )
+                        }}
+                        className={inputClass}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={saveTargets}
+                disabled={savingTargets}
+                className="w-full mt-3 bg-[var(--accent-blue)] text-white font-medium py-2.5 px-6 rounded text-sm cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {savingTargets ? 'Saving...' : 'Save Monthly Targets'}
+              </button>
             </div>
-          </div>
+          )}
         </div>
       </section>
     </div>

@@ -29,6 +29,13 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('ai:suggest-goal-fix', title, note),
     generateAnalyticsInsight: (context: unknown) =>
       ipcRenderer.invoke('ai:analytics-insight', context),
+    generateMonthlyTargets: (context: {
+      yearlyTarget: number
+      collectionTarget: number | null
+      businessType: string
+      fiscalYearStart: number
+      year: number
+    }) => ipcRenderer.invoke('ai:generate-monthly-targets', context),
   },
   tasks: {
     getByDate: (date: string) => ipcRenderer.invoke('tasks:get-by-date', date),
@@ -62,6 +69,26 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('reports:export-tasks-csv', filters),
     exportSummaryCsv: (filters: { year?: string }) =>
       ipcRenderer.invoke('reports:export-summary-csv', filters),
+  },
+  sales: {
+    getMonthlyTargets: (filters: { fiscalYearStart: number; year: number }) =>
+      ipcRenderer.invoke('sales:get-monthly-targets', filters),
+    saveMonthlyTargets: (targets: {
+      year_month: string
+      sales_target: number
+      collection_target: number
+    }[]) => ipcRenderer.invoke('sales:save-monthly-targets', targets),
+    getDailySales: (filters: { month: string }) => ipcRenderer.invoke('sales:get-daily-sales', filters),
+    saveDailyEntry: (data: {
+      date: string
+      sales_amount: number
+      collection_amount: number
+      notes?: string
+    }) => ipcRenderer.invoke('sales:save-daily-entry', data),
+    getMonthSummary: (filters: { month: string }) =>
+      ipcRenderer.invoke('sales:get-month-summary', filters),
+    getYearlySummary: (filters: { fiscalYearStart: number; year: number }) =>
+      ipcRenderer.invoke('sales:get-yearly-summary', filters),
   },
   business: {
     get: () => ipcRenderer.invoke('business:get'),

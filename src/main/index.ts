@@ -10,6 +10,7 @@ import { registerBusinessHandlers } from './ipc/business.ipc'
 import { registerConfigHandlers } from './ipc/config.ipc'
 import { registerGoalsHandlers } from './ipc/goals.ipc'
 import { registerReportsHandlers } from './ipc/reports.ipc'
+import { registerSalesHandlers } from './ipc/sales.ipc'
 import { registerTasksHandlers } from './ipc/tasks.ipc'
 import { registerTeamHandlers } from './ipc/team.ipc'
 
@@ -242,6 +243,7 @@ app.whenReady().then(() => {
   registerAIHandlers()
   registerTasksHandlers()
   registerReportsHandlers()
+  registerSalesHandlers()
   registerTeamHandlers()
 
   ipcMain.handle('overlay:open-main', () => {
