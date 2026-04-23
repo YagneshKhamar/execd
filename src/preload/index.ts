@@ -58,6 +58,22 @@ contextBridge.exposeInMainWorld('api', {
     dayLog: (date: string) => ipcRenderer.invoke('reports:day-log', date),
     year: (year: string) => ipcRenderer.invoke('reports:year', year),
     analytics: (days: number) => ipcRenderer.invoke('reports:analytics', days),
+    exportTasksCsv: (filters: { month?: string }) =>
+      ipcRenderer.invoke('reports:export-tasks-csv', filters),
+    exportSummaryCsv: (filters: { year?: string }) =>
+      ipcRenderer.invoke('reports:export-summary-csv', filters),
+  },
+  business: {
+    get: () => ipcRenderer.invoke('business:get'),
+    save: (data: {
+      business_name: string
+      business_type: string
+      monthly_sales_target?: number | null
+      collection_target?: number | null
+      primary_activities: string[]
+      team_size: number
+      language: string
+    }) => ipcRenderer.invoke('business:save', data),
   },
   team: {
     getMembers: () => ipcRenderer.invoke('team:get-members'),

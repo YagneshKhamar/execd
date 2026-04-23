@@ -2,8 +2,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   Target,
-  CalendarDays,
-  Calendar,
+  Briefcase,
   History,
   FileText,
   BarChart2,
@@ -15,10 +14,9 @@ import {
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', to: '/today' },
   { icon: Target, label: 'Goals', to: '/goals' },
-  { icon: CalendarDays, label: 'Plan', to: '/plan' },
+  { icon: Briefcase, label: 'Business', to: '/business' },
   { icon: FileText, label: 'Daily Report', to: '/report/daily' },
-  { icon: BarChart2, label: 'Weekly Report', to: '/report/weekly' },
-  { icon: Calendar, label: 'Year Report', to: '/report/yearly' },
+  { icon: BarChart2, label: 'Reports', to: '/reports' },
   { icon: History, label: 'History', to: '/history' },
   { icon: LineChartIcon, label: 'Analytics', to: '/analytics' },
   { icon: Users, label: 'Team', to: '/team' },

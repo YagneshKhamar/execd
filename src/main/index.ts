@@ -6,6 +6,7 @@ import { existsSync } from 'fs'
 import { join } from 'path'
 import { closeDatabase, getDatabase } from './db/database'
 import { registerAIHandlers } from './ipc/ai.ipc'
+import { registerBusinessHandlers } from './ipc/business.ipc'
 import { registerConfigHandlers } from './ipc/config.ipc'
 import { registerGoalsHandlers } from './ipc/goals.ipc'
 import { registerReportsHandlers } from './ipc/reports.ipc'
@@ -237,6 +238,7 @@ app.whenReady().then(() => {
 
   registerConfigHandlers()
   registerGoalsHandlers()
+  registerBusinessHandlers()
   registerAIHandlers()
   registerTasksHandlers()
   registerReportsHandlers()

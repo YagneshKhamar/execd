@@ -93,6 +93,44 @@ export default function DailyReport(): React.JSX.Element {
     }
   }
 
+  function triggerCsvDownload(csv: string, filename: string): void {
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleExportTasksCsv(): Promise<void> {
+    try {
+      const result = await window.api.reports.exportTasksCsv({})
+      if (!result.success) {
+        error('Failed to export tasks CSV.')
+        return
+      }
+      triggerCsvDownload(result.csv, result.filename)
+      success('Tasks CSV exported.')
+    } catch {
+      error('Failed to export tasks CSV.')
+    }
+  }
+
+  async function handleExportSummaryCsv(): Promise<void> {
+    try {
+      const result = await window.api.reports.exportSummaryCsv({})
+      if (!result.success) {
+        error('Failed to export summary CSV.')
+        return
+      }
+      triggerCsvDownload(result.csv, result.filename)
+      success('Summary CSV exported.')
+    } catch {
+      error('Failed to export summary CSV.')
+    }
+  }
+
   function statusLabel(status: Task['status']): React.JSX.Element {
     if (status === 'completed')
       return (
@@ -153,6 +191,20 @@ export default function DailyReport(): React.JSX.Element {
           >
             <Download className="w-4 h-4" />
             {saving ? 'Saving...' : 'Save as Image'}
+          </button>
+          <button
+            onClick={handleExportTasksCsv}
+            className="flex items-center gap-2 bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)] hover:text-[var(--text-primary)] text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors mb-0.5"
+          >
+            <Download className="w-4 h-4" />
+            Export Tasks CSV
+          </button>
+          <button
+            onClick={handleExportSummaryCsv}
+            className="flex items-center gap-2 bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)] hover:text-[var(--text-primary)] text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors mb-0.5"
+          >
+            <Download className="w-4 h-4" />
+            Export Summary CSV
           </button>
         </div>
       </div>

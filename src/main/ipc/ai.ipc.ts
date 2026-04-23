@@ -1,6 +1,16 @@
 import { ipcMain, safeStorage } from 'electron'
 import { getDatabase } from '../db/database'
 
+// ─── AI Configuration ─────────────────────────────────────────────────────
+// Change these two lines to switch providers/models. No other changes needed.
+const AI_PROVIDER: 'openai' | 'anthropic' | 'ollama' | 'openrouter' = 'openai'
+const AI_MODEL = 'gpt-4o-mini'
+// Models: openai → gpt-4o-mini | gpt-4o | gpt-4-turbo
+//         anthropic → claude-haiku-4-5-20251001 | claude-sonnet-4-5
+//         ollama → llama3 | mistral | any local model
+//         openrouter → nvidia/nemotron-3-super-120b-a12b:free | any OR model
+// ──────────────────────────────────────────────────────────────────────────
+
 interface GoalValidationResult {
   valid: boolean
   note: string
@@ -13,28 +23,25 @@ interface SubgoalSuggestion {
 
 async function callAI(prompt: string, systemPrompt: string): Promise<string> {
   const db = getDatabase()
-  const config = db.prepare('SELECT * FROM config WHERE id = 1').get() as
-    | (Record<string, string> & {
-        ollama_model?: string
-        ollama_base_url?: string
-        openrouter_model?: string
-      })
-    | undefined
+  const config = db.prepare('SELECT * FROM config WHERE id = 1').get() as Record<string, string> | undefined
 
   if (!config) throw new Error('No config found. Complete setup first.')
 
-  const encryptedApiKey = config.api_key_encrypted || ''
-  const apiKeyIsEncrypted = Number(config.api_key_is_encrypted) === 1
-  const shouldDecrypt = apiKeyIsEncrypted && safeStorage.isEncryptionAvailable()
-  const apiKey =
-    shouldDecrypt && encryptedApiKey
-      ? safeStorage.decryptString(Buffer.from(encryptedApiKey, 'base64'))
-      : encryptedApiKey
+  const provider = AI_PROVIDER
+  const encryptedApiKey = config.api_key_encrypted as string | undefined
+  const isEncrypted = Number(config.api_key_is_encrypted ?? 0) === 1
 
-  const provider = config.ai_provider
+  let apiKey = ''
+  if (encryptedApiKey) {
+    if (isEncrypted && safeStorage.isEncryptionAvailable()) {
+      apiKey = safeStorage.decryptString(Buffer.from(encryptedApiKey, 'base64'))
+    } else {
+      apiKey = encryptedApiKey
+    }
+  }
 
-  if (provider !== 'ollama' && !apiKey) {
-    throw new Error('API key is missing after resolution. Please set it in the config.')
+  if (!apiKey && provider !== 'ollama') {
+    throw new Error('API key is missing. Please set it in Settings.')
   }
 
   if (provider === 'openai') {
@@ -45,7 +52,7 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: AI_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
@@ -58,7 +65,9 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: { message: string }
     }
     if (data.error) throw new Error(data.error.message)
-    return data.choices[0].message.content
+    let raw = data.choices[0].message.content
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   if (provider === 'anthropic') {
@@ -70,7 +79,7 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: AI_MODEL,
         max_tokens: 1024,
         system: systemPrompt,
         messages: [{ role: 'user', content: prompt }],
@@ -81,11 +90,13 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: { message: string }
     }
     if (data.error) throw new Error(data.error.message)
-    return data.content[0].text
+    let raw = data.content[0].text
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   if (provider === 'ollama') {
-    const model = config.ollama_model || 'llama3'
+    const model = config.ollama_model || AI_MODEL || 'llama3'
     const baseUrl = config.ollama_base_url || 'http://localhost:11434'
     const response = await fetch(`${baseUrl}/api/chat`, {
       method: 'POST',
@@ -104,11 +115,13 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: string
     }
     if (data.error) throw new Error(data.error)
-    return data.message.content
+    let raw = data.message.content
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   if (provider === 'openrouter') {
-    const model = config.openrouter_model || 'nvidia/nemotron-3-super-120b-a12b:free'
+    const model = config.openrouter_model || AI_MODEL
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -132,7 +145,9 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: { message: string }
     }
     if (data.error) throw new Error(data.error.message)
-    return data.choices[0].message.content
+    let raw = data.choices[0].message.content
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   throw new Error(`Unknown provider: ${provider}`)

@@ -1,7 +1,7 @@
 export interface IElectronAPI {
   config: {
     save: (data: unknown) => Promise<{ success: boolean }>
-    get: () => Promise<unknown>
+    get: () => Promise<{ fiscal_year_start: number } & Record<string, unknown>>
   }
   goals: {
     save: (goals: unknown) => Promise<{ success: boolean; ids: string[] }>
@@ -136,6 +136,36 @@ export interface IElectronAPI {
         tasks_carried: number
       }[]
     }>
+    exportTasksCsv: (filters: { month?: string }) => Promise<{
+      success: boolean
+      csv: string
+      filename: string
+    }>
+    exportSummaryCsv: (filters: { year?: string }) => Promise<{
+      success: boolean
+      csv: string
+      filename: string
+    }>
+  }
+  business: {
+    get: () => Promise<{
+      business_name: string
+      business_type: string
+      monthly_sales_target: number | null
+      collection_target: number | null
+      primary_activities: string[]
+      team_size: number
+      language: string
+    } | null>
+    save: (data: {
+      business_name: string
+      business_type: string
+      monthly_sales_target?: number | null
+      collection_target?: number | null
+      primary_activities: string[]
+      team_size: number
+      language: string
+    }) => Promise<{ success: boolean }>
   }
   team: {
     getMembers: () => Promise<unknown[]>
