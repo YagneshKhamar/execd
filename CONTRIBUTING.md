@@ -16,6 +16,7 @@ See `CLAUDE_CODE_CONTEXT.md` in the repo root for the full architecture,
 IPC surface, database schema, and coding rules.
 
 Key things to know:
+
 - `src/main/` — Electron main process. Requires app restart after changes.
 - `src/renderer/` — React UI. Hot reloads automatically.
 - `src/preload/` — Secure bridge between main and renderer.
@@ -41,6 +42,7 @@ Key things to know:
 ## Reporting Bugs
 
 Open an issue with:
+
 - Your OS and version
 - App version (shown in title bar)
 - Steps to reproduce
@@ -50,6 +52,7 @@ Open an issue with:
 ## Feature Requests
 
 Open an issue describing:
+
 - The problem you're trying to solve
 - Your proposed solution
 - Any alternatives you considered

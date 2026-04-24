@@ -62,6 +62,7 @@ function AppRouter(): React.JSX.Element {
       <Routes>
         <Route path="/" element={<Navigate to={startPath} replace />} />
         <Route path="/setup" element={<Setup />} />
+        <Route path="/settings" element={<Setup />} />
         <Route path="/goals" element={<Goals />} />
         <Route path="/business" element={<Business />} />
         <Route path="/business/setup" element={<Business isSetup={true} />} />

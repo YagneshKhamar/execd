@@ -9,6 +9,7 @@ labels: bug
 **Node.js Version (if running from source):**
 
 **Steps to reproduce:**
+
 1.
 2.
 3.

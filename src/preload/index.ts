@@ -46,8 +46,7 @@ contextBridge.exposeInMainWorld('api', {
     completeTask: (id: string, proof: string | null) =>
       ipcRenderer.invoke('tasks:complete', id, proof),
     uncompleteTask: (id: string) => ipcRenderer.invoke('tasks:uncomplete', id),
-    updateNotes: (id: string, notes: string) =>
-      ipcRenderer.invoke('tasks:update-notes', id, notes),
+    updateNotes: (id: string, notes: string) => ipcRenderer.invoke('tasks:update-notes', id, notes),
     getMissed: (date: string) => ipcRenderer.invoke('tasks:get-missed', date),
     markMissed: (date: string) => ipcRenderer.invoke('tasks:mark-missed', date),
     carryOver: (taskId: string, toDate: string) =>
@@ -73,12 +72,15 @@ contextBridge.exposeInMainWorld('api', {
   sales: {
     getMonthlyTargets: (filters: { fiscalYearStart: number; year: number }) =>
       ipcRenderer.invoke('sales:get-monthly-targets', filters),
-    saveMonthlyTargets: (targets: {
-      year_month: string
-      sales_target: number
-      collection_target: number
-    }[]) => ipcRenderer.invoke('sales:save-monthly-targets', targets),
-    getDailySales: (filters: { month: string }) => ipcRenderer.invoke('sales:get-daily-sales', filters),
+    saveMonthlyTargets: (
+      targets: {
+        year_month: string
+        sales_target: number
+        collection_target: number
+      }[],
+    ) => ipcRenderer.invoke('sales:save-monthly-targets', targets),
+    getDailySales: (filters: { month: string }) =>
+      ipcRenderer.invoke('sales:get-daily-sales', filters),
     saveDailyEntry: (data: {
       date: string
       sales_amount: number

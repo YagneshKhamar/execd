@@ -55,7 +55,7 @@ export default function Sidebar(): React.JSX.Element {
 
       <div className="px-3 pb-5">
         <NavLink
-          to="/setup"
+          to="/settings"
           className={({ isActive }) =>
             `flex items-center gap-2.5 px-3 py-2 rounded text-sm cursor-pointer transition-colors no-underline ${
               isActive

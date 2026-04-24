@@ -25,7 +25,20 @@ const LANGUAGES = [
   { value: 'hi', label: 'हिंदी' },
   { value: 'gu', label: 'ગુજરાતી' },
 ]
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+]
 
 type BusinessProps = {
   isSetup?: boolean
@@ -203,7 +216,10 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
   const inputClass =
     'w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none'
   const cardClass = 'bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4'
-  const monthlySalesTotal = monthlyTargets.reduce((sum, item) => sum + Number(item.sales_target || 0), 0)
+  const monthlySalesTotal = monthlyTargets.reduce(
+    (sum, item) => sum + Number(item.sales_target || 0),
+    0,
+  )
   const yearlySalesTarget = Number(monthlySalesTarget || 0)
   const targetDiffRatio =
     yearlySalesTarget > 0 ? Math.abs(monthlySalesTotal - yearlySalesTarget) / yearlySalesTarget : 0
@@ -316,7 +332,9 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
         <div className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <p className="text-xs text-[var(--text-secondary)] mb-1">Yearly Sales Target (optional)</p>
+              <p className="text-xs text-[var(--text-secondary)] mb-1">
+                Yearly Sales Target (optional)
+              </p>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[var(--text-muted)] font-mono">₹</span>
                 <input
@@ -361,7 +379,9 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                 <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest">
                   Monthly Breakdown
                 </p>
-                <p className={`text-sm font-mono ${totalColorClass}`}>Total: ₹{monthlySalesTotal}</p>
+                <p className={`text-sm font-mono ${totalColorClass}`}>
+                  Total: ₹{monthlySalesTotal}
+                </p>
               </div>
 
               <div>
@@ -375,7 +395,9 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                     >
                       <div className="w-32 shrink-0">
                         <p className="text-sm text-[var(--text-primary)]">{monthLabel}</p>
-                        <p className="text-xs font-mono text-[var(--text-muted)]">{item.year_month}</p>
+                        <p className="text-xs font-mono text-[var(--text-muted)]">
+                          {item.year_month}
+                        </p>
                       </div>
                       <input
                         type="number"
@@ -397,7 +419,9 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                           const value = Number(e.target.value || 0)
                           setMonthlyTargets((prev) =>
                             prev.map((target, targetIndex) =>
-                              targetIndex === index ? { ...target, collection_target: value } : target,
+                              targetIndex === index
+                                ? { ...target, collection_target: value }
+                                : target,
                             ),
                           )
                         }}

@@ -212,7 +212,9 @@ export default function History(): React.JSX.Element {
                           {task.title}
                         </p>
                         {task.subgoal_title && (
-                          <p className="text-xs text-[var(--text-muted)] mt-1">{task.subgoal_title}</p>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            {task.subgoal_title}
+                          </p>
                         )}
                       </div>
 

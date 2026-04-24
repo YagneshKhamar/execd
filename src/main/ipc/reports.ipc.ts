@@ -157,9 +157,7 @@ export function registerReportsHandlers(): void {
     const endYear = Number(year) + 1
     const endMonth = fyStart - 1
     const endDate =
-      fyStart === 1
-        ? `${year}-12-31`
-        : new Date(endYear, endMonth, 0).toISOString().slice(0, 10)
+      fyStart === 1 ? `${year}-12-31` : new Date(endYear, endMonth, 0).toISOString().slice(0, 10)
     const fyLabel = fyStart === 1 ? year : `${year}-${String(Number(year) + 1).slice(2)}`
 
     const days = db

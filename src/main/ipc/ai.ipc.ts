@@ -11,6 +11,42 @@ const AI_MODEL = 'gpt-4o-mini'
 //         openrouter → nvidia/nemotron-3-super-120b-a12b:free | any OR model
 // ──────────────────────────────────────────────────────────────────────────
 
+function getBusinessContext(): string {
+  try {
+    const db = getDatabase()
+    const profile = db.prepare('SELECT * FROM business_profile WHERE id = 1').get() as
+      | Record<string, unknown>
+      | undefined
+    if (!profile) return ''
+
+    const activities = (() => {
+      try {
+        return JSON.parse(String(profile.primary_activities || '[]')) as string[]
+      } catch {
+        return [] as string[]
+      }
+    })()
+
+    const businessType = String(profile.business_type || '').startsWith('other:')
+      ? String(profile.business_type).slice(6)
+      : String(profile.business_type || '')
+
+    const parts = [
+      profile.business_name ? `Business: ${String(profile.business_name)}` : '',
+      businessType ? `Type: ${businessType}` : '',
+      `Team size: ${String(profile.team_size || 1)}`,
+      activities.length > 0 ? `Primary activities: ${activities.join(', ')}` : '',
+      profile.monthly_sales_target
+        ? `Yearly sales target: ₹${String(profile.monthly_sales_target)}`
+        : '',
+    ].filter(Boolean)
+
+    return parts.length > 0 ? `\n\nBusiness context:\n${parts.join('\n')}` : ''
+  } catch {
+    return ''
+  }
+}
+
 interface GoalValidationResult {
   valid: boolean
   note: string
@@ -23,13 +59,18 @@ interface SubgoalSuggestion {
 
 async function callAI(prompt: string, systemPrompt: string): Promise<string> {
   const db = getDatabase()
-  const config = db.prepare('SELECT * FROM config WHERE id = 1').get() as Record<string, string> | undefined
+  const config = db.prepare('SELECT * FROM config WHERE id = 1').get() as
+    | Record<string, string>
+    | undefined
 
   if (!config) throw new Error('No config found. Complete setup first.')
 
   const provider = AI_PROVIDER
   const encryptedApiKey = config.api_key_encrypted as string | undefined
   const isEncrypted = Number(config.api_key_is_encrypted ?? 0) === 1
+  console.log('encryptedApiKey', encryptedApiKey)
+  console.log('isEncrypted', isEncrypted)
+  console.log('safeStorage.isEncryptionAvailable()', safeStorage.isEncryptionAvailable())
 
   let apiKey = ''
   if (encryptedApiKey) {
@@ -39,6 +80,9 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       apiKey = encryptedApiKey
     }
   }
+
+  console.log('apiKey', apiKey)
+  console.log('provider', provider)
 
   if (!apiKey && provider !== 'ollama') {
     throw new Error('API key is missing. Please set it in Settings.')
@@ -199,11 +243,12 @@ Check: Is it specific? Is it actionable? Is it realistic for one month?`
   })
 
   ipcMain.handle('ai:generate-subgoals', async (_event, goalTitle: string, goalType: string) => {
+    const businessCtx = getBusinessContext()
     const systemPrompt = `You are an execution coach. Generate subgoals for monthly goals.
 Respond ONLY with valid JSON array in this exact format:
 [{"title": "string", "priority": "high"|"medium"|"low"}]
 Each subgoal must be completable in 1-2 weeks and map to a concrete output.
-Generate exactly 5 subgoals. No explanation, no markdown, just the JSON array.`
+Generate exactly 5 subgoals. No explanation, no markdown, just the JSON array.${businessCtx}`
 
     const prompt = `Goal: "${goalTitle}" (Type: ${goalType})
 Generate 5 subgoals that break this down into concrete 1-2 week deliverables.`
@@ -232,6 +277,7 @@ Generate 5 subgoals that break this down into concrete 1-2 week deliverables.`
         maxTasks?: number
       },
     ) => {
+      const businessCtx = getBusinessContext()
       const systemPrompt = `You are an execution coach generating daily tasks.
 Respond ONLY with valid JSON array in this exact format:
 [{"title":"string","effort":"light"|"medium"|"heavy","proof_type":"none"|"comment"|"link","subgoal_id":"string","scheduled_time_slot":"morning"|"afternoon"|"anytime"}]
@@ -239,7 +285,8 @@ Rules:
 - light = 30min max, medium = 60min max, heavy = 120min max
 - Never generate vague tasks. "Work on X" is invalid. "Write intro section of X" is valid.
 - proof_type: none for internal work, comment for built/wrote/fixed, link for posted/published/submitted
-- No explanation, no markdown, just the JSON array.`
+- Generate tasks that are specific and relevant to the business context provided.
+- No explanation, no markdown, just the JSON array.${businessCtx}`
 
       const prompt = `Available time: ${context.availableMinutes} minutes (${context.workingStart} - ${context.workingEnd})
 Active subgoals: ${JSON.stringify(context.subgoals)}
@@ -272,7 +319,23 @@ Max 2 carry-overs. Prioritize high-priority subgoals.`
       },
     ) => {
       try {
-        const raw = await generateEndOfDayFeedback(context)
+        const businessCtx = getBusinessContext()
+        const systemPrompt = `You are an execution coach giving end-of-day feedback.
+Rules:
+- Never use motivational language. No "great job", "keep it up", "you're doing well".
+- Name specific tasks that were skipped.
+- If a pattern exists, name it explicitly.
+- If score > 80%, still identify what was missed and why it matters.
+- Tone: direct, honest, neutral.
+- Maximum 3 sentences. No bullet points.${businessCtx}`
+
+        const prompt = `Execution score: ${Math.round(context.score * 100)}%
+Completed: ${context.completed.map((t) => t.title).join(', ') || 'none'}
+Missed: ${context.missed.map((t) => t.title).join(', ') || 'none'}
+Active behavior flags: ${context.flags.join(', ') || 'none'}
+Last 7 days history: ${JSON.stringify(context.history)}`
+
+        const raw = await callAI(prompt, systemPrompt)
         return { success: true, data: raw }
       } catch (e) {
         return { success: false, error: String(e) }

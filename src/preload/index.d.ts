@@ -69,24 +69,22 @@ export interface IElectronAPI {
       completed: unknown[]
       missed: unknown[]
     }>
-    getHistory: (filters: {
-      month?: string
-      date?: string
-      status?: string
-    }) => Promise<{
-      id: string
-      title: string
-      effort: string
-      proof_type: string
-      proof_value: string | null
-      status: string
-      scheduled_date: string
-      scheduled_time_slot: string
-      carry_count: number
-      subgoal_title: string | null
-      goal_title: string | null
-      completed_at: string | null
-    }[]>
+    getHistory: (filters: { month?: string; date?: string; status?: string }) => Promise<
+      {
+        id: string
+        title: string
+        effort: string
+        proof_type: string
+        proof_value: string | null
+        status: string
+        scheduled_date: string
+        scheduled_time_slot: string
+        carry_count: number
+        subgoal_title: string | null
+        goal_title: string | null
+        completed_at: string | null
+      }[]
+    >
     updateProof: (taskId: string, proof: string) => Promise<{ success: boolean }>
   }
   reports: {
@@ -159,22 +157,28 @@ export interface IElectronAPI {
     }>
   }
   sales: {
-    getMonthlyTargets: (filters: { fiscalYearStart: number; year: number }) => Promise<{
-      year_month: string
-      sales_target: number
-      collection_target: number
-    }[]>
-    saveMonthlyTargets: (targets: {
-      year_month: string
-      sales_target: number
-      collection_target: number
-    }[]) => Promise<{ success: boolean }>
-    getDailySales: (filters: { month: string }) => Promise<{
-      date: string
-      sales_amount: number
-      collection_amount: number
-      notes: string
-    }[]>
+    getMonthlyTargets: (filters: { fiscalYearStart: number; year: number }) => Promise<
+      {
+        year_month: string
+        sales_target: number
+        collection_target: number
+      }[]
+    >
+    saveMonthlyTargets: (
+      targets: {
+        year_month: string
+        sales_target: number
+        collection_target: number
+      }[],
+    ) => Promise<{ success: boolean }>
+    getDailySales: (filters: { month: string }) => Promise<
+      {
+        date: string
+        sales_amount: number
+        collection_amount: number
+        notes: string
+      }[]
+    >
     saveDailyEntry: (data: {
       date: string
       sales_amount: number
@@ -189,13 +193,15 @@ export interface IElectronAPI {
       collection_target: number
       days_with_entry: number
     }>
-    getYearlySummary: (filters: { fiscalYearStart: number; year: number }) => Promise<{
-      year_month: string
-      sales_target: number
-      collection_target: number
-      sales_done: number
-      collection_done: number
-    }[]>
+    getYearlySummary: (filters: { fiscalYearStart: number; year: number }) => Promise<
+      {
+        year_month: string
+        sales_target: number
+        collection_target: number
+        sales_done: number
+        collection_done: number
+      }[]
+    >
   }
   business: {
     get: () => Promise<{
@@ -243,16 +249,23 @@ export interface IElectronAPI {
     check: () => Promise<void>
     download: () => Promise<void>
     install: () => Promise<void>
-    onStatus: (callback: (data: {
-      status: 'checking' | 'available' | 'latest' | 'downloading' | 'ready' | 'error'
-      version?: string
-      percent?: number
-      message?: string
-    }) => void) => void
+    onStatus: (
+      callback: (data: {
+        status: 'checking' | 'available' | 'latest' | 'downloading' | 'ready' | 'error'
+        version?: string
+        percent?: number
+        message?: string
+      }) => void,
+    ) => void
     removeStatusListener: () => void
   }
   electronAPI: {
-    captureReport: (rect?: { x: number; y: number; width: number; height: number }) => Promise<string>
+    captureReport: (rect?: {
+      x: number
+      y: number
+      width: number
+      height: number
+    }) => Promise<string>
   }
 }
 

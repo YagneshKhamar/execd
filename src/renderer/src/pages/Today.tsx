@@ -90,6 +90,7 @@ export default function Today(): React.JSX.Element {
     scheduled_time_slot: 'anytime' as 'morning' | 'afternoon' | 'anytime',
   })
   const [addingTask, setAddingTask] = useState(false)
+  const [generatingTomorrow, setGeneratingTomorrow] = useState(false)
   const [selectedSubgoalId, setSelectedSubgoalId] = useState('')
   const [subgoalOptions, setSubgoalOptions] = useState<SubgoalOption[]>([])
   const [followupCount, setFollowupCount] = useState(0)
@@ -270,7 +271,7 @@ export default function Today(): React.JSX.Element {
       const goals = (await window.api.goals.get(month)) as { id: string }[]
 
       if (!goals || goals.length === 0) {
-        error('Failed to generate tasks. Check your API key.')
+        error('Please add goals to generate tasks.')
         setGenerating(false)
         return
       }
@@ -347,6 +348,90 @@ export default function Today(): React.JSX.Element {
     }
   }
 
+  async function generateTomorrowTasks(): Promise<void> {
+    setGeneratingTomorrow(true)
+    try {
+      const config = (await window.api.config.get()) as Record<string, string | number>
+      const month = getCurrentMonth()
+      const goals = (await window.api.goals.get(month)) as { id: string }[]
+
+      if (!goals || goals.length === 0) {
+        error('No goals set for this month.')
+        setGeneratingTomorrow(false)
+        return
+      }
+
+      const allSubgoals: { id: string; title: string; priority: string }[] = []
+      for (const goal of goals) {
+        const subs = (await window.api.subgoals.getByGoal(goal.id)) as {
+          id: string
+          title: string
+          priority: string
+        }[]
+        allSubgoals.push(...subs)
+      }
+
+      const workStart = config.working_start || '09:00'
+      const workEnd = config.working_end || '18:00'
+      const breakStart = config.break_start || '13:00'
+      const breakEnd = config.break_end || '14:00'
+      const maxDailyTasks = Number(config.max_daily_tasks ?? 5)
+
+      const [startH, startM] = String(workStart).split(':').map(Number)
+      const [endH, endM] = String(workEnd).split(':').map(Number)
+      const [bStartH, bStartM] = String(breakStart).split(':').map(Number)
+      const [bEndH, bEndM] = String(breakEnd).split(':').map(Number)
+
+      const totalMinutes = endH * 60 + endM - (startH * 60 + startM)
+      const breakMinutes = bEndH * 60 + bEndM - (bStartH * 60 + bStartM)
+      const availableMinutes = totalMinutes - breakMinutes
+
+      const result = await window.api.ai.generateDailyTasks({
+        availableMinutes,
+        workingStart: workStart,
+        workingEnd: workEnd,
+        subgoals: allSubgoals,
+        carryOvers: [],
+        behaviorFlags: [],
+        maxTasks: maxDailyTasks || 5,
+      })
+
+      if (!result.success || !result.data) {
+        error('Failed to generate tasks. Check your API key.')
+        setGeneratingTomorrow(false)
+        return
+      }
+
+      const generated = result.data as {
+        title: string
+        effort: string
+        proof_type: string
+        subgoal_id: string
+        scheduled_time_slot: string
+      }[]
+
+      await window.api.tasks.saveDayPlan({
+        date: getTomorrow(),
+        available_minutes: availableMinutes,
+      })
+
+      await window.api.tasks.saveTasks(
+        generated.map((t) => ({
+          ...t,
+          scheduled_date: getTomorrow(),
+          status: 'pending',
+        })),
+      )
+
+      success("Tomorrow's tasks generated.")
+    } catch (e) {
+      error("Failed to generate tomorrow's tasks.")
+      console.error(e)
+    } finally {
+      setGeneratingTomorrow(false)
+    }
+  }
+
   async function handleEndDay(): Promise<void> {
     setEndingDay(true)
     try {
@@ -355,6 +440,10 @@ export default function Today(): React.JSX.Element {
       setDayEnded(true)
       await loadTodayData()
       success('Day complete. Good work.')
+      // Auto-generate tomorrow in background
+      generateTomorrowTasks().catch(() => {
+        // Silent fail — user can manually generate if needed
+      })
     } catch (e) {
       error('Failed to end day. Try again.')
       console.error(e)
@@ -1020,54 +1109,67 @@ export default function Today(): React.JSX.Element {
             </button>
           )}
 
-          {isLocked && dayPlan?.replan_used === 0 && (
-            <button
-              disabled
-              className="w-full bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Replan Today (once)
-            </button>
-          )}
-
-          {isLocked && (
-            <button
-              onClick={() => {
-                setAddingForDate('today')
-                setShowAddTask(true)
-              }}
-              className="w-full bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
-            >
-              Add Task Today
-            </button>
-          )}
-
-          {isLocked && (
-            <button
-              onClick={() => {
-                setAddingForDate('tomorrow')
-                setShowAddTask(true)
-              }}
-              className="w-full bg-transparent border border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
-            >
-              Add Task Tomorrow
-            </button>
-          )}
-
-          {isLocked &&
-            tasks.length > 0 &&
-            !dayEnded &&
-            !tasks.every((t) => t.status === 'completed') && (
-              <button
-                onClick={handleEndDay}
-                disabled={endingDay}
-                className="w-full bg-transparent border border-[var(--accent-red)]/30 hover:border-[var(--accent-red)] text-[var(--accent-red)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
-              >
-                {endingDay ? 'Ending day...' : 'End Day'}
-              </button>
+          <div className="space-y-2">
+            {/* Row 1 — shown when plan is locked */}
+            {isLocked && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setAddingForDate('today')
+                    setShowAddTask(true)
+                  }}
+                  className="bg-transparent border border-[var(--border-default)] hover:border-[var(--accent-blue)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
+                >
+                  Add Task Today
+                </button>
+                <button
+                  onClick={() => {}}
+                  disabled={dayPlan?.replan_used === 1}
+                  className="bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Replan Today
+                </button>
+              </div>
             )}
 
+            {/* Row 2 — shown when plan is locked */}
+            {isLocked && (
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setAddingForDate('tomorrow')
+                    setShowAddTask(true)
+                  }}
+                  className="bg-transparent border border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
+                >
+                  Add Task Tomorrow
+                </button>
+                <button
+                  onClick={generateTomorrowTasks}
+                  disabled={generatingTomorrow}
+                  className="bg-transparent border border-[var(--border-subtle)] hover:border-[var(--accent-blue)] text-[var(--text-muted)] hover:text-[var(--accent-blue)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {generatingTomorrow ? 'Generating...' : 'Generate Tomorrow'}
+                </button>
+              </div>
+            )}
+
+            {/* End Day — divider + button */}
+            {isLocked && tasks.length > 0 && !dayEnded && !tasks.every((t) => t.status === 'completed') && (
+              <div className="border-t border-[var(--border-subtle)] pt-2 mt-1">
+                <button
+                  onClick={handleEndDay}
+                  disabled={endingDay}
+                  className="w-full bg-[var(--accent-red)]/10 border border-[var(--accent-red)]/40 hover:bg-[var(--accent-red)]/20 hover:border-[var(--accent-red)] text-[var(--accent-red)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {endingDay ? 'Ending day...' : 'End Day'}
+                </button>
+              </div>
+            )}
+          </div>
+
           {dayEnded && endDayResult && (
-            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-5 space-y-3">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] border-l-2 border-[var(--accent-blue)] rounded-xl p-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)] text-xs">Execution score</span>
                 <span className="text-[var(--text-primary)] font-bold text-sm">
@@ -1087,7 +1189,7 @@ export default function Today(): React.JSX.Element {
           )}
 
           {isLocked && !dayEnded && tasks.every((t) => t.status === 'completed') && (
-            <div className="flex items-center gap-2 text-[var(--accent-green)] text-sm">
+            <div className="bg-[var(--accent-green)]/5 border border-[var(--accent-green)]/20 rounded-xl px-4 py-3 flex items-center gap-2 text-[var(--accent-green)] text-sm">
               <CheckCircle className="w-4 h-4" />
               <p>All tasks complete</p>
             </div>

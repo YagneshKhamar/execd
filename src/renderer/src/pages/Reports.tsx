@@ -39,7 +39,20 @@ type ReportsData =
   | { kind: 'year'; days: DayStat[]; months: MonthStat[]; topMissed: MissedPattern[] }
   | { kind: 'custom'; days: DayStat[] }
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const MONTH_NAMES = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+]
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10)
@@ -89,7 +102,11 @@ export default function Reports(): React.JSX.Element {
         if (range === '1W') {
           const week = await window.api.reports.week(today)
           if (!cancelled) {
-            setData({ kind: 'week', days: week.days as DayLog[], patterns: week.patterns as MissedPattern[] })
+            setData({
+              kind: 'week',
+              days: week.days as DayLog[],
+              patterns: week.patterns as MissedPattern[],
+            })
           }
           return
         }
@@ -171,7 +188,11 @@ export default function Reports(): React.JSX.Element {
 
   const avgScore =
     allDays.length > 0
-      ? Math.round((allDays.reduce((sum, day) => sum + Number(day.execution_score || 0), 0) / allDays.length) * 100)
+      ? Math.round(
+          (allDays.reduce((sum, day) => sum + Number(day.execution_score || 0), 0) /
+            allDays.length) *
+            100,
+        )
       : 0
   const daysLogged = allDays.length
   const completed = allDays.reduce((sum, day) => sum + Number(day.tasks_completed || 0), 0)
@@ -183,7 +204,10 @@ export default function Reports(): React.JSX.Element {
       label:
         data.kind === 'week'
           ? new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short' })
-          : new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }),
+          : new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', {
+              month: 'numeric',
+              day: 'numeric',
+            }),
       scorePercent: Math.round(day.execution_score * 100),
       scoreRaw: day.execution_score,
     }))
@@ -197,7 +221,8 @@ export default function Reports(): React.JSX.Element {
   }, [data])
 
   const monthMap = useMemo(() => {
-    if (!data || (data.kind !== 'month' && data.kind !== 'year')) return new Map<number, MonthStat>()
+    if (!data || (data.kind !== 'month' && data.kind !== 'year'))
+      return new Map<number, MonthStat>()
     const map = new Map<number, MonthStat>()
     for (const item of data.months) {
       const idx = Number(item.month) - 1
@@ -252,12 +277,14 @@ export default function Reports(): React.JSX.Element {
 
         <div className="mb-6">
           <div className="flex items-center gap-2 flex-wrap">
-            {([
-              ['1W', '1 Week'],
-              ['1M', '1 Month'],
-              ['1Y', '1 Year'],
-              ['custom', 'Custom'],
-            ] as const).map(([value, label]) => (
+            {(
+              [
+                ['1W', '1 Week'],
+                ['1M', '1 Month'],
+                ['1Y', '1 Year'],
+                ['custom', 'Custom'],
+              ] as const
+            ).map(([value, label]) => (
               <button
                 key={value}
                 onClick={() => setRange(value)}
@@ -298,18 +325,31 @@ export default function Reports(): React.JSX.Element {
 
         <div className="grid grid-cols-4 gap-3 mb-6">
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-4">
-            <p className="font-mono text-3xl font-semibold" style={{ color: scoreColor(avgScore / 100) }}>
+            <p
+              className="font-mono text-3xl font-semibold"
+              style={{ color: scoreColor(avgScore / 100) }}
+            >
               {avgScore}%
             </p>
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">avg score</p>
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">
+              avg score
+            </p>
           </div>
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-4">
-            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)]">{daysLogged}</p>
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">days logged</p>
+            <p className="font-mono text-3xl font-semibold text-[var(--text-primary)]">
+              {daysLogged}
+            </p>
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">
+              days logged
+            </p>
           </div>
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-4">
-            <p className="font-mono text-3xl font-semibold text-[var(--accent-green)]">{completed}</p>
-            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">completed</p>
+            <p className="font-mono text-3xl font-semibold text-[var(--accent-green)]">
+              {completed}
+            </p>
+            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mt-1">
+              completed
+            </p>
           </div>
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-4">
             <p className="font-mono text-3xl font-semibold text-[var(--accent-red)]">{missed}</p>
@@ -329,7 +369,13 @@ export default function Reports(): React.JSX.Element {
               <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-5 mb-6">
                 <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={dayChartData}>
-                    <XAxis dataKey="label" stroke="var(--text-muted)" fontSize={11} tickLine={false} axisLine={false} />
+                    <XAxis
+                      dataKey="label"
+                      stroke="var(--text-muted)"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                    />
                     <YAxis
                       domain={[0, 100]}
                       ticks={[0, 25, 50, 75, 100]}
@@ -359,7 +405,9 @@ export default function Reports(): React.JSX.Element {
                     >
                       <div className="flex items-center">
                         <span className="font-mono text-xs text-[var(--text-secondary)] w-10 shrink-0">
-                          {new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short' })}
+                          {new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', {
+                            weekday: 'short',
+                          })}
                         </span>
                         <div className="flex-1 h-1 bg-[var(--border-default)] rounded mx-3 overflow-hidden">
                           <div
@@ -397,7 +445,9 @@ export default function Reports(): React.JSX.Element {
                     const scorePct = stat ? Math.round(Number(stat.avg_score || 0) * 100) : 0
                     return (
                       <div key={name} className="flex items-center gap-3 py-2">
-                        <span className="font-mono text-xs text-[var(--text-secondary)] w-8 shrink-0">{name}</span>
+                        <span className="font-mono text-xs text-[var(--text-secondary)] w-8 shrink-0">
+                          {name}
+                        </span>
                         <div className="flex-1 h-2 bg-[var(--border-subtle)] rounded-full overflow-hidden relative">
                           {stat && (
                             <div
@@ -433,7 +483,9 @@ export default function Reports(): React.JSX.Element {
                 <div className="space-y-2">
                   {recurringSkips.map((pattern) => (
                     <div key={pattern.title} className="flex items-center justify-between">
-                      <p className="text-[var(--text-primary)] text-sm truncate flex-1 mr-4">{pattern.title}</p>
+                      <p className="text-[var(--text-primary)] text-sm truncate flex-1 mr-4">
+                        {pattern.title}
+                      </p>
                       <span className="font-mono text-xs text-[var(--accent-red)] font-semibold shrink-0">
                         missed {pattern.miss_count}×
                       </span>
@@ -446,7 +498,9 @@ export default function Reports(): React.JSX.Element {
         )}
 
         <div className="pt-2">
-          <h2 className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-3">EXPORT</h2>
+          <h2 className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-3">
+            EXPORT
+          </h2>
           <div className="flex items-center gap-3 flex-wrap">
             <button
               onClick={handleExportTasksCsv}
