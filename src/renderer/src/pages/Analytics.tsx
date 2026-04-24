@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   LineChart,
   Line,
@@ -27,6 +28,7 @@ function formatDayLabel(date: string): string {
 }
 
 export default function Analytics(): React.JSX.Element {
+  const { t } = useTranslation()
   const [range, setRange] = useState<7 | 14 | 30>(30)
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,7 +44,7 @@ export default function Analytics(): React.JSX.Element {
         setData(result)
       })
       .catch(() => {
-        error('Failed to load analytics.')
+        error(t('toast.loadAnalyticsFailed'))
       })
       .finally(() => {
         setLoading(false)
@@ -111,7 +113,7 @@ export default function Analytics(): React.JSX.Element {
   if (loading) {
     return (
       <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)] flex items-center justify-center">
-        <p className="text-[var(--text-muted)] text-sm font-mono">loading...</p>
+        <p className="text-[var(--text-muted)] text-sm font-mono">{t('common.loading')}</p>
       </div>
     )
   }
@@ -122,9 +124,11 @@ export default function Analytics(): React.JSX.Element {
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-1">
-              ANALYTICS
+              {t('analytics.header')}
             </p>
-            <h1 className="text-xl font-semibold text-[var(--text-primary)]">Execution Metrics</h1>
+            <h1 className="text-xl font-semibold text-[var(--text-primary)]">
+              {t('analytics.title')}
+            </h1>
           </div>
           <div className="flex items-center gap-1">
             {[7, 14, 30].map((value) => (
@@ -145,10 +149,10 @@ export default function Analytics(): React.JSX.Element {
 
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-6">
           <p className="font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest mb-2">
-            EXECUTION ANALYSIS
+            {t('analytics.executionAnalysis')}
           </p>
           {loadingInsight ? (
-            <p className="text-xs text-[var(--text-muted)] font-mono">Analyzing...</p>
+            <p className="text-xs text-[var(--text-muted)] font-mono">{t('analytics.analyzing')}</p>
           ) : insight ? (
             <>
               <h2 className="text-base font-semibold text-[var(--text-primary)] mb-1">
@@ -163,7 +167,7 @@ export default function Analytics(): React.JSX.Element {
 
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-4">
           <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-4">
-            SCORE TREND
+            {t('analytics.scoreTrend')}
           </p>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={data?.trend ?? []}>
@@ -191,7 +195,7 @@ export default function Analytics(): React.JSX.Element {
 
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-4">
           <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-4">
-            DAILY TASKS
+            {t('analytics.dailyTasks')}
           </p>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={data?.trend ?? []}>
@@ -214,7 +218,7 @@ export default function Analytics(): React.JSX.Element {
 
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-4">
           <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-4">
-            BY EFFORT
+            {t('analytics.byEffort')}
           </p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={effortData}>
@@ -240,7 +244,7 @@ export default function Analytics(): React.JSX.Element {
 
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-4">
           <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-4">
-            BY TIME SLOT
+            {t('analytics.byTimeSlot')}
           </p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={slotData}>

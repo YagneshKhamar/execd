@@ -8,7 +8,6 @@ export function registerConfigHandlers(): void {
     (
       _event,
       data: {
-        ai_provider: string
         api_key: string
         working_start: string
         working_end: string
@@ -19,14 +18,11 @@ export function registerConfigHandlers(): void {
         personal_goal_count: number
         family_goal_count: number
         max_daily_tasks?: number
-        ollama_model?: string
-        ollama_base_url?: string
-        openrouter_model?: string
+        fiscal_year_start?: number
       },
     ) => {
       const db = getDatabase()
       const {
-        ai_provider,
         api_key,
         working_start,
         working_end,
@@ -37,9 +33,7 @@ export function registerConfigHandlers(): void {
         personal_goal_count,
         family_goal_count,
         max_daily_tasks = 5,
-        ollama_model,
-        ollama_base_url,
-        openrouter_model,
+        fiscal_year_start = 4,
       } = data
       const rawKey = api_key || ''
       let keyToStore = rawKey
@@ -57,7 +51,6 @@ export function registerConfigHandlers(): void {
         db.prepare(
           `
         UPDATE config SET
-          ai_provider = ?,
           api_key_encrypted = ?,
           api_key_is_encrypted = ?,
           working_start = ?,
@@ -69,14 +62,11 @@ export function registerConfigHandlers(): void {
           personal_goal_count = ?,
           family_goal_count = ?,
           max_daily_tasks = ?,
-          ollama_model = ?,
-          ollama_base_url = ?,
-          openrouter_model = ?,
+          fiscal_year_start = ?,
           updated_at = datetime('now')
         WHERE id = 1
       `,
         ).run(
-          ai_provider,
           keyToStore,
           apiKeyIsEncrypted,
           working_start,
@@ -88,24 +78,20 @@ export function registerConfigHandlers(): void {
           personal_goal_count,
           family_goal_count,
           max_daily_tasks,
-          ollama_model ?? 'llama3',
-          ollama_base_url ?? 'http://localhost:11434',
-          openrouter_model ?? 'nvidia/nemotron-3-super-120b-a12b:free',
+          fiscal_year_start ?? 4,
         )
       } else {
         db.prepare(
           `
-        INSERT INTO config (
-          id, ai_provider, api_key_encrypted,
-          api_key_is_encrypted,
-          working_start, working_end, working_days,
-          break_start, break_end, business_goal_count,
-          personal_goal_count, family_goal_count, max_daily_tasks,
-          ollama_model, ollama_base_url, openrouter_model
-        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
+          INSERT INTO config (
+            id, api_key_encrypted, api_key_is_encrypted,
+            working_start, working_end, working_days,
+            break_start, break_end, business_goal_count,
+            personal_goal_count, family_goal_count, max_daily_tasks,
+            fiscal_year_start
+          ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
         ).run(
-          ai_provider,
           keyToStore,
           apiKeyIsEncrypted,
           working_start,
@@ -117,9 +103,7 @@ export function registerConfigHandlers(): void {
           personal_goal_count,
           family_goal_count,
           max_daily_tasks,
-          ollama_model ?? 'llama3',
-          ollama_base_url ?? 'http://localhost:11434',
-          openrouter_model ?? 'nvidia/nemotron-3-super-120b-a12b:free',
+          fiscal_year_start ?? 4,
         )
       }
 
@@ -148,6 +132,8 @@ export function registerConfigHandlers(): void {
     }
 
     const row = config as Record<string, unknown>
+    const rest = { ...row }
+    delete rest.ai_provider
     let workingDays: string[] = ['mon', 'tue', 'wed', 'thu', 'fri']
     try {
       const parsed = JSON.parse(String(row.working_days ?? '[]')) as unknown
@@ -159,15 +145,14 @@ export function registerConfigHandlers(): void {
     }
 
     return {
-      ...row,
+      ...rest,
+      ai_provider: 'openai',
       working_days: workingDays,
       business_goal_count: Number(row.business_goal_count ?? 3),
       personal_goal_count: Number(row.personal_goal_count ?? 1),
       family_goal_count: Number(row.family_goal_count ?? 1),
       max_daily_tasks: Number(row.max_daily_tasks ?? 5),
-      ollama_model: String(row.ollama_model ?? 'llama3'),
-      ollama_base_url: String(row.ollama_base_url ?? 'http://localhost:11434'),
-      openrouter_model: String(row.openrouter_model ?? 'nvidia/nemotron-3-super-120b-a12b:free'),
+      fiscal_year_start: Number(row.fiscal_year_start ?? 4),
     }
   })
 }

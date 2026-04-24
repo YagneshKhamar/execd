@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import { useToast } from '../components/Toast'
 
@@ -78,6 +79,7 @@ function getDefaultDueDate(weekStart: string): string {
 }
 
 export default function Team(): React.JSX.Element {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const weekStart = useMemo(() => getWeekStart(), [])
   const [tab, setTab] = useState<'members' | 'week' | 'followups'>('week')
@@ -116,7 +118,7 @@ export default function Team(): React.JSX.Element {
       setFollowups(followupsData as Followup[])
       setOverdue(overdueData as TeamTask[])
     } catch {
-      error('Failed to load team data.')
+      error(t('toast.loadTeamFailed'))
     } finally {
       setLoading(false)
     }
@@ -135,12 +137,12 @@ export default function Team(): React.JSX.Element {
     if (!newMember.name.trim()) return
     const result = await window.api.team.addMember(newMember)
     if (result.success) {
-      success('Member added.')
+      success(t('toast.memberAdded'))
       setShowAddMember(false)
       setNewMember({ name: '', role: '', email: '' })
       await loadData()
     } else {
-      error('Failed to add member.')
+      error(t('toast.memberAddFailed'))
     }
   }
 
@@ -155,7 +157,7 @@ export default function Team(): React.JSX.Element {
       week_start: weekStart,
     })
     if (result.success) {
-      success('Task assigned.')
+      success(t('toast.taskAssigned'))
       setShowAddTask(false)
       setNewTask({
         member_id: members[0]?.id ?? '',
@@ -166,7 +168,7 @@ export default function Team(): React.JSX.Element {
       })
       await loadData()
     } else {
-      error('Failed to assign task.')
+      error(t('toast.taskAssignFailed'))
     }
   }
 
@@ -178,7 +180,7 @@ export default function Team(): React.JSX.Element {
     if (result.success) {
       await loadData()
     } else {
-      error('Failed to update status.')
+      error(t('toast.statusUpdateFailed'))
     }
   }
 
@@ -187,11 +189,11 @@ export default function Team(): React.JSX.Element {
     if (!note) return
     const result = await window.api.team.addNote(taskId, note)
     if (result.success) {
-      success('Note saved.')
+      success(t('toast.noteSaved'))
       setActiveNoteTaskId(null)
       await loadData()
     } else {
-      error('Failed to save note.')
+      error(t('toast.noteSaveFailed'))
     }
   }
 
@@ -204,19 +206,19 @@ export default function Team(): React.JSX.Element {
       scheduled_date: followupDraft.scheduled_date,
     })
     if (result.success) {
-      success('Follow-up scheduled.')
+      success(t('toast.followupScheduled'))
       setShowFollowupModalForTask(null)
       setFollowupDraft({ scheduled_date: getTomorrow(), note: '' })
       await loadData()
     } else {
-      error('Failed to schedule follow-up.')
+      error(t('toast.followupFailed'))
     }
   }
 
   if (loading) {
     return (
       <div className="h-full w-full bg-[var(--bg-base)] flex items-center justify-center">
-        <p className="text-[var(--text-muted)] text-sm font-mono">loading...</p>
+        <p className="text-[var(--text-muted)] text-sm font-mono">{t('common.loading')}</p>
       </div>
     )
   }
@@ -238,9 +240,9 @@ export default function Team(): React.JSX.Element {
         <div className="flex gap-1 mb-6 bg-[var(--bg-surface)] p-1 rounded border border-[var(--border-subtle)] w-fit">
           {(
             [
-              { id: 'members', label: 'Members' },
-              { id: 'week', label: 'This Week' },
-              { id: 'followups', label: 'Follow-ups' },
+              { id: 'members', label: t('team.members') },
+              { id: 'week', label: t('team.thisWeek') },
+              { id: 'followups', label: t('team.followups') },
             ] as const
           ).map((item) => (
             <button
@@ -267,7 +269,7 @@ export default function Team(): React.JSX.Element {
                 title={members.length >= 10 ? 'Max 10 members' : ''}
                 className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors"
               >
-                Add Member
+                {t('team.addMember')}
               </button>
             </div>
             <div className="space-y-2">
@@ -343,7 +345,7 @@ export default function Team(): React.JSX.Element {
                       : 'bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
                   }`}
                 >
-                  All
+                  {t('team.all')}
                 </button>
                 {members.map((member) => (
                   <button
@@ -369,7 +371,7 @@ export default function Team(): React.JSX.Element {
                 }}
                 className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors"
               >
-                Assign Task
+                {t('team.assignTask')}
               </button>
             </div>
 
@@ -564,14 +566,16 @@ export default function Team(): React.JSX.Element {
       {showAddTask && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6">
           <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-base font-semibold text-[var(--text-primary)] mb-4">Assign Task</h3>
+            <h3 className="text-base font-semibold text-[var(--text-primary)] mb-4">
+              {t('team.assignTaskTitle')}
+            </h3>
             <div className="space-y-2">
               <select
                 value={newTask.member_id}
                 onChange={(e) => setNewTask((prev) => ({ ...prev, member_id: e.target.value }))}
                 className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
               >
-                <option value="">Select member</option>
+                <option value="">{t('team.selectMember')}</option>
                 {members.map((member) => (
                   <option key={member.id} value={member.id}>
                     {member.name}
@@ -580,14 +584,14 @@ export default function Team(): React.JSX.Element {
               </select>
               <input
                 type="text"
-                placeholder="Task title"
+                placeholder={t('team.taskTitle')}
                 value={newTask.title}
                 onChange={(e) => setNewTask((prev) => ({ ...prev, title: e.target.value }))}
                 className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
               />
               <textarea
                 rows={3}
-                placeholder="Description (optional)"
+                placeholder={t('team.descriptionOptional')}
                 value={newTask.description}
                 onChange={(e) => setNewTask((prev) => ({ ...prev, description: e.target.value }))}
                 className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
@@ -619,14 +623,14 @@ export default function Team(): React.JSX.Element {
                 onClick={() => setShowAddTask(false)}
                 className="flex-1 bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm py-2 rounded cursor-pointer transition-colors"
               >
-                Cancel
+                {t('team.cancel')}
               </button>
               <button
                 onClick={handleAssignTask}
                 disabled={!newTask.member_id || !newTask.title.trim()}
                 className="flex-1 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm py-2 rounded cursor-pointer transition-colors"
               >
-                Save
+                {t('team.save')}
               </button>
             </div>
           </div>

@@ -1,22 +1,24 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Setup from './pages/Setup'
 import Goals from './pages/Goals'
-import MonthlyPlan from './pages/MonthlyPlan'
 import Today from './pages/Today'
 import DailyReport from './pages/DailyReport'
-import WeeklyReport from './pages/WeeklyReport'
-import YearlyReport from './pages/YearlyReport'
+import Reports from './pages/Reports'
 import History from './pages/History'
+import Business from './pages/Business'
 import Analytics from './pages/Analytics'
 import Team from './pages/Team'
 import UpdateNotifier from './components/UpdateNotifier'
 
 function AppLayout({ children }: { children: React.ReactNode }): React.JSX.Element {
+  const location = useLocation()
+  const hideSidebar = location.pathname === '/setup' || location.pathname === '/business/setup'
+
   return (
     <div className="h-screen w-screen flex bg-[var(--bg-base)] overflow-hidden">
-      <Sidebar />
+      {!hideSidebar && <Sidebar />}
       <main className="flex-1 overflow-hidden">{children}</main>
       <UpdateNotifier />
     </div>
@@ -34,13 +36,12 @@ function AppRouter(): React.JSX.Element {
           setStartPath('/setup')
           return
         }
-        const month = new Date().toISOString().slice(0, 7)
-        const goals = (await window.api.goals.get(month)) as unknown[]
-        if (goals && goals.length > 0) {
-          setStartPath('/today')
-        } else {
-          setStartPath('/goals')
+        const profile = await window.api.business.get()
+        if (!profile || !profile.business_name) {
+          setStartPath('/business/setup')
+          return
         }
+        setStartPath('/today')
       } catch {
         setStartPath('/setup')
       }
@@ -61,12 +62,13 @@ function AppRouter(): React.JSX.Element {
       <Routes>
         <Route path="/" element={<Navigate to={startPath} replace />} />
         <Route path="/setup" element={<Setup />} />
+        <Route path="/settings" element={<Setup />} />
         <Route path="/goals" element={<Goals />} />
-        <Route path="/plan" element={<MonthlyPlan />} />
+        <Route path="/business" element={<Business />} />
+        <Route path="/business/setup" element={<Business isSetup={true} />} />
         <Route path="/today" element={<Today />} />
         <Route path="/report/daily" element={<DailyReport />} />
-        <Route path="/report/weekly" element={<WeeklyReport />} />
-        <Route path="/report/yearly" element={<YearlyReport />} />
+        <Route path="/reports" element={<Reports />} />
         <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/team" element={<Team />} />

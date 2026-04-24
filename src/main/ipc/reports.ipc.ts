@@ -2,6 +2,17 @@ import { ipcMain } from 'electron'
 import { getDatabase } from '../db/database'
 import { v4 as uuidv4 } from 'uuid'
 
+function escapeCsvField(value: unknown): string {
+  const text = String(value ?? '')
+  if (text.includes('"')) {
+    return `"${text.replace(/"/g, '""')}"`
+  }
+  if (text.includes(',') || text.includes('\n') || text.includes('\r')) {
+    return `"${text}"`
+  }
+  return text
+}
+
 export function detectBehaviorPatterns(date: string): void {
   const db = getDatabase()
 
@@ -137,6 +148,17 @@ export function registerReportsHandlers(): void {
 
   ipcMain.handle('reports:year', (_event, year: string) => {
     const db = getDatabase()
+    const config = db.prepare('SELECT fiscal_year_start FROM config WHERE id = 1').get() as
+      | { fiscal_year_start?: number }
+      | undefined
+    const fyStart = config?.fiscal_year_start ?? 4
+    const paddedStartMonth = String(fyStart).padStart(2, '0')
+    const startDate = fyStart === 1 ? `${year}-01-01` : `${year}-${paddedStartMonth}-01`
+    const endYear = Number(year) + 1
+    const endMonth = fyStart - 1
+    const endDate =
+      fyStart === 1 ? `${year}-12-31` : new Date(endYear, endMonth, 0).toISOString().slice(0, 10)
+    const fyLabel = fyStart === 1 ? year : `${year}-${String(Number(year) + 1).slice(2)}`
 
     const days = db
       .prepare(
@@ -147,7 +169,7 @@ export function registerReportsHandlers(): void {
     ORDER BY date ASC
   `,
       )
-      .all(`${year}-01-01`, `${year}-12-31`)
+      .all(startDate, endDate)
 
     const months = db
       .prepare(
@@ -164,7 +186,7 @@ export function registerReportsHandlers(): void {
     ORDER BY month ASC
   `,
       )
-      .all(`${year}-01-01`, `${year}-12-31`)
+      .all(startDate, endDate)
 
     const topMissed = db
       .prepare(
@@ -180,9 +202,9 @@ export function registerReportsHandlers(): void {
     LIMIT 5
   `,
       )
-      .all(`${year}-01-01`, `${year}-12-31`)
+      .all(startDate, endDate)
 
-    return { days, months, topMissed }
+    return { days, months, topMissed, fy_label: fyLabel }
   })
 
   ipcMain.handle('reports:analytics', (_event, days: number) => {
@@ -244,5 +266,135 @@ export function registerReportsHandlers(): void {
       .all(sinceStr)
 
     return { trend, byEffort, bySlot, carryTrend }
+  })
+
+  ipcMain.handle('reports:export-tasks-csv', (_event, filters: { month?: string }) => {
+    const db = getDatabase()
+    const rows = (
+      filters.month
+        ? db
+            .prepare(
+              `
+          SELECT
+            tasks.*,
+            subgoals.title as subgoal_title,
+            goals.title as goal_title,
+            goals.type as goal_type
+          FROM tasks
+          LEFT JOIN subgoals ON tasks.subgoal_id = subgoals.id
+          LEFT JOIN goals ON subgoals.goal_id = goals.id
+          WHERE tasks.scheduled_date LIKE ?
+          ORDER BY tasks.scheduled_date DESC
+        `,
+            )
+            .all(`${filters.month}-%`)
+        : db
+            .prepare(
+              `
+          SELECT
+            tasks.*,
+            subgoals.title as subgoal_title,
+            goals.title as goal_title,
+            goals.type as goal_type
+          FROM tasks
+          LEFT JOIN subgoals ON tasks.subgoal_id = subgoals.id
+          LEFT JOIN goals ON subgoals.goal_id = goals.id
+          ORDER BY tasks.scheduled_date DESC
+        `,
+            )
+            .all()
+    ) as Record<string, unknown>[]
+
+    const headers = [
+      'Date',
+      'Day',
+      'Task',
+      'Goal Type',
+      'Goal',
+      'Subgoal',
+      'Effort',
+      'Status',
+      'Time Slot',
+      'Note',
+      'Completed At',
+    ]
+
+    const csvRows = rows.map((row) => {
+      const date = String(row.scheduled_date ?? '')
+      const day = date
+        ? new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' })
+        : ''
+      const effortRaw = String(row.effort ?? '')
+      const effortLabels: Record<string, string> = {
+        light: '30 min',
+        medium: '1 hour',
+        heavy: '2 hours',
+      }
+      const effort = effortLabels[effortRaw] ?? effortRaw
+      return [
+        date,
+        day,
+        row.title ?? '',
+        row.goal_type ?? '',
+        row.goal_title ?? '',
+        row.subgoal_title ?? '',
+        effort,
+        row.status ?? '',
+        row.scheduled_time_slot ?? '',
+        row.notes ?? '',
+        row.completed_at ?? '',
+      ]
+        .map(escapeCsvField)
+        .join(',')
+    })
+
+    const today = new Date().toISOString().slice(0, 10)
+    return {
+      success: true,
+      csv: `\uFEFF${[headers.join(','), ...csvRows].join('\n')}`,
+      filename: `execd-tasks-${today}.csv`,
+    }
+  })
+
+  ipcMain.handle('reports:export-summary-csv', (_event, filters: { year?: string }) => {
+    const db = getDatabase()
+    const year = filters.year || String(new Date().getFullYear())
+    const rows = db
+      .prepare(
+        `
+      SELECT *
+      FROM day_logs
+      WHERE date >= ? AND date <= ?
+      ORDER BY date DESC
+    `,
+      )
+      .all(`${year}-01-01`, `${year}-12-31`) as Record<string, unknown>[]
+
+    const headers = ['Date', 'Day', 'Score %', 'Completed', 'Missed', 'Carried', 'AI Feedback']
+    const csvRows = rows.map((row) => {
+      const date = String(row.date ?? '')
+      const day = date
+        ? new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'long' })
+        : ''
+      const scorePercent = Math.round(Number(row.execution_score ?? 0) * 100)
+      return [
+        date,
+        day,
+        scorePercent,
+        Number(row.tasks_completed ?? 0),
+        Number(row.tasks_missed ?? 0),
+        Number(row.tasks_carried ?? 0),
+        row.ai_feedback ?? '',
+      ]
+        .map(escapeCsvField)
+        .join(',')
+    })
+
+    const today = new Date().toISOString().slice(0, 10)
+    return {
+      success: true,
+      csv: `\uFEFF${[headers.join(','), ...csvRows].join('\n')}`,
+      filename: `execd-summary-${today}.csv`,
+    }
   })
 }

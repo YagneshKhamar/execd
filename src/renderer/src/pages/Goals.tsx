@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Sparkles, Target, Trash2 } from 'lucide-react'
 import { useToast } from '../components/Toast'
+import i18n from '../i18n/index'
 
 type GoalType = 'business' | 'personal' | 'family'
 type ValidationState = 'idle' | 'validating' | 'valid' | 'invalid'
@@ -60,8 +62,8 @@ function getCurrentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 }
 
-function getMonthLabel(month: string): string {
-  return new Date(`${month}-01T00:00:00`).toLocaleDateString('en-US', {
+function getMonthLabel(month: string, language: string): string {
+  return new Date(`${month}-01T00:00:00`).toLocaleDateString(language === 'gu' ? 'gu-IN' : 'en-US', {
     month: 'long',
     year: 'numeric',
   })
@@ -104,6 +106,7 @@ function buildGoalSlots(counts: {
 }
 
 export default function Goals(): React.JSX.Element {
+  const { t } = useTranslation()
   const [view, setView] = useState<GoalsView>('empty')
   const [step, setStep] = useState<'input' | 'subgoals'>('input')
   const [goals, setGoals] = useState<GoalWithSubgoals[]>([])
@@ -115,6 +118,11 @@ export default function Goals(): React.JSX.Element {
   const [loading, setLoading] = useState(true)
   const month = useMemo(() => getCurrentMonth(), [])
   const { error, success, info } = useToast()
+  const goalTypeLabel = (type: GoalType): string => {
+    if (type === 'business') return t('goals.businessLabel')
+    if (type === 'personal') return t('goals.personalLabel')
+    return t('goals.familyLabel')
+  }
 
   async function loadSavedGoals(targetMonth: string): Promise<SavedGoal[]> {
     const fetched = (await window.api.goals.get(targetMonth)) as SavedGoal[]
@@ -151,7 +159,7 @@ export default function Goals(): React.JSX.Element {
         const fetched = await loadSavedGoals(month)
         setView(fetched.length > 0 ? 'review' : 'empty')
       } catch {
-        error('Failed to load goals.')
+        error(t('toast.loadGoalsFailed'))
       } finally {
         setLoading(false)
       }
@@ -277,7 +285,7 @@ export default function Goals(): React.JSX.Element {
         }
         setGoals([...updated])
         setValidating(false)
-        error('Validation failed. Check your API key.')
+        error(t('toast.validationFailed'))
         return
       }
       setGoals([...updated])
@@ -322,7 +330,7 @@ export default function Goals(): React.JSX.Element {
       )
 
       if (!result.success || !result.ids || result.ids.length !== goals.length) {
-        error('Failed to save goals.')
+        error(t('toast.saveGoalsFailed'))
         setSaving(false)
         return
       }
@@ -340,10 +348,10 @@ export default function Goals(): React.JSX.Element {
       await loadSavedGoals(month)
       setView('review')
       setStep('input')
-      success('Goals saved for this month.')
+      success(t('toast.goalsSaved'))
     } catch (e) {
       console.error('Error saving goals:', e)
-      error('Failed to save goals.')
+      error(t('toast.saveGoalsFailed'))
     } finally {
       setSaving(false)
     }
@@ -360,7 +368,7 @@ export default function Goals(): React.JSX.Element {
   if (loading) {
     return (
       <div className="h-full w-full bg-[var(--bg-base)] flex items-center justify-center">
-        <p className="text-[var(--text-muted)] text-sm font-mono">loading...</p>
+        <p className="text-[var(--text-muted)] text-sm font-mono">{t('common.loading')}</p>
       </div>
     )
   }
@@ -372,27 +380,28 @@ export default function Goals(): React.JSX.Element {
           <div className="w-14 h-14 rounded-full border border-[var(--border-default)] bg-[var(--bg-elevated)] mx-auto mb-5 flex items-center justify-center">
             <Target className="w-7 h-7 text-[var(--text-muted)]" />
           </div>
-          <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">No goals set</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
+            {t('goals.noGoals')} {getMonthLabel(month, i18n.language)}
+          </h1>
           <p className="text-sm text-[var(--text-secondary)] mb-7 text-center max-w-md mx-auto leading-relaxed">
-            Define your monthly goals to generate daily tasks. You need goals before the app can
-            plan your day.
+            {t('goals.addGoalsSubtitle')}
           </p>
           <div className="flex flex-wrap justify-center gap-2 mb-6">
             <span className="font-mono text-xs px-3 py-1.5 rounded border border-blue-500/30 text-blue-400 bg-blue-500/10">
-              {goalConfig.business} Business
+              {goalConfig.business} {t('goals.business')}
             </span>
             <span className="font-mono text-xs px-3 py-1.5 rounded border border-purple-500/30 text-purple-400 bg-purple-500/10">
-              {goalConfig.personal} Personal
+              {goalConfig.personal} {t('goals.personal')}
             </span>
             <span className="font-mono text-xs px-3 py-1.5 rounded border border-[var(--accent-green)]/30 text-[var(--accent-green)] bg-[var(--accent-green)]/10">
-              {goalConfig.family} Family
+              {goalConfig.family} {t('goals.family')}
             </span>
           </div>
           <button
             onClick={startAddFlow}
             className="mt-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-colors"
           >
-            Set Goals for {getMonthLabel(month)}
+            {t('goals.addGoals')}
           </button>
         </div>
       </div>
@@ -406,15 +415,17 @@ export default function Goals(): React.JSX.Element {
           <div className="flex justify-between items-center mb-6">
             <div>
               <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase">
-                GOALS
+                {t('goals.title')}
               </p>
               <p className="font-mono text-xs text-[var(--text-muted)] mt-1">
-                {getMonthLabel(month)}
+                {getMonthLabel(month, i18n.language)}
               </p>
-              <h1 className="text-xl font-semibold text-[var(--text-primary)] mt-1">Goals Set</h1>
+              <h1 className="text-xl font-semibold text-[var(--text-primary)] mt-1">
+                {t('goals.title')}
+              </h1>
             </div>
             <p className="text-xs text-[var(--text-muted)] font-mono">
-              {savedGoals.length} / {totalSubgoals} subgoals active
+              {savedGoals.length} / {totalSubgoals} {t('goals.subgoalsActive')}
             </p>
           </div>
 
@@ -431,7 +442,7 @@ export default function Goals(): React.JSX.Element {
                       <span className="font-mono text-[10px] text-[var(--text-muted)]">
                         {String(goalIndex + 1).padStart(2, '0')}
                       </span>
-                      <span className={TYPE_BADGE[goal.type]}>{goal.type}</span>
+                      <span className={TYPE_BADGE[goal.type]}>{goalTypeLabel(goal.type)}</span>
                     </div>
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-sm font-medium text-[var(--text-primary)] flex-1 min-w-0 leading-snug break-words">
@@ -444,7 +455,7 @@ export default function Goals(): React.JSX.Element {
                             : 'bg-[var(--text-muted)]/10 text-[var(--text-muted)] border-[var(--text-muted)]/20'
                         }`}
                       >
-                        {goal.ai_validated === 1 ? 'validated' : 'unvalidated'}
+                        {goal.ai_validated === 1 ? t('goals.validated') : t('goals.unvalidated')}
                       </span>
                     </div>
                   </div>
@@ -471,7 +482,7 @@ export default function Goals(): React.JSX.Element {
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-[var(--text-muted)] py-1">No subgoals generated</p>
+                      <p className="text-xs text-[var(--text-muted)] py-1">{t('goals.noGoals')}</p>
                     )}
                   </div>
                 </div>
@@ -504,7 +515,7 @@ export default function Goals(): React.JSX.Element {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className={`${TYPE_BADGE[goal.type]} shrink-0`}>{goal.type}</span>
+                    <span className={`${TYPE_BADGE[goal.type]} shrink-0`}>{goalTypeLabel(goal.type)}</span>
                     <span className="text-sm text-[var(--text-primary)] font-medium truncate">
                       {goal.title}
                     </span>
@@ -516,7 +527,7 @@ export default function Goals(): React.JSX.Element {
 
                 {goal.loadingSubgoals ? (
                   <div className="text-[var(--text-muted)] text-xs py-2">
-                    Generating subgoals...
+                    {t('goals.generating')}
                   </div>
                 ) : (
                   <div>
@@ -552,7 +563,7 @@ export default function Goals(): React.JSX.Element {
                       onClick={() => addSubgoal(gi)}
                       className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] cursor-pointer mt-1 ml-1"
                     >
-                      Add subgoal
+                      {t('goals.addSubgoal')}
                     </button>
                   </div>
                 )}
@@ -565,7 +576,7 @@ export default function Goals(): React.JSX.Element {
             disabled={saving}
             className="w-full bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded text-sm cursor-pointer transition-colors mt-6"
           >
-            {saving ? 'Saving...' : 'Confirm & Start Month ->'}
+            {saving ? t('goals.saving') : t('goals.saveGoals')}
           </button>
         </div>
       </div>
@@ -586,7 +597,7 @@ export default function Goals(): React.JSX.Element {
           STEP 1 OF 2 - DEFINE GOALS
         </p>
         <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-6">
-          Define Monthly Goals
+          {t('goals.addGoals')}
         </h1>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 mb-6">
@@ -604,7 +615,7 @@ export default function Goals(): React.JSX.Element {
               }`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className={TYPE_BADGE[slot.type]}>{slot.type}</span>
+                <span className={TYPE_BADGE[slot.type]}>{goalTypeLabel(slot.type)}</span>
                 <span className="font-mono text-xs text-[var(--text-muted)]">
                   {String(index + 1).padStart(2, '0')}
                 </span>
@@ -613,7 +624,7 @@ export default function Goals(): React.JSX.Element {
                 type="text"
                 value={goals[index].title}
                 onChange={(e) => updateGoalTitle(index, e.target.value)}
-                placeholder={slot.placeholder}
+                placeholder={t('goals.goalPlaceholder')}
                 className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none mt-3"
               />
               {goals[index].validationState === 'idle' && (
@@ -672,10 +683,10 @@ export default function Goals(): React.JSX.Element {
           className="w-full bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded text-sm cursor-pointer transition-colors mt-4"
         >
           {validating
-            ? 'Validating with AI...'
+            ? t('goals.validating')
             : toValidate === 0
-              ? 'All Validated ✓'
-              : `Validate (${toValidate})`}
+              ? t('goals.validated')
+              : `${t('goals.validate')} (${toValidate})`}
         </button>
       </div>
     </div>

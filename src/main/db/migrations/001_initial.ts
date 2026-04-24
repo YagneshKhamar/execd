@@ -113,6 +113,43 @@ export function runInitialMigration(db: Database.Database): void {
     );
   `)
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS business_profile (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      business_name TEXT NOT NULL DEFAULT '',
+      business_type TEXT NOT NULL DEFAULT 'other',
+      monthly_sales_target REAL DEFAULT NULL,
+      collection_target REAL DEFAULT NULL,
+      primary_activities TEXT NOT NULL DEFAULT '[]',
+      team_size INTEGER NOT NULL DEFAULT 1,
+      language TEXT NOT NULL DEFAULT 'en',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS monthly_targets (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      year_month TEXT NOT NULL UNIQUE,
+      sales_target REAL NOT NULL DEFAULT 0,
+      collection_target REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS daily_sales (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL UNIQUE,
+      sales_amount REAL NOT NULL DEFAULT 0,
+      collection_amount REAL NOT NULL DEFAULT 0,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `)
+
   const addColumnIfMissing = (col: string, def: string) => {
     try {
       db.exec(`ALTER TABLE config ADD COLUMN ${col} ${def}`)
@@ -127,4 +164,5 @@ export function runInitialMigration(db: Database.Database): void {
     "TEXT NOT NULL DEFAULT 'nvidia/nemotron-3-super-120b-a12b:free'",
   )
   addColumnIfMissing('api_key_is_encrypted', 'INTEGER NOT NULL DEFAULT 0')
+  addColumnIfMissing('fiscal_year_start', 'INTEGER NOT NULL DEFAULT 4')
 }

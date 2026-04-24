@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Download } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useToast } from '../components/Toast'
 
 interface Task {
@@ -28,6 +29,7 @@ function formatDate(iso: string): string {
 
 export default function DailyReport(): React.JSX.Element {
   const reportRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation()
   const [todayTasks, setTodayTasks] = useState<Task[]>([])
   const [dayLog, setDayLog] = useState<{
     execution_score: number
@@ -83,13 +85,51 @@ export default function DailyReport(): React.JSX.Element {
       link.download = `daily-report-${getToday()}.png`
       link.href = `data:image/png;base64,${base64}`
       link.click()
-      success('Report saved as image.')
+      success(t('toast.reportSaved'))
     } catch (captureError) {
       console.error('Failed to capture report:', captureError)
-      error('Failed to capture report image.')
+      error(t('toast.reportFailed'))
     } finally {
       document.body.classList.remove('capture-mode')
       setSaving(false)
+    }
+  }
+
+  function triggerCsvDownload(csv: string, filename: string): void {
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleExportTasksCsv(): Promise<void> {
+    try {
+      const result = await window.api.reports.exportTasksCsv({})
+      if (!result.success) {
+        error(t('toast.exportTasksFailed'))
+        return
+      }
+      triggerCsvDownload(result.csv, result.filename)
+      success(t('toast.exportTasksSuccess'))
+    } catch {
+      error(t('toast.exportTasksFailed'))
+    }
+  }
+
+  async function handleExportSummaryCsv(): Promise<void> {
+    try {
+      const result = await window.api.reports.exportSummaryCsv({})
+      if (!result.success) {
+        error(t('toast.exportSummaryFailed'))
+        return
+      }
+      triggerCsvDownload(result.csv, result.filename)
+      success(t('toast.exportSummarySuccess'))
+    } catch {
+      error(t('toast.exportSummaryFailed'))
     }
   }
 
@@ -97,30 +137,30 @@ export default function DailyReport(): React.JSX.Element {
     if (status === 'completed')
       return (
         <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent-green)]/10 text-[var(--accent-green)] border border-[var(--accent-green)]/20">
-          completed
+          {t('dailyReport.completed')}
         </span>
       )
     if (status === 'missed')
       return (
         <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent-red)]/10 text-[var(--accent-red)] border border-[var(--accent-red)]/20">
-          missed
+          {t('dailyReport.missed')}
         </span>
       )
     if (status === 'carried')
       return (
         <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--accent-orange)]/10 text-[var(--accent-orange)] border border-[var(--accent-orange)]/20">
-          carried
+          {t('dailyReport.carried')}
         </span>
       )
     if (status === 'dropped')
       return (
         <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--border-default)]/30 text-[var(--text-muted)] border border-[var(--border-default)]">
-          dropped
+          {t('dailyReport.dropped')}
         </span>
       )
     return (
       <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--border-default)]/30 text-[var(--text-secondary)] border border-[var(--border-default)]">
-        pending
+        {t('dailyReport.pending')}
       </span>
     )
   }
@@ -128,7 +168,7 @@ export default function DailyReport(): React.JSX.Element {
   if (loading) {
     return (
       <div className="h-screen w-screen overflow-y-auto bg-[var(--bg-base)] flex items-center justify-center">
-        <p className="text-[var(--text-muted)] text-sm font-mono">loading...</p>
+        <p className="text-[var(--text-muted)] text-sm font-mono">{t('common.loading')}</p>
       </div>
     )
   }
@@ -140,7 +180,7 @@ export default function DailyReport(): React.JSX.Element {
         <div className="flex items-end gap-4">
           <div>
             <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase mb-1">
-              Daily Report
+              {t('dailyReport.title')}
             </p>
             <h1 className="text-lg font-semibold text-[var(--text-primary)]">
               {formatDate(getToday())}
@@ -152,7 +192,21 @@ export default function DailyReport(): React.JSX.Element {
             className="flex items-center gap-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors mb-0.5"
           >
             <Download className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Save as Image'}
+            {saving ? t('dailyReport.saving') : t('dailyReport.saveImage')}
+          </button>
+          <button
+            onClick={handleExportTasksCsv}
+            className="flex items-center gap-2 bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)] hover:text-[var(--text-primary)] text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors mb-0.5"
+          >
+            <Download className="w-4 h-4" />
+            {t('dailyReport.exportTasksCsv')}
+          </button>
+          <button
+            onClick={handleExportSummaryCsv}
+            className="flex items-center gap-2 bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)] hover:text-[var(--text-primary)] text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors mb-0.5"
+          >
+            <Download className="w-4 h-4" />
+            {t('dailyReport.exportSummaryCsv')}
           </button>
         </div>
       </div>
@@ -168,7 +222,7 @@ export default function DailyReport(): React.JSX.Element {
           <div className="flex items-start gap-8 flex-wrap mb-4">
             <div>
               <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase mb-2">
-                Execution Score
+                {t('dailyReport.executionScore')}
               </p>
               <div
                 className={`font-mono text-5xl font-bold leading-none ${
@@ -182,27 +236,31 @@ export default function DailyReport(): React.JSX.Element {
                 {score}%
               </div>
               <p className="font-mono text-xs text-[var(--text-muted)] mt-2">
-                {completedWeight} / {totalWeight} weight
+                {completedWeight} / {totalWeight} {t('dailyReport.weight')}
               </p>
             </div>
             <div className="flex gap-6 pt-1">
               {[
                 {
-                  label: 'done',
+                  label: t('dailyReport.done'),
                   value: todayTasks.filter((t) => t.status === 'completed').length,
                   color: 'text-[var(--accent-green)]',
                 },
                 {
-                  label: 'missed',
+                  label: t('dailyReport.missed'),
                   value: todayTasks.filter((t) => t.status === 'missed').length,
                   color: 'text-[var(--accent-red)]',
                 },
                 {
-                  label: 'pending',
+                  label: t('dailyReport.pending'),
                   value: todayTasks.filter((t) => t.status === 'pending').length,
                   color: 'text-[var(--text-secondary)]',
                 },
-                { label: 'total', value: todayTasks.length, color: 'text-[var(--text-secondary)]' },
+                {
+                  label: t('dailyReport.total'),
+                  value: todayTasks.length,
+                  color: 'text-[var(--text-secondary)]',
+                },
               ].map(({ label, value, color }) => (
                 <div key={label} className="text-center">
                   <p className={`font-mono text-2xl font-semibold ${color}`}>{value}</p>
@@ -228,7 +286,7 @@ export default function DailyReport(): React.JSX.Element {
           {dayLog && dayLog.ai_feedback && (
             <div className="mt-4 pt-4 border-t border-[var(--border-subtle)]">
               <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase mb-2">
-                AI Feedback
+                {t('dailyReport.aiFeedback')}
               </p>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed italic">
                 {dayLog.ai_feedback}
@@ -243,7 +301,7 @@ export default function DailyReport(): React.JSX.Element {
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase">
-                Today&apos;s Tasks
+                {t('dailyReport.todaysTasks')}
               </p>
               <span className="font-mono text-[10px] text-[var(--text-muted)]">
                 1 - {Math.ceil(todayTasks.length / 2)}
@@ -301,7 +359,7 @@ export default function DailyReport(): React.JSX.Element {
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="font-mono text-[10px] tracking-widest text-[var(--text-muted)] uppercase">
-                Today&apos;s Tasks
+                {t('dailyReport.todaysTasks')}
               </p>
               <span className="font-mono text-[10px] text-[var(--text-muted)]">
                 {Math.ceil(todayTasks.length / 2) + 1} - {todayTasks.length}

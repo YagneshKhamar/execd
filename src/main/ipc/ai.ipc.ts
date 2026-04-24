@@ -1,6 +1,59 @@
 import { ipcMain, safeStorage } from 'electron'
 import { getDatabase } from '../db/database'
 
+// ─── AI Configuration ─────────────────────────────────────────────────────
+// Change these two lines to switch providers/models. No other changes needed.
+const AI_PROVIDER: 'openai' | 'anthropic' | 'ollama' | 'openrouter' = 'openai'
+const AI_MODEL = 'gpt-4o-mini'
+// Models: openai → gpt-4o-mini | gpt-4o | gpt-4-turbo
+//         anthropic → claude-haiku-4-5-20251001 | claude-sonnet-4-5
+//         ollama → llama3 | mistral | any local model
+//         openrouter → nvidia/nemotron-3-super-120b-a12b:free | any OR model
+// ──────────────────────────────────────────────────────────────────────────
+
+function getBusinessContext(): string {
+  try {
+    const db = getDatabase()
+    const profile = db.prepare('SELECT * FROM business_profile WHERE id = 1').get() as
+      | Record<string, unknown>
+      | undefined
+    if (!profile) return ''
+
+    const activities = (() => {
+      try {
+        return JSON.parse(String(profile.primary_activities || '[]')) as string[]
+      } catch {
+        return [] as string[]
+      }
+    })()
+
+    const businessType = String(profile.business_type || '').startsWith('other:')
+      ? String(profile.business_type).slice(6)
+      : String(profile.business_type || '')
+
+    const parts = [
+      profile.business_name ? `Business: ${String(profile.business_name)}` : '',
+      businessType ? `Type: ${businessType}` : '',
+      `Team size: ${String(profile.team_size || 1)}`,
+      activities.length > 0 ? `Primary activities: ${activities.join(', ')}` : '',
+      profile.monthly_sales_target
+        ? `Yearly sales target: ₹${String(profile.monthly_sales_target)}`
+        : '',
+    ].filter(Boolean)
+    const language = String(profile.language || 'en')
+    const languageInstruction =
+      language === 'gu'
+        ? '\nRespond in Gujarati (ગુજરાતી) language only.'
+        : language === 'hi'
+          ? '\nRespond in Hindi (हिंदी) language only.'
+          : ''
+
+    return `\n\nBusiness context:\n${parts.join('\n')}${languageInstruction}`
+  } catch {
+    return ''
+  }
+}
+
 interface GoalValidationResult {
   valid: boolean
   note: string
@@ -14,27 +67,32 @@ interface SubgoalSuggestion {
 async function callAI(prompt: string, systemPrompt: string): Promise<string> {
   const db = getDatabase()
   const config = db.prepare('SELECT * FROM config WHERE id = 1').get() as
-    | (Record<string, string> & {
-        ollama_model?: string
-        ollama_base_url?: string
-        openrouter_model?: string
-      })
+    | Record<string, string>
     | undefined
 
   if (!config) throw new Error('No config found. Complete setup first.')
 
-  const encryptedApiKey = config.api_key_encrypted || ''
-  const apiKeyIsEncrypted = Number(config.api_key_is_encrypted) === 1
-  const shouldDecrypt = apiKeyIsEncrypted && safeStorage.isEncryptionAvailable()
-  const apiKey =
-    shouldDecrypt && encryptedApiKey
-      ? safeStorage.decryptString(Buffer.from(encryptedApiKey, 'base64'))
-      : encryptedApiKey
+  const provider = AI_PROVIDER
+  const encryptedApiKey = config.api_key_encrypted as string | undefined
+  const isEncrypted = Number(config.api_key_is_encrypted ?? 0) === 1
+  console.log('encryptedApiKey', encryptedApiKey)
+  console.log('isEncrypted', isEncrypted)
+  console.log('safeStorage.isEncryptionAvailable()', safeStorage.isEncryptionAvailable())
 
-  const provider = config.ai_provider
+  let apiKey = ''
+  if (encryptedApiKey) {
+    if (isEncrypted && safeStorage.isEncryptionAvailable()) {
+      apiKey = safeStorage.decryptString(Buffer.from(encryptedApiKey, 'base64'))
+    } else {
+      apiKey = encryptedApiKey
+    }
+  }
 
-  if (provider !== 'ollama' && !apiKey) {
-    throw new Error('API key is missing after resolution. Please set it in the config.')
+  console.log('apiKey', apiKey)
+  console.log('provider', provider)
+
+  if (!apiKey && provider !== 'ollama') {
+    throw new Error('API key is missing. Please set it in Settings.')
   }
 
   if (provider === 'openai') {
@@ -45,7 +103,7 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: AI_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
@@ -58,7 +116,9 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: { message: string }
     }
     if (data.error) throw new Error(data.error.message)
-    return data.choices[0].message.content
+    let raw = data.choices[0].message.content
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   if (provider === 'anthropic') {
@@ -70,7 +130,7 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: AI_MODEL,
         max_tokens: 1024,
         system: systemPrompt,
         messages: [{ role: 'user', content: prompt }],
@@ -81,11 +141,13 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: { message: string }
     }
     if (data.error) throw new Error(data.error.message)
-    return data.content[0].text
+    let raw = data.content[0].text
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   if (provider === 'ollama') {
-    const model = config.ollama_model || 'llama3'
+    const model = config.ollama_model || AI_MODEL || 'llama3'
     const baseUrl = config.ollama_base_url || 'http://localhost:11434'
     const response = await fetch(`${baseUrl}/api/chat`, {
       method: 'POST',
@@ -104,11 +166,13 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: string
     }
     if (data.error) throw new Error(data.error)
-    return data.message.content
+    let raw = data.message.content
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   if (provider === 'openrouter') {
-    const model = config.openrouter_model || 'nvidia/nemotron-3-super-120b-a12b:free'
+    const model = config.openrouter_model || AI_MODEL
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -132,7 +196,9 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
       error?: { message: string }
     }
     if (data.error) throw new Error(data.error.message)
-    return data.choices[0].message.content
+    let raw = data.choices[0].message.content
+    raw = raw.replace(/<think>[\s\S]*?<\/think>/g, '').trim()
+    return raw
   }
 
   throw new Error(`Unknown provider: ${provider}`)
@@ -166,9 +232,10 @@ Last 7 days history: ${JSON.stringify(context.history)}`
 
 export function registerAIHandlers(): void {
   ipcMain.handle('ai:validate-goal', async (_event, goalTitle: string) => {
+    const businessCtx = getBusinessContext()
     const systemPrompt = `You are an execution coach. Evaluate monthly goals.
 Respond ONLY with valid JSON in this exact format: {"valid": boolean, "note": "string"}
-Note must be under 20 words. No encouragement. State the problem directly if invalid.`
+Note must be under 20 words. No encouragement. State the problem directly if invalid.${businessCtx}`
 
     const prompt = `Evaluate this monthly goal: "${goalTitle}"
 Check: Is it specific? Is it actionable? Is it realistic for one month?`
@@ -184,11 +251,12 @@ Check: Is it specific? Is it actionable? Is it realistic for one month?`
   })
 
   ipcMain.handle('ai:generate-subgoals', async (_event, goalTitle: string, goalType: string) => {
+    const businessCtx = getBusinessContext()
     const systemPrompt = `You are an execution coach. Generate subgoals for monthly goals.
 Respond ONLY with valid JSON array in this exact format:
 [{"title": "string", "priority": "high"|"medium"|"low"}]
 Each subgoal must be completable in 1-2 weeks and map to a concrete output.
-Generate exactly 5 subgoals. No explanation, no markdown, just the JSON array.`
+Generate exactly 5 subgoals. No explanation, no markdown, just the JSON array.${businessCtx}`
 
     const prompt = `Goal: "${goalTitle}" (Type: ${goalType})
 Generate 5 subgoals that break this down into concrete 1-2 week deliverables.`
@@ -217,6 +285,7 @@ Generate 5 subgoals that break this down into concrete 1-2 week deliverables.`
         maxTasks?: number
       },
     ) => {
+      const businessCtx = getBusinessContext()
       const systemPrompt = `You are an execution coach generating daily tasks.
 Respond ONLY with valid JSON array in this exact format:
 [{"title":"string","effort":"light"|"medium"|"heavy","proof_type":"none"|"comment"|"link","subgoal_id":"string","scheduled_time_slot":"morning"|"afternoon"|"anytime"}]
@@ -224,7 +293,8 @@ Rules:
 - light = 30min max, medium = 60min max, heavy = 120min max
 - Never generate vague tasks. "Work on X" is invalid. "Write intro section of X" is valid.
 - proof_type: none for internal work, comment for built/wrote/fixed, link for posted/published/submitted
-- No explanation, no markdown, just the JSON array.`
+- Generate tasks that are specific and relevant to the business context provided.
+- No explanation, no markdown, just the JSON array.${businessCtx}`
 
       const prompt = `Available time: ${context.availableMinutes} minutes (${context.workingStart} - ${context.workingEnd})
 Active subgoals: ${JSON.stringify(context.subgoals)}
@@ -257,7 +327,23 @@ Max 2 carry-overs. Prioritize high-priority subgoals.`
       },
     ) => {
       try {
-        const raw = await generateEndOfDayFeedback(context)
+        const businessCtx = getBusinessContext()
+        const systemPrompt = `You are an execution coach giving end-of-day feedback.
+Rules:
+- Never use motivational language. No "great job", "keep it up", "you're doing well".
+- Name specific tasks that were skipped.
+- If a pattern exists, name it explicitly.
+- If score > 80%, still identify what was missed and why it matters.
+- Tone: direct, honest, neutral.
+- Maximum 3 sentences. No bullet points.${businessCtx}`
+
+        const prompt = `Execution score: ${Math.round(context.score * 100)}%
+Completed: ${context.completed.map((t) => t.title).join(', ') || 'none'}
+Missed: ${context.missed.map((t) => t.title).join(', ') || 'none'}
+Active behavior flags: ${context.flags.join(', ') || 'none'}
+Last 7 days history: ${JSON.stringify(context.history)}`
+
+        const raw = await callAI(prompt, systemPrompt)
         return { success: true, data: raw }
       } catch (e) {
         return { success: false, error: String(e) }
@@ -320,6 +406,54 @@ Generate the insight JSON.`
         const raw = await callAI(prompt, systemPrompt)
         const cleaned = raw.replace(/```json|```/g, '').trim()
         return { success: true, data: JSON.parse(cleaned) }
+      } catch (e) {
+        return { success: false, error: String(e) }
+      }
+    },
+  )
+
+  ipcMain.handle(
+    'ai:generate-monthly-targets',
+    async (
+      _event,
+      context: {
+        yearlyTarget: number
+        collectionTarget: number | null
+        businessType: string
+        fiscalYearStart: number
+        year: number
+      },
+    ) => {
+      const systemPrompt = `You are a business planning assistant.
+Generate realistic monthly sales targets based on business type and seasonal patterns.
+Respond ONLY with valid JSON array, no markdown, no explanation:
+[{"month": "YYYY-MM", "sales_target": number, "collection_target": number}]
+Rules:
+- Generate exactly 12 months starting from the fiscal year start month
+- Total of all sales_target values must equal exactly the yearlyTarget provided
+- Distribute based on realistic seasonal patterns for the business type
+- Analyze the business type provided and determine the realistic seasonal revenue patterns for that specific industry in India.
+- For example: CA/accounting firms peak in March (tax season) and July (ITR filing). IT/software companies have relatively flat revenue with slight Q4 push. Textile/trading peaks during Navratri, Diwali, and wedding seasons. Manufacturing peaks pre-festive season. Use your knowledge of Indian business cycles for the specific industry mentioned.
+- If the business type is unfamiliar or generic, distribute evenly with no single month exceeding 12% or below 6% of yearly total.
+- Always ensure the monthly distribution reflects realistic cash flow patterns for that industry — not a generic even split.
+- collection_target per month = roughly 85-90% of that month's sales_target
+  (collections lag sales slightly)
+- If collectionTarget is provided, total collection must equal collectionTarget
+- Round all values to nearest 1000`
+
+      const prompt = `Business type: ${context.businessType}
+Yearly sales target: ₹${context.yearlyTarget}
+Yearly collection target: ${context.collectionTarget ? '₹' + context.collectionTarget : 'not set'}
+Financial year starts: month ${context.fiscalYearStart} (1=Jan, 4=Apr)
+Current year: ${context.year}
+Generate 12 monthly targets starting from ${context.fiscalYearStart}/${context.year}.
+For months after December, use year ${context.year + 1}.`
+
+      try {
+        const raw = await callAI(prompt, systemPrompt)
+        const cleaned = raw.replace(/```json|```/g, '').trim()
+        const result = JSON.parse(cleaned)
+        return { success: true, data: result }
       } catch (e) {
         return { success: false, error: String(e) }
       }

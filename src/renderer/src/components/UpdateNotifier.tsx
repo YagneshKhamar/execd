@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Download, RefreshCw, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type UpdateStatus = {
   status: 'checking' | 'available' | 'latest' | 'downloading' | 'ready' | 'error'
@@ -9,6 +10,7 @@ type UpdateStatus = {
 } | null
 
 export default function UpdateNotifier(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const [update, setUpdate] = useState<UpdateStatus>(null)
   const [dismissed, setDismissed] = useState(false)
 
@@ -32,7 +34,9 @@ export default function UpdateNotifier(): React.JSX.Element | null {
         <div>
           <div className="flex items-start justify-between mb-3">
             <div>
-              <p className="text-sm font-medium text-[var(--text-primary)]">Update available</p>
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {t('updater.available')}
+              </p>
               <p className="text-xs text-[var(--text-muted)] font-mono mt-0.5">v{update.version}</p>
             </div>
             <button
@@ -72,7 +76,9 @@ export default function UpdateNotifier(): React.JSX.Element | null {
       {update.status === 'ready' && (
         <div>
           <div className="flex items-start justify-between mb-3">
-            <p className="text-sm font-medium text-[var(--text-primary)]">Ready to install</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">
+              {t('updater.readyToInstall')}
+            </p>
             <button
               onClick={() => setDismissed(true)}
               className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] cursor-pointer transition-colors"
@@ -96,7 +102,9 @@ export default function UpdateNotifier(): React.JSX.Element | null {
       {update.status === 'error' && (
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-medium text-[var(--accent-red)]">Update check failed</p>
+            <p className="text-sm font-medium text-[var(--accent-red)]">
+              {t('updater.checkFailed')}
+            </p>
             <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate max-w-xs">
               {update.message}
             </p>

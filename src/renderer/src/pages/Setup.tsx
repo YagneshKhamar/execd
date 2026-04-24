@@ -1,22 +1,36 @@
 import React, { useEffect, useState } from 'react'
-import { AlertTriangle, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useToast } from '../components/Toast'
 
-const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
-const DAY_LABELS: Record<string, string> = {
-  mon: 'Mon',
-  tue: 'Tue',
-  wed: 'Wed',
-  thu: 'Thu',
-  fri: 'Fri',
-  sat: 'Sat',
-  sun: 'Sun',
-}
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
 
 export default function Setup(): React.JSX.Element {
-  const [provider, setProvider] = useState<'openai' | 'anthropic' | 'ollama' | 'openrouter'>(
-    'openai',
-  )
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const dayOptions = [
+    { label: t('days.mon'), value: 'mon' },
+    { label: t('days.tue'), value: 'tue' },
+    { label: t('days.wed'), value: 'wed' },
+    { label: t('days.thu'), value: 'thu' },
+    { label: t('days.fri'), value: 'fri' },
+    { label: t('days.sat'), value: 'sat' },
+    { label: t('days.sun'), value: 'sun' },
+  ]
   const [apiKey, setApiKey] = useState('')
   const [workingStart, setWorkingStart] = useState('09:00')
   const [workingEnd, setWorkingEnd] = useState('18:00')
@@ -29,20 +43,13 @@ export default function Setup(): React.JSX.Element {
   const [personalGoalCount, setPersonalGoalCount] = useState(1)
   const [familyGoalCount, setFamilyGoalCount] = useState(1)
   const [maxDailyTasks, setMaxDailyTasks] = useState(5)
-  const [ollamaModel, setOllamaModel] = useState('llama3')
-  const [ollamaBaseUrl, setOllamaBaseUrl] = useState('http://localhost:11434')
-  const [openrouterModel, setOpenrouterModel] = useState('nvidia/nemotron-3-super-120b-a12b:free')
-  const [loadedConfig, setLoadedConfig] = useState<Record<string, unknown> | null>(null)
+  const [fiscalYearStart, setFiscalYearStart] = useState(4)
   const { error, success } = useToast()
 
   useEffect(() => {
     async function hydrateConfig(): Promise<void> {
       const config = (await window.api.config.get()) as Record<string, unknown> | null
       if (!config) return
-      setLoadedConfig(config)
-      setProvider(
-        (config.ai_provider as 'openai' | 'anthropic' | 'ollama' | 'openrouter') ?? 'openai',
-      )
       setApiKey((config.api_key_encrypted as string) ?? '')
       setWorkingStart((config.working_start as string) ?? '09:00')
       setWorkingEnd((config.working_end as string) ?? '18:00')
@@ -53,11 +60,7 @@ export default function Setup(): React.JSX.Element {
       setPersonalGoalCount(Number(config.personal_goal_count ?? 1))
       setFamilyGoalCount(Number(config.family_goal_count ?? 1))
       setMaxDailyTasks(Number(config.max_daily_tasks ?? 5))
-      setOllamaModel(String(config.ollama_model ?? 'llama3'))
-      setOllamaBaseUrl(String(config.ollama_base_url ?? 'http://localhost:11434'))
-      setOpenrouterModel(
-        String(config.openrouter_model ?? 'nvidia/nemotron-3-super-120b-a12b:free'),
-      )
+      setFiscalYearStart(Number(config.fiscal_year_start ?? 4))
     }
     hydrateConfig()
   }, [])
@@ -67,29 +70,9 @@ export default function Setup(): React.JSX.Element {
   }
 
   function validate(): boolean {
-    if (provider !== 'ollama' && !apiKey.trim()) {
+    if (!apiKey.trim()) {
       setFormError('API key is required.')
       return false
-    }
-    if (provider === 'ollama') {
-      if (!ollamaBaseUrl.trim().startsWith('http')) {
-        setFormError('Ollama base URL must start with http.')
-        return false
-      }
-      if (!ollamaModel.trim()) {
-        setFormError('Ollama model is required.')
-        return false
-      }
-    }
-    if (provider === 'openrouter') {
-      if (!apiKey.trim()) {
-        setFormError('OpenRouter API key is required.')
-        return false
-      }
-      if (!openrouterModel.trim()) {
-        setFormError('OpenRouter model is required.')
-        return false
-      }
     }
     if (workingDays.length === 0) {
       setFormError('Select at least one working day.')
@@ -111,7 +94,6 @@ export default function Setup(): React.JSX.Element {
     if (!validate()) return
     try {
       await window.api.config.save({
-        ai_provider: provider,
         api_key: apiKey,
         working_start: workingStart,
         working_end: workingEnd,
@@ -122,15 +104,58 @@ export default function Setup(): React.JSX.Element {
         personal_goal_count: personalGoalCount,
         family_goal_count: familyGoalCount,
         max_daily_tasks: maxDailyTasks,
-        ollama_model: ollamaModel,
-        ollama_base_url: ollamaBaseUrl,
-        openrouter_model: openrouterModel,
+        fiscal_year_start: fiscalYearStart,
       })
-      success('Settings saved.')
+      const profile = await window.api.business.get()
+      if (!profile || !profile.business_name) {
+        navigate('/business/setup')
+      } else {
+        success(t('toast.settingsSaved'))
+      }
     } catch {
-      error('Failed to save settings.')
+      error(t('toast.settingsFailed'))
     }
   }
+
+  function triggerCsvDownload(csv: string, filename: string): void {
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleDownloadTaskHistory(): Promise<void> {
+    try {
+      const result = await window.api.reports.exportTasksCsv({})
+      if (!result.success) {
+        error(t('toast.exportCsvFailed'))
+        return
+      }
+      triggerCsvDownload(result.csv, result.filename)
+      success('Tasks CSV exported.')
+    } catch {
+      error(t('toast.exportCsvFailed'))
+    }
+  }
+
+  async function handleDownloadDailySummary(): Promise<void> {
+    try {
+      const result = await window.api.reports.exportSummaryCsv({})
+      if (!result.success) {
+        error('Failed to export summary CSV.')
+        return
+      }
+      triggerCsvDownload(result.csv, result.filename)
+      success('Summary CSV exported.')
+    } catch {
+      error('Failed to export summary CSV.')
+    }
+  }
+  const fiscalYearEnd = ((fiscalYearStart - 2 + 12) % 12) + 1
+
   return (
     <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)] p-5">
       <div className="mx-auto bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-5 w-full max-w-5xl mb-6">
@@ -138,166 +163,52 @@ export default function Setup(): React.JSX.Element {
           <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-1">
             Execd
           </p>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">Setup</h1>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings.title')}</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Configure your AI provider and schedule.
+            {t('settings.subtitle')}
           </p>
         </div>
-        {loadedConfig &&
-          Number(loadedConfig.api_key_is_encrypted ?? 0) === 0 &&
-          Boolean(loadedConfig.api_key_encrypted) && (
-            <div className="bg-[var(--accent-yellow)]/5 border border-[var(--accent-yellow)]/20 rounded p-3 mb-4 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-[var(--accent-yellow)] shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs text-[var(--accent-yellow)] font-medium">
-                  API key not encrypted
-                </p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                  Save your settings to encrypt your API key using OS secure storage.
-                </p>
-              </div>
-            </div>
-          )}
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <section className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4 space-y-3">
-            <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest">
-              AI Provider
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {(['openai', 'anthropic', 'ollama', 'openrouter'] as const).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setProvider(p)}
-                  className={`py-2 rounded text-sm font-medium cursor-pointer transition-colors ${
-                    provider === p
-                      ? 'bg-[var(--bg-surface)] border border-[var(--border-active)] text-[var(--text-primary)]'
-                      : 'bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)]'
-                  }`}
-                >
-                  {p === 'openai'
-                    ? 'OpenAI'
-                    : p === 'anthropic'
-                      ? 'Anthropic'
-                      : p === 'ollama'
-                        ? 'Ollama (local)'
-                        : 'OpenRouter'}
-                </button>
-              ))}
-            </div>
-
-            {provider !== 'ollama' ? (
-              <div>
-                <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">
-                  API Key
-                </label>
-                <div className="relative">
-                  <input
-                    type={showKey ? 'text' : 'password'}
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={
-                      provider === 'openai'
-                        ? 'sk-...'
-                        : provider === 'anthropic'
-                          ? 'sk-ant-...'
-                          : 'or-...'
-                    }
-                    className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition-colors pr-10"
-                  />
-                  <button
-                    onClick={() => setShowKey((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
-                  >
-                    {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                <p className="text-[var(--text-muted)] text-xs mt-1.5">
-                  Stored encrypted on your machine. Never sent anywhere else.
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-[var(--text-muted)]">
-                No API key needed. Ollama must be running locally.
-              </p>
-            )}
-
-            {provider === 'ollama' && (
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">
-                    Ollama Base URL
-                  </label>
-                  <input
-                    type="text"
-                    value={ollamaBaseUrl}
-                    onChange={(e) => setOllamaBaseUrl(e.target.value)}
-                    placeholder="http://localhost:11434"
-                    className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">
-                    Model Name
-                  </label>
-                  <input
-                    type="text"
-                    value={ollamaModel}
-                    onChange={(e) => setOllamaModel(e.target.value)}
-                    placeholder="llama3, mistral, phi3..."
-                    className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
-                  />
-                </div>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    window.open('https://ollama.com/library')
-                  }}
-                  className="text-xs text-[var(--accent-blue)] hover:underline cursor-pointer"
-                >
-                  Browse Ollama models ↗
-                </a>
-              </div>
-            )}
-
-            {provider === 'openrouter' && (
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">
-                    Model
-                  </label>
-                  <input
-                    type="text"
-                    value={openrouterModel}
-                    onChange={(e) => setOpenrouterModel(e.target.value)}
-                    placeholder="nvidia/nemotron-3-super-120b-a12b:free"
-                    className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
-                  />
-                </div>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    window.open('https://openrouter.ai/models')
-                  }}
-                  className="text-xs text-[var(--accent-blue)] hover:underline cursor-pointer"
-                >
-                  Browse OpenRouter models ↗
-                </a>
-              </div>
-            )}
-          </section>
-
           <section className="space-y-4">
+            <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-xl p-5">
+              <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-3">
+                {t('settings.financialYear')}
+              </p>
+              <p className="text-xs text-[var(--text-muted)] mb-3">
+                {t('settings.financialYearSubtitle')}
+              </p>
+              <select
+                value={fiscalYearStart}
+                onChange={(e) => setFiscalYearStart(Number(e.target.value))}
+                className="bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none w-full cursor-pointer"
+              >
+                <option value={1}>January (Jan – Dec)</option>
+                <option value={2}>February (Feb – Jan)</option>
+                <option value={3}>March (Mar – Feb)</option>
+                <option value={4}>April (Apr – Mar) — Indian FY</option>
+                <option value={5}>May (May – Apr)</option>
+                <option value={6}>June (Jun – May)</option>
+                <option value={7}>July (Jul – Jun)</option>
+                <option value={8}>August (Aug – Jul)</option>
+                <option value={9}>September (Sep – Aug)</option>
+                <option value={10}>October (Oct – Sep)</option>
+                <option value={11}>November (Nov – Oct)</option>
+                <option value={12}>December (Dec – Nov)</option>
+              </select>
+              <p className="text-xs text-[var(--text-muted)] mt-2">
+                {t('settings.financialYearRuns')} {MONTH_NAMES[fiscalYearStart - 1]} →{' '}
+                {MONTH_NAMES[fiscalYearEnd - 1]}
+              </p>
+            </div>
             <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4 space-y-3">
               <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest">
-                Working Schedule
+                {t('settings.workingSchedule')}
               </label>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Working Hours</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">{t('settings.workingHours')}</p>
                   <div className="flex items-center gap-2">
                     <input
                       type="time"
@@ -316,7 +227,7 @@ export default function Setup(): React.JSX.Element {
                 </div>
 
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Break Time</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">{t('settings.breakTime')}</p>
                   <div className="flex items-center gap-2">
                     <input
                       type="time"
@@ -336,19 +247,19 @@ export default function Setup(): React.JSX.Element {
               </div>
 
               <div>
-                <p className="text-xs text-[var(--text-secondary)] mb-1.5">Working Days</p>
+                <p className="text-xs text-[var(--text-secondary)] mb-1.5">{t('settings.workingDays')}</p>
                 <div className="flex gap-1.5 flex-wrap">
-                  {DAYS.map((day) => (
+                  {dayOptions.map((day) => (
                     <button
-                      key={day}
-                      onClick={() => toggleDay(day)}
+                      key={day.value}
+                      onClick={() => toggleDay(day.value)}
                       className={`px-3 py-1.5 rounded text-xs font-mono cursor-pointer transition-colors ${
-                        workingDays.includes(day)
+                        workingDays.includes(day.value)
                           ? 'bg-[var(--accent-blue)] text-white border border-[var(--accent-blue)]'
                           : 'bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
                       }`}
                     >
-                      {DAY_LABELS[day]}
+                      {day.label}
                     </button>
                   ))}
                 </div>
@@ -357,11 +268,13 @@ export default function Setup(): React.JSX.Element {
 
             <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4 space-y-3">
               <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest">
-                Monthly Goal Slots
+                {t('settings.goalSlots')}
               </label>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Business</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">
+                    {t('settings.businessGoals')}
+                  </p>
                   <input
                     type="number"
                     min={3}
@@ -371,7 +284,9 @@ export default function Setup(): React.JSX.Element {
                   />
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Personal</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">
+                    {t('settings.personalGoals')}
+                  </p>
                   <input
                     type="number"
                     min={1}
@@ -381,7 +296,9 @@ export default function Setup(): React.JSX.Element {
                   />
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Family</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">
+                    {t('settings.familyGoals')}
+                  </p>
                   <input
                     type="number"
                     min={1}
@@ -391,13 +308,11 @@ export default function Setup(): React.JSX.Element {
                   />
                 </div>
               </div>
-              <p className="text-[var(--text-muted)] text-xs">
-                Minimum: 3 business, 1 personal, 1 family.
-              </p>
+              <p className="text-[var(--text-muted)] text-xs">{t('settings.minimumGoals')}</p>
             </div>
             <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4 space-y-3">
               <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest">
-                Daily Task Limit
+                {t('settings.dailyTaskLimit')}
               </label>
               <div className="flex gap-1.5 flex-wrap">
                 {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((value) => (
@@ -415,6 +330,32 @@ export default function Setup(): React.JSX.Element {
                 ))}
               </div>
             </div>
+
+            <section className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4 space-y-3 self-end">
+              <div>
+                <label className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                  {t('settings.apiKey')}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showKey ? 'text' : 'password'}
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder={t('settings.apiKeyPlaceholder')}
+                    className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none transition-colors pr-10"
+                  />
+                  <button
+                    onClick={() => setShowKey((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                  >
+                    {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[var(--text-muted)] text-xs mt-1.5">
+                  {t('settings.apiKeyNote')}
+                </p>
+              </div>
+            </section>
           </section>
         </div>
 
@@ -425,8 +366,27 @@ export default function Setup(): React.JSX.Element {
             onClick={handleSave}
             className="w-full xl:w-auto xl:min-w-56 bg-(--accent-blue) hover:bg-[--accent-blue-dim] text-white font-medium py-2.5 px-6 rounded text-sm cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Save Settings
+            {t('settings.saveSettings')}
           </button>
+        </div>
+        <div className="pt-4">
+          <p className="block text-xs font-mono text-[var(--text-muted)] uppercase tracking-widest mb-2">
+            {t('settings.data')}
+          </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleDownloadTaskHistory}
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] cursor-pointer transition-colors underline"
+            >
+              {t('settings.downloadTaskHistory')}
+            </button>
+            <button
+              onClick={handleDownloadDailySummary}
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] cursor-pointer transition-colors underline"
+            >
+              {t('settings.downloadDailySummary')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

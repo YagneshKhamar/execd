@@ -181,18 +181,22 @@ a lightweight way to delegate and follow up without switching tools.
 ## Roadmap
 
 ### v1.2.0
+
 - [ ] API key encryption via Electron safeStorage
 - [ ] Auto-update UI — check for new releases from inside the app
 - [ ] Analytics empty state handling for new users
 - [ ] Data export to CSV
 
 ### v1.3.0
+
 - [ ] Hosted AI option — no API key needed
 - [ ] Monthly goal editing with confirmation flow
 - [ ] Goal carry-over between months
 
 ### Help Wanted
+
 Good first issues for contributors:
+
 - Add keyboard shortcuts for common actions (lock plan, complete task)
 - Improve error messages across all pages
 - Add more chart types to Analytics page

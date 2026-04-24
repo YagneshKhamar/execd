@@ -1,7 +1,7 @@
 export interface IElectronAPI {
   config: {
     save: (data: unknown) => Promise<{ success: boolean }>
-    get: () => Promise<unknown>
+    get: () => Promise<{ fiscal_year_start: number } & Record<string, unknown>>
   }
   goals: {
     save: (goals: unknown) => Promise<{ success: boolean; ids: string[] }>
@@ -37,6 +37,17 @@ export interface IElectronAPI {
       data?: { heading: string; body: string }
       error?: string
     }>
+    generateMonthlyTargets: (context: {
+      yearlyTarget: number
+      collectionTarget: number | null
+      businessType: string
+      fiscalYearStart: number
+      year: number
+    }) => Promise<{
+      success: boolean
+      data?: { month: string; sales_target: number; collection_target: number }[]
+      error?: string
+    }>
   }
   tasks: {
     getByDate: (date: string) => Promise<unknown[]>
@@ -58,24 +69,22 @@ export interface IElectronAPI {
       completed: unknown[]
       missed: unknown[]
     }>
-    getHistory: (filters: {
-      month?: string
-      date?: string
-      status?: string
-    }) => Promise<{
-      id: string
-      title: string
-      effort: string
-      proof_type: string
-      proof_value: string | null
-      status: string
-      scheduled_date: string
-      scheduled_time_slot: string
-      carry_count: number
-      subgoal_title: string | null
-      goal_title: string | null
-      completed_at: string | null
-    }[]>
+    getHistory: (filters: { month?: string; date?: string; status?: string }) => Promise<
+      {
+        id: string
+        title: string
+        effort: string
+        proof_type: string
+        proof_value: string | null
+        status: string
+        scheduled_date: string
+        scheduled_time_slot: string
+        carry_count: number
+        subgoal_title: string | null
+        goal_title: string | null
+        completed_at: string | null
+      }[]
+    >
     updateProof: (taskId: string, proof: string) => Promise<{ success: boolean }>
   }
   reports: {
@@ -136,6 +145,83 @@ export interface IElectronAPI {
         tasks_carried: number
       }[]
     }>
+    exportTasksCsv: (filters: { month?: string }) => Promise<{
+      success: boolean
+      csv: string
+      filename: string
+    }>
+    exportSummaryCsv: (filters: { year?: string }) => Promise<{
+      success: boolean
+      csv: string
+      filename: string
+    }>
+  }
+  sales: {
+    getMonthlyTargets: (filters: { fiscalYearStart: number; year: number }) => Promise<
+      {
+        year_month: string
+        sales_target: number
+        collection_target: number
+      }[]
+    >
+    saveMonthlyTargets: (
+      targets: {
+        year_month: string
+        sales_target: number
+        collection_target: number
+      }[],
+    ) => Promise<{ success: boolean }>
+    getDailySales: (filters: { month: string }) => Promise<
+      {
+        date: string
+        sales_amount: number
+        collection_amount: number
+        notes: string
+      }[]
+    >
+    saveDailyEntry: (data: {
+      date: string
+      sales_amount: number
+      collection_amount: number
+      notes?: string
+    }) => Promise<{ success: boolean }>
+    getMonthSummary: (filters: { month: string }) => Promise<{
+      month: string
+      sales_done: number
+      sales_target: number
+      collection_done: number
+      collection_target: number
+      days_with_entry: number
+    }>
+    getYearlySummary: (filters: { fiscalYearStart: number; year: number }) => Promise<
+      {
+        year_month: string
+        sales_target: number
+        collection_target: number
+        sales_done: number
+        collection_done: number
+      }[]
+    >
+  }
+  business: {
+    get: () => Promise<{
+      business_name: string
+      business_type: string
+      monthly_sales_target: number | null
+      collection_target: number | null
+      primary_activities: string[]
+      team_size: number
+      language: string
+    } | null>
+    save: (data: {
+      business_name: string
+      business_type: string
+      monthly_sales_target?: number | null
+      collection_target?: number | null
+      primary_activities: string[]
+      team_size: number
+      language: string
+    }) => Promise<{ success: boolean }>
   }
   team: {
     getMembers: () => Promise<unknown[]>
@@ -163,16 +249,23 @@ export interface IElectronAPI {
     check: () => Promise<void>
     download: () => Promise<void>
     install: () => Promise<void>
-    onStatus: (callback: (data: {
-      status: 'checking' | 'available' | 'latest' | 'downloading' | 'ready' | 'error'
-      version?: string
-      percent?: number
-      message?: string
-    }) => void) => void
+    onStatus: (
+      callback: (data: {
+        status: 'checking' | 'available' | 'latest' | 'downloading' | 'ready' | 'error'
+        version?: string
+        percent?: number
+        message?: string
+      }) => void,
+    ) => void
     removeStatusListener: () => void
   }
   electronAPI: {
-    captureReport: (rect?: { x: number; y: number; width: number; height: number }) => Promise<string>
+    captureReport: (rect?: {
+      x: number
+      y: number
+      width: number
+      height: number
+    }) => Promise<string>
   }
 }
 

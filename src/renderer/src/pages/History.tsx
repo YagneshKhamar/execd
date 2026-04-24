@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Paperclip } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type TaskStatus = 'completed' | 'missed' | 'pending' | 'carried' | 'dropped'
 
@@ -45,6 +46,7 @@ function getStatusBorderClass(status: string): string {
 }
 
 export default function History(): React.JSX.Element {
+  const { t } = useTranslation()
   const [filterMonth, setFilterMonth] = useState(getCurrentMonth())
   const [filterDate, setFilterDate] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -101,25 +103,25 @@ export default function History(): React.JSX.Element {
   const groupedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a))
 
   const statusOptions: { label: string; value: TaskStatus | 'all' }[] = [
-    { label: 'All', value: 'all' },
-    { label: 'Completed', value: 'completed' },
-    { label: 'Missed', value: 'missed' },
-    { label: 'Pending', value: 'pending' },
-    { label: 'Carried', value: 'carried' },
-    { label: 'Dropped', value: 'dropped' },
+    { label: t('history.all'), value: 'all' },
+    { label: t('history.completed'), value: 'completed' },
+    { label: t('history.missed'), value: 'missed' },
+    { label: t('history.pending'), value: 'pending' },
+    { label: t('history.carried'), value: 'carried' },
+    { label: t('history.dropped'), value: 'dropped' },
   ]
 
   return (
     <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)]">
       <div className="max-w-4xl mx-auto px-8 py-8">
         <div className="mb-5">
-          <h1 className="text-lg font-mono text-[var(--text-primary)]">History</h1>
-          <p className="text-xs text-[var(--text-muted)] mt-1">All tasks across all dates</p>
+          <h1 className="text-lg font-mono text-[var(--text-primary)]">{t('history.title')}</h1>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{t('history.subtitle')}</p>
         </div>
 
         <div className="mb-5 flex flex-wrap gap-3">
           <div>
-            <p className="text-xs text-[var(--text-muted)] mb-1">Month</p>
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('history.month')}</p>
             <input
               type="month"
               value={filterMonth}
@@ -132,7 +134,7 @@ export default function History(): React.JSX.Element {
           </div>
 
           <div>
-            <p className="text-xs text-[var(--text-muted)] mb-1">Date</p>
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('history.date')}</p>
             <div className="flex items-center gap-1">
               <input
                 type="date"
@@ -153,7 +155,7 @@ export default function History(): React.JSX.Element {
           </div>
 
           <div className="min-w-[280px]">
-            <p className="text-xs text-[var(--text-muted)] mb-1">Status</p>
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('history.status')}</p>
             <div className="flex flex-wrap gap-2">
               {statusOptions.map((option) => (
                 <button
@@ -174,12 +176,12 @@ export default function History(): React.JSX.Element {
 
         {loading ? (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-8 text-center">
-            <p className="text-xs text-[var(--text-muted)] font-mono">loading...</p>
+            <p className="text-xs text-[var(--text-muted)] font-mono">{t('common.loading')}</p>
           </div>
         ) : tasks.length === 0 ? (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-8 text-center">
-            <p className="text-sm text-[var(--text-secondary)]">No tasks found</p>
-            <p className="text-xs text-[var(--text-muted)] mt-1">Adjust filters to see results</p>
+            <p className="text-sm text-[var(--text-secondary)]">{t('history.noTasks')}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">{t('history.noTasksSubtitle')}</p>
           </div>
         ) : (
           <div>
@@ -212,7 +214,9 @@ export default function History(): React.JSX.Element {
                           {task.title}
                         </p>
                         {task.subgoal_title && (
-                          <p className="text-xs text-[var(--text-muted)] mt-1">{task.subgoal_title}</p>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">
+                            {task.subgoal_title}
+                          </p>
                         )}
                       </div>
 
@@ -245,7 +249,9 @@ export default function History(): React.JSX.Element {
 
                     {openProofTaskId === task.id && task.proof_type !== 'none' && (
                       <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-lg px-3 py-2 mb-2">
-                        <p className="text-xs text-[var(--text-muted)] mb-1.5">Proof (optional)</p>
+                        <p className="text-xs text-[var(--text-muted)] mb-1.5">
+                          {t('history.proofOptional')}
+                        </p>
                         {task.proof_type === 'link' ? (
                           <input
                             type="text"
@@ -253,7 +259,7 @@ export default function History(): React.JSX.Element {
                             onChange={(e) =>
                               setProofInputs((prev) => ({ ...prev, [task.id]: e.target.value }))
                             }
-                            placeholder="Paste link..."
+                            placeholder={t('history.pasteLinkPlaceholder')}
                             className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none transition-colors font-mono"
                           />
                         ) : (
@@ -263,7 +269,7 @@ export default function History(): React.JSX.Element {
                             onChange={(e) =>
                               setProofInputs((prev) => ({ ...prev, [task.id]: e.target.value }))
                             }
-                            placeholder="Add note..."
+                            placeholder={t('history.addNotePlaceholder')}
                             className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-xs text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none resize-none transition-colors font-mono"
                           />
                         )}
@@ -281,7 +287,7 @@ export default function History(): React.JSX.Element {
                           }}
                           className="mt-1.5 text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white px-3 py-1 rounded cursor-pointer transition-colors"
                         >
-                          Save
+                          {t('common.save')}
                         </button>
                       </div>
                     )}

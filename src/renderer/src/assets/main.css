@@ -9,6 +9,10 @@ body {
   color: var(--text-primary);
   font-family:
     'Geist',
+    'Noto Sans Gujarati',
+    'Noto Sans Devanagari',
+    'Nirmala UI',
+    'Arial Unicode MS',
     -apple-system,
     BlinkMacSystemFont,
     sans-serif;
