@@ -64,17 +64,17 @@ export default function Sidebar(): React.JSX.Element {
 
       <div className="px-3 pb-5">
         <div className="mx-3 my-2 border-t border-[var(--border-subtle)]" />
-        <p className="px-3 py-1 text-[9px] font-mono text-[var(--text-muted)] uppercase tracking-widest">
+        <p className="px-3 py-1 text-[9px] font-mono text-[var(--text-secondary)] uppercase tracking-widest">
           {t('nav.comingSoon')}
         </p>
         {COMING_SOON.map((item) => (
           <div
             key={item.label}
-            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-[var(--text-muted)] border border-transparent opacity-50 cursor-not-allowed"
+            className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-[var(--text-secondary)] border border-transparent opacity-70 cursor-not-allowed"
           >
             <item.icon className="w-4 h-4 shrink-0" />
             <span>{item.label}</span>
-            <span className="ml-auto text-[9px] font-mono text-[var(--text-muted)] bg-[var(--bg-elevated)] px-1.5 py-0.5 rounded">
+            <span className="ml-auto text-[9px] font-mono text-[var(--text-secondary)] bg-[var(--bg-hover)] px-1.5 py-0.5 rounded">
               soon
             </span>
           </div>
