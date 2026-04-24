@@ -432,12 +432,10 @@ Rules:
 - Generate exactly 12 months starting from the fiscal year start month
 - Total of all sales_target values must equal exactly the yearlyTarget provided
 - Distribute based on realistic seasonal patterns for the business type
-- For textile/trading businesses in India:
-  Sep-Oct-Nov are peak (Navratri, Diwali, wedding season)
-  Dec-Jan are high (winter wedding season)
-  Apr-May-Jun are slow
-  Feb-Mar are slowest (FY closing)
-- For other business types, distribute more evenly with slight Q4 peak
+- Analyze the business type provided and determine the realistic seasonal revenue patterns for that specific industry in India.
+- For example: CA/accounting firms peak in March (tax season) and July (ITR filing). IT/software companies have relatively flat revenue with slight Q4 push. Textile/trading peaks during Navratri, Diwali, and wedding seasons. Manufacturing peaks pre-festive season. Use your knowledge of Indian business cycles for the specific industry mentioned.
+- If the business type is unfamiliar or generic, distribute evenly with no single month exceeding 12% or below 6% of yearly total.
+- Always ensure the monthly distribution reflects realistic cash flow patterns for that industry — not a generic even split.
 - collection_target per month = roughly 85-90% of that month's sales_target
   (collections lag sales slightly)
 - If collectionTarget is provided, total collection must equal collectionTarget
