@@ -40,8 +40,15 @@ function getBusinessContext(): string {
         ? `Yearly sales target: ₹${String(profile.monthly_sales_target)}`
         : '',
     ].filter(Boolean)
+    const language = String(profile.language || 'en')
+    const languageInstruction =
+      language === 'gu'
+        ? '\nRespond in Gujarati (ગુજરાતી) language only.'
+        : language === 'hi'
+          ? '\nRespond in Hindi (हिंदी) language only.'
+          : ''
 
-    return parts.length > 0 ? `\n\nBusiness context:\n${parts.join('\n')}` : ''
+    return `\n\nBusiness context:\n${parts.join('\n')}${languageInstruction}`
   } catch {
     return ''
   }
@@ -225,9 +232,10 @@ Last 7 days history: ${JSON.stringify(context.history)}`
 
 export function registerAIHandlers(): void {
   ipcMain.handle('ai:validate-goal', async (_event, goalTitle: string) => {
+    const businessCtx = getBusinessContext()
     const systemPrompt = `You are an execution coach. Evaluate monthly goals.
 Respond ONLY with valid JSON in this exact format: {"valid": boolean, "note": "string"}
-Note must be under 20 words. No encouragement. State the problem directly if invalid.`
+Note must be under 20 words. No encouragement. State the problem directly if invalid.${businessCtx}`
 
     const prompt = `Evaluate this monthly goal: "${goalTitle}"
 Check: Is it specific? Is it actionable? Is it realistic for one month?`
