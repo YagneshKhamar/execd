@@ -165,11 +165,11 @@ export function registerTasksHandlers(): void {
            WHERE scheduled_date = ? 
            AND status = 'pending' 
            AND (carried_over_from IS NULL OR carried_over_from = '')`,
-          )
+        )
         db.transaction(() => {
-        for (const date of dates) {
-          deletePending.run(date)
-        }
+          for (const date of dates) {
+            deletePending.run(date)
+          }
         })()
       }
 

@@ -595,12 +595,14 @@ export default function Team(): React.JSX.Element {
                 placeholder="Select member"
                 value={newTask.member_id}
                 onChange={(val) => setNewTask((prev) => ({ ...prev, member_id: val }))}
-                options={members.map((m): SelectOption => ({
-                  value: m.id,
-                  label: m.name,
-                  tag: m.role,
-                  tagColor: 'blue',
-                }))}
+                options={members.map(
+                  (m): SelectOption => ({
+                    value: m.id,
+                    label: m.name,
+                    tag: m.role,
+                    tagColor: 'blue',
+                  }),
+                )}
               />
               <input
                 type="text"

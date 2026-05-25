@@ -443,20 +443,22 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
               <button
                 type="button"
                 onClick={() => setSalesTargetUnit('amount')}
-                className={`px-3 py-1.5 rounded text-sm border transition-colors cursor-pointer ${salesTargetUnit === 'amount'
-                  ? 'bg-[var(--bg-surface)] border-[var(--border-active)] text-[var(--text-primary)]'
-                  : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
-                  }`}
+                className={`px-3 py-1.5 rounded text-sm border transition-colors cursor-pointer ${
+                  salesTargetUnit === 'amount'
+                    ? 'bg-[var(--bg-surface)] border-[var(--border-active)] text-[var(--text-primary)]'
+                    : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
+                }`}
               >
                 ₹ Amount
               </button>
               <button
                 type="button"
                 onClick={() => setSalesTargetUnit('units')}
-                className={`px-3 py-1.5 rounded text-sm border transition-colors cursor-pointer ${salesTargetUnit === 'units'
-                  ? 'bg-[var(--bg-surface)] border-[var(--border-active)] text-[var(--text-primary)]'
-                  : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
-                  }`}
+                className={`px-3 py-1.5 rounded text-sm border transition-colors cursor-pointer ${
+                  salesTargetUnit === 'units'
+                    ? 'bg-[var(--bg-surface)] border-[var(--border-active)] text-[var(--text-primary)]'
+                    : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
+                }`}
               >
                 Units
               </button>
@@ -484,11 +486,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                   type="number"
                   value={monthlySalesTarget}
                   onChange={(e) => setMonthlySalesTarget(e.target.value)}
-                  placeholder={
-                    salesTargetUnit === 'amount'
-                      ? 'e.g. 12000000'
-                      : 'e.g. 50'
-                  }
+                  placeholder={salesTargetUnit === 'amount' ? 'e.g. 12000000' : 'e.g. 50'}
                   className={inputClass}
                 />
               </div>
@@ -574,7 +572,9 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                         className={inputClass}
                       />
                       {salesTargetUnit !== 'amount' ? (
-                        <span className="text-xs text-[var(--text-muted)] w-20 shrink-0">{activeUnitLabel}</span>
+                        <span className="text-xs text-[var(--text-muted)] w-20 shrink-0">
+                          {activeUnitLabel}
+                        </span>
                       ) : (
                         <>
                           <span className="text-sm text-[var(--text-muted)] font-mono w-12 shrink-0">

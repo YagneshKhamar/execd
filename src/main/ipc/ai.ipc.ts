@@ -22,13 +22,17 @@ function getBusinessContext(): string {
     const activities = (() => {
       try {
         return JSON.parse(String(profile.primary_activities || '[]')) as string[]
-      } catch { return [] as string[] }
+      } catch {
+        return [] as string[]
+      }
     })()
 
     const departments = (() => {
       try {
         return JSON.parse(String(profile.departments || '[]')) as string[]
-      } catch { return [] as string[] }
+      } catch {
+        return [] as string[]
+      }
     })()
 
     const businessType = String(profile.business_type || '').startsWith('other:')
@@ -41,7 +45,9 @@ function getBusinessContext(): string {
       `Team size: ${String(profile.team_size || 1)}`,
       departments.length > 0 ? `Departments: ${departments.join(', ')}` : '',
       activities.length > 0 ? `Primary activities: ${activities.join(', ')}` : '',
-      profile.business_description ? `About the business: ${String(profile.business_description)}` : '',
+      profile.business_description
+        ? `About the business: ${String(profile.business_description)}`
+        : '',
       profile.monthly_sales_target
         ? `Yearly sales target: ₹${String(profile.monthly_sales_target)}`
         : '',
@@ -468,21 +474,27 @@ Rules:
 
       const totalDaysInMonth = context.currentMonth
         ? (() => {
-          const [y, m] = context.currentMonth!.split('-').map(Number)
-          return new Date(y, m, 0).getDate()
-        })()
+            const [y, m] = context.currentMonth!.split('-').map(Number)
+            return new Date(y, m, 0).getDate()
+          })()
         : undefined
 
       const prompt = `Business type: ${context.businessType}
 Business description: ${context.businessDescription || 'not provided'}
 Yearly ${isUnitMode ? `${effectiveUnitLabel} target` : 'sales target'}: ${isUnitMode ? context.yearlyTarget : `₹${context.yearlyTarget}`}
-${isUnitMode ? '' : `Yearly collection target: ${context.collectionTarget ? '₹' + context.collectionTarget : 'not set'}
-`}Financial year starts: month ${context.fiscalYearStart} (1=Jan, 4=Apr)
+${
+  isUnitMode
+    ? ''
+    : `Yearly collection target: ${context.collectionTarget ? '₹' + context.collectionTarget : 'not set'}
+`
+}Financial year starts: month ${context.fiscalYearStart} (1=Jan, 4=Apr)
 Current year: ${context.year}
 Generate 12 monthly targets starting from ${context.fiscalYearStart}/${context.year}.
-For months after December, use year ${context.year + 1}.${context.currentMonth
-    ? `\nCurrent month: ${context.currentMonth}, days remaining: ${context.daysRemainingInCurrentMonth} out of ${totalDaysInMonth}`
-    : ''}`
+For months after December, use year ${context.year + 1}.${
+        context.currentMonth
+          ? `\nCurrent month: ${context.currentMonth}, days remaining: ${context.daysRemainingInCurrentMonth} out of ${totalDaysInMonth}`
+          : ''
+      }`
 
       try {
         const raw = await callAI(prompt, systemPrompt)
