@@ -73,8 +73,6 @@ linux:
 appImage:
   artifactName: Execd-${version}.${ext}
 
-npmRebuild: false
-
 publish:
   provider: github
   owner: YagneshKhamar
