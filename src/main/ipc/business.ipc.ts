@@ -118,7 +118,7 @@ export function registerBusinessHandlers(): void {
             departments,
             team_size,
             language
-          ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         ).run(
           data.business_name,
