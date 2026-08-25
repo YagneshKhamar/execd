@@ -4,7 +4,7 @@ import { getDatabase } from '../db/database'
 // ─── AI Configuration ─────────────────────────────────────────────────────
 // Change these two lines to switch providers/models. No other changes needed.
 const AI_PROVIDER: 'openai' | 'anthropic' | 'ollama' | 'openrouter' = 'openai'
-const AI_MODEL = 'gpt-4o-mini'
+const AI_MODEL = 'gpt-5.6-luna'
 // Models: openai → gpt-4o-mini | gpt-4o | gpt-4-turbo
 //         anthropic → claude-haiku-4-5-20251001 | claude-sonnet-4-5
 //         ollama → llama3 | mistral | any local model
@@ -117,7 +117,6 @@ async function callAI(prompt: string, systemPrompt: string): Promise<string> {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: prompt },
         ],
-        temperature: 0.3,
       }),
     })
     const data = (await response.json()) as {
@@ -311,7 +310,6 @@ Carry-over tasks: ${JSON.stringify(context.carryOvers)}
 Behavior flags: ${context.behaviorFlags.join(', ') || 'none'}
 Generate ${context.maxTasks || 5} tasks (minimum 3, maximum ${context.maxTasks || 5}).
 Max 2 carry-overs. Prioritize high-priority subgoals.`
-
       try {
         const raw = await callAI(prompt, systemPrompt)
         const cleaned = raw.replace(/```json|```/g, '').trim()
