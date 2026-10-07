@@ -2,24 +2,10 @@ import Database from 'better-sqlite3'
 import { app } from 'electron'
 import { join } from 'path'
 import { runInitialMigration } from './migrations/001_initial'
+import { addColumnIfMissing } from './schemaUtils'
+import { ensureSyncSchema } from './syncSchema'
 
 let db: Database.Database | null = null
-
-function addColumnIfMissing(
-  database: Database.Database,
-  table: string,
-  column: string,
-  definition: string,
-): void {
-  try {
-    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
-  } catch (error) {
-    const message = error instanceof Error ? error.message.toLowerCase() : ''
-    if (!message.includes('duplicate column name')) {
-      throw error
-    }
-  }
-}
 
 function ensureSchemaUpdates(database: Database.Database): void {
   const configAlterStatements = [
@@ -96,6 +82,8 @@ function ensureSchemaUpdates(database: Database.Database): void {
       throw new Error('Schema update failed', { cause: error })
     }
   }
+
+  ensureSyncSchema(database)
 }
 
 export function getDatabase(): Database.Database {

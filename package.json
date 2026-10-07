@@ -26,6 +26,7 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
+    "@supabase/supabase-js": "^2.116.0",
     "@types/recharts": "^1.8.29",
     "better-sqlite3": "^12.8.0",
     "electron-log": "^5.4.3",

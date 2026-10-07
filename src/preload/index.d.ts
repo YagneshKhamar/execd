@@ -1,3 +1,107 @@
+export interface AuthState {
+  configured: boolean
+  signedIn: boolean
+  user: { id: string; email: string; displayName: string } | null
+  organization: {
+    id: string
+    name: string
+    role: 'owner' | 'manager' | 'member'
+    requireApproval: boolean
+  } | null
+  error?: string
+}
+
+export type TeamSyncStatus = 'local' | 'pending' | 'unlinked' | 'synced' | 'failed'
+
+export interface SyncErrorEntry {
+  entityType: 'team_task' | 'my_task'
+  entityId: string
+  title: string
+  status: 'failed' | 'waiting'
+  error: string
+  retryCount: number
+  updatedAt: string
+}
+
+export interface TaskHistoryEntry {
+  action: string
+  note: string
+  actor: string
+  at: string
+}
+
+export interface SyncInfo {
+  enabled: boolean
+  disabledByUser: boolean
+  role: 'owner' | 'manager' | 'member' | null
+  online: boolean
+  realtime: 'disabled' | 'connecting' | 'connected' | 'disconnected'
+  syncing: boolean
+  pending: number
+  waiting: number
+  failed: number
+  lastSyncedAt: string | null
+  lastError: string | null
+}
+
+export interface TeamWriteResult {
+  success: boolean
+  id?: string
+  sync?: TeamSyncStatus
+  syncError?: string
+}
+
+export interface AppNotification {
+  id: string
+  type:
+    | 'task_assigned'
+    | 'task_due_soon'
+    | 'task_overdue'
+    | 'task_completed'
+    | 'task_blocked'
+    | 'task_approved'
+    | 'task_rejected'
+    | 'invitation_accepted'
+  task_id: string | null
+  title: string
+  body: string
+  read_at: string | null
+  created_at: string
+}
+
+export interface MigrationPreview {
+  eligible: boolean
+  unlinkedMembersWithEmail: number
+  unlinkedMembersWithoutEmail: number
+  linkedMembers: number
+  legacyTasks: number
+}
+
+export interface MigrationResult {
+  success: boolean
+  error?: string
+  invitationsSent: number
+  invitationsSkippedNoEmail: number
+  invitationsFailed: { name: string; error: string }[]
+  tasksQueued: number
+}
+
+export interface MyTask {
+  id: string
+  title: string
+  description: string
+  effort: string
+  status: string
+  due_date: string
+  week_start: string
+  proof_value: string | null
+  notes: string
+  completed_at: string | null
+  version: number | null
+  sync_status: TeamSyncStatus
+  sync_error: string | null
+}
+
 export interface IElectronAPI {
   config: {
     save: (data: unknown) => Promise<{ success: boolean }>
@@ -251,17 +355,108 @@ export interface IElectronAPI {
     removeMember: (id: string) => Promise<{ success: boolean; id?: string }>
     getTasks: (memberId: string, weekStart: string) => Promise<unknown[]>
     getAllTasks: (weekStart: string) => Promise<unknown[]>
-    addTask: (data: unknown) => Promise<{ success: boolean; id?: string }>
+    addTask: (data: unknown) => Promise<TeamWriteResult>
     updateTaskStatus: (
       taskId: string,
       status: string,
       proof?: string,
-    ) => Promise<{ success: boolean; id?: string }>
-    addNote: (taskId: string, note: string) => Promise<{ success: boolean; id?: string }>
+      reviewNote?: string,
+    ) => Promise<TeamWriteResult>
+    addNote: (taskId: string, note: string) => Promise<TeamWriteResult>
     getFollowups: (date: string) => Promise<unknown[]>
     addFollowup: (data: unknown) => Promise<{ success: boolean; id?: string }>
     completeFollowup: (id: string) => Promise<{ success: boolean; id?: string }>
     getOverdue: () => Promise<unknown[]>
+    taskHistory: (
+      taskId: string,
+    ) => Promise<{ success: boolean; history?: TaskHistoryEntry[]; error?: string }>
+    myTaskHistory: (
+      taskId: string,
+    ) => Promise<{ success: boolean; history?: TaskHistoryEntry[]; error?: string }>
+    syncNow: () => Promise<SyncInfo>
+    syncStatus: () => Promise<SyncInfo>
+    retrySync: () => Promise<SyncInfo>
+    discardFailedSync: () => Promise<SyncInfo>
+    syncErrors: () => Promise<SyncErrorEntry[]>
+    getSyncDisabled: () => Promise<boolean>
+    setSyncDisabled: (disabled: boolean) => Promise<{ success: boolean }>
+    exportData: () => Promise<{ success: boolean; json: string; filename: string }>
+    myTasks: () => Promise<{ success: boolean; tasks?: MyTask[]; error?: string }>
+    updateMyTask: (data: {
+      taskId: string
+      status: string
+      proofValue?: string
+    }) => Promise<{ success: boolean; error?: string }>
+  }
+  auth: {
+    getState: () => Promise<AuthState>
+    signUp: (data: {
+      email: string
+      password: string
+      displayName: string
+    }) => Promise<{ success: boolean; needsConfirmation?: boolean; error?: string }>
+    signIn: (data: { email: string; password: string }) => Promise<{
+      success: boolean
+      error?: string
+    }>
+    signOut: () => Promise<{ success: boolean; error?: string }>
+    createOrganization: (name: string) => Promise<{ success: boolean; id?: string; error?: string }>
+    setRequireApproval: (data: {
+      organizationId: string
+      requireApproval: boolean
+    }) => Promise<{ success: boolean; error?: string }>
+  }
+  invitations: {
+    list: (organizationId: string) => Promise<{
+      success: boolean
+      error?: string
+      invitations?: {
+        id: string
+        email: string
+        role: 'manager' | 'member'
+        status: 'pending' | 'sent' | 'accepted' | 'expired' | 'revoked'
+        expires_at: string
+        accepted_at: string | null
+        created_at: string
+      }[]
+      members?: {
+        userId: string
+        role: 'owner' | 'manager' | 'member'
+        joinedAt: string
+        displayName: string
+        email: string
+      }[]
+    }>
+    create: (data: {
+      organizationId: string
+      email: string
+      role: 'manager' | 'member'
+    }) => Promise<{
+      success: boolean
+      id?: string
+      error?: string
+    }>
+    revoke: (invitationId: string) => Promise<{ success: boolean; error?: string }>
+    getMine: () => Promise<{
+      success: boolean
+      error?: string
+      invitations?: {
+        id: string
+        organizationName: string
+        role: string
+        invitedByName: string
+        expiresAt: string
+      }[]
+    }>
+    accept: (invitationId: string) => Promise<{ success: boolean; error?: string }>
+  }
+  notifications: {
+    list: () => Promise<{ success: boolean; notifications?: AppNotification[]; error?: string }>
+    markRead: (ids: string[] | null) => Promise<{ success: boolean; error?: string }>
+  }
+  migration: {
+    preview: () => Promise<MigrationPreview>
+    run: () => Promise<MigrationResult>
   }
   overlay: {
     openMain: () => Promise<void>

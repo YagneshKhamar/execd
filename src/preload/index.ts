@@ -119,13 +119,52 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('team:get-tasks', memberId, weekStart),
     getAllTasks: (weekStart: string) => ipcRenderer.invoke('team:get-all-tasks', weekStart),
     addTask: (data: unknown) => ipcRenderer.invoke('team:add-task', data),
-    updateTaskStatus: (taskId: string, status: string, proof?: string) =>
-      ipcRenderer.invoke('team:update-task-status', taskId, status, proof),
+    updateTaskStatus: (taskId: string, status: string, proof?: string, reviewNote?: string) =>
+      ipcRenderer.invoke('team:update-task-status', taskId, status, proof, reviewNote),
     addNote: (taskId: string, note: string) => ipcRenderer.invoke('team:add-note', taskId, note),
     getFollowups: (date: string) => ipcRenderer.invoke('team:get-followups', date),
     addFollowup: (data: unknown) => ipcRenderer.invoke('team:add-followup', data),
     completeFollowup: (id: string) => ipcRenderer.invoke('team:complete-followup', id),
     getOverdue: () => ipcRenderer.invoke('team:get-overdue'),
+    taskHistory: (taskId: string) => ipcRenderer.invoke('team:task-history', taskId),
+    myTaskHistory: (taskId: string) => ipcRenderer.invoke('team:my-task-history', taskId),
+    syncNow: () => ipcRenderer.invoke('team:sync-now'),
+    syncStatus: () => ipcRenderer.invoke('team:sync-status'),
+    retrySync: () => ipcRenderer.invoke('team:retry-sync'),
+    discardFailedSync: () => ipcRenderer.invoke('team:discard-failed-sync'),
+    syncErrors: () => ipcRenderer.invoke('team:sync-errors'),
+    getSyncDisabled: () => ipcRenderer.invoke('team:get-sync-disabled'),
+    setSyncDisabled: (disabled: boolean) => ipcRenderer.invoke('team:set-sync-disabled', disabled),
+    exportData: () => ipcRenderer.invoke('team:export-data'),
+    myTasks: () => ipcRenderer.invoke('team:my-tasks'),
+    updateMyTask: (data: { taskId: string; status: string; proofValue?: string }) =>
+      ipcRenderer.invoke('team:my-task-update', data),
+  },
+  auth: {
+    getState: () => ipcRenderer.invoke('auth:get-state'),
+    signUp: (data: { email: string; password: string; displayName: string }) =>
+      ipcRenderer.invoke('auth:sign-up', data),
+    signIn: (data: { email: string; password: string }) => ipcRenderer.invoke('auth:sign-in', data),
+    signOut: () => ipcRenderer.invoke('auth:sign-out'),
+    createOrganization: (name: string) => ipcRenderer.invoke('auth:create-organization', name),
+    setRequireApproval: (data: { organizationId: string; requireApproval: boolean }) =>
+      ipcRenderer.invoke('auth:set-require-approval', data),
+  },
+  invitations: {
+    list: (organizationId: string) => ipcRenderer.invoke('invitations:list', organizationId),
+    create: (data: { organizationId: string; email: string; role: string }) =>
+      ipcRenderer.invoke('invitations:create', data),
+    revoke: (invitationId: string) => ipcRenderer.invoke('invitations:revoke', invitationId),
+    getMine: () => ipcRenderer.invoke('invitations:get-mine'),
+    accept: (invitationId: string) => ipcRenderer.invoke('invitations:accept', invitationId),
+  },
+  notifications: {
+    list: () => ipcRenderer.invoke('notifications:list'),
+    markRead: (ids: string[] | null) => ipcRenderer.invoke('notifications:mark-read', ids),
+  },
+  migration: {
+    preview: () => ipcRenderer.invoke('migration:preview'),
+    run: () => ipcRenderer.invoke('migration:run'),
   },
   overlay: {
     openMain: () => ipcRenderer.invoke('overlay:open-main'),

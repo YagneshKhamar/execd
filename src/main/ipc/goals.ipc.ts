@@ -11,13 +11,15 @@ export function registerGoalsHandlers(): void {
         title: string
         type: string
         month: string
+        ai_validated: number
+        ai_validation_note: string
       }[],
     ) => {
       const db = getDatabase()
 
       const insertGoal = db.prepare(`
       INSERT INTO goals (id, month, title, type, ai_validated, ai_validation_note)
-      VALUES (?, ?, ?, ?, 0, '')
+      VALUES (?, ?, ?, ?, ?, ?)
     `)
 
       const insertMany = db.transaction((items: typeof goals) => {
@@ -32,7 +34,14 @@ export function registerGoalsHandlers(): void {
         const ids: string[] = []
         for (const goal of items) {
           const id = uuidv4()
-          insertGoal.run(id, goal.month, goal.title, goal.type)
+          insertGoal.run(
+            id,
+            goal.month,
+            goal.title,
+            goal.type,
+            goal.ai_validated,
+            goal.ai_validation_note,
+          )
           ids.push(id)
         }
         return ids

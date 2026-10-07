@@ -6,13 +6,20 @@ import { existsSync } from 'fs'
 import { join } from 'path'
 import { closeDatabase, getDatabase } from './db/database'
 import { registerAIHandlers } from './ipc/ai.ipc'
+import { registerAuthHandlers } from './ipc/auth.ipc'
 import { registerBusinessHandlers } from './ipc/business.ipc'
 import { registerConfigHandlers } from './ipc/config.ipc'
 import { registerGoalsHandlers } from './ipc/goals.ipc'
+import { registerInvitationHandlers } from './ipc/invitations.ipc'
+import { registerMigrationHandlers } from './ipc/migration.ipc'
+import { registerNotificationHandlers } from './ipc/notifications.ipc'
 import { registerReportsHandlers } from './ipc/reports.ipc'
 import { registerSalesHandlers } from './ipc/sales.ipc'
 import { registerTasksHandlers, runEndOfDay } from './ipc/tasks.ipc'
 import { registerTeamHandlers } from './ipc/team.ipc'
+import { isSupabaseConfigured } from './supabase/client'
+import { startRealtime } from './supabase/realtime'
+import { startSyncWorker } from './supabase/syncEngine'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -390,6 +397,12 @@ app.whenReady().then(async () => {
   // Initialize database
   getDatabase()
 
+  console.log(
+    isSupabaseConfigured()
+      ? '[startup] Supabase configured — remote sync available'
+      : '[startup] Supabase not configured — running local-only',
+  )
+
   registerConfigHandlers()
   registerGoalsHandlers()
   registerBusinessHandlers()
@@ -398,6 +411,14 @@ app.whenReady().then(async () => {
   registerReportsHandlers()
   registerSalesHandlers()
   registerTeamHandlers()
+  registerAuthHandlers()
+  registerInvitationHandlers()
+  registerNotificationHandlers()
+  registerMigrationHandlers()
+  if (isSupabaseConfigured()) {
+    startSyncWorker(getDatabase)
+    startRealtime(getDatabase)
+  }
 
   ipcMain.handle('overlay:open-main', () => {
     mainWindow?.show()

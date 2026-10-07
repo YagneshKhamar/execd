@@ -9,8 +9,9 @@ import Reports from './pages/Reports'
 import History from './pages/History'
 import Business from './pages/Business'
 import Analytics from './pages/Analytics'
-import Team from './pages/Team'
 import UpdateNotifier from './components/UpdateNotifier'
+import TeamRoute from './components/TeamRoute'
+import { AuthProvider } from './components/AuthProvider'
 
 function AutoEodHandler(): React.JSX.Element | null {
   const navigate = useNavigate()
@@ -127,12 +128,16 @@ function AppRouter(): React.JSX.Element {
         <Route path="/reports" element={<Reports />} />
         <Route path="/history" element={<History />} />
         <Route path="/analytics" element={<Analytics />} />
-        <Route path="/team" element={<Team />} />
+        <Route path="/team" element={<TeamRoute />} />
       </Routes>
     </AppLayout>
   )
 }
 
 export default function App(): React.JSX.Element {
-  return <AppRouter />
+  return (
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
+  )
 }

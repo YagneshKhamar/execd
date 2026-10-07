@@ -17,9 +17,18 @@ out/
 # AI tool artifacts
 .claude/
 .code-review-graph/
+graphify-out/
 
 # Environment
 .env
 
 # Temporary files
 *.zip
+
+# Supabase CLI local state (project ref, versions) and local secrets
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*
+.env.*
+!.env.example

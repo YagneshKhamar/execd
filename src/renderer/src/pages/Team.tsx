@@ -2,7 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
+import InvitationsPanel from '../components/InvitationsPanel'
+import LocalDataMigration from '../components/LocalDataMigration'
+import SyncDiagnostics from '../components/SyncDiagnostics'
+import SyncStatusBar from '../components/SyncStatusBar'
+import TaskHistory from '../components/TaskHistory'
 import SearchableSelect, { type SelectOption } from '../components/SearchableSelect'
+import { useAuth } from '../components/AuthProvider'
 import { useToast } from '../components/Toast'
 
 interface TeamMember {
@@ -10,7 +16,10 @@ interface TeamMember {
   name: string
   role: string
   email: string
+  remote_user_id: string | null
 }
+
+type SyncStatus = 'local' | 'pending' | 'unlinked' | 'synced' | 'failed'
 
 interface TeamTask {
   id: string
@@ -19,11 +28,13 @@ interface TeamTask {
   title: string
   description: string
   effort: 'light' | 'medium' | 'heavy'
-  status: 'pending' | 'completed' | 'blocked'
+  status: 'pending' | 'completed' | 'blocked' | 'awaiting_review' | 'needs_changes'
   due_date: string
   week_start: string
   notes: string
   proof_value: string | null
+  sync_status: SyncStatus
+  sync_error: string | null
   days_overdue?: number
 }
 
@@ -96,6 +107,8 @@ export default function Team(): React.JSX.Element {
   const [showFollowupModalForTask, setShowFollowupModalForTask] = useState<TeamTask | null>(null)
   const [activeNoteTaskId, setActiveNoteTaskId] = useState<string | null>(null)
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({})
+  const [reviewTaskId, setReviewTaskId] = useState<string | null>(null)
+  const [reviewNoteDrafts, setReviewNoteDrafts] = useState<Record<string, string>>({})
   const [newMember, setNewMember] = useState({ name: '', role: '', email: '' })
   const [newTask, setNewTask] = useState({
     member_id: '',
@@ -105,7 +118,9 @@ export default function Team(): React.JSX.Element {
     due_date: getDefaultDueDate(weekStart),
   })
   const [followupDraft, setFollowupDraft] = useState({ scheduled_date: getTomorrow(), note: '' })
-  const { error, success } = useToast()
+  const { error, success, info } = useToast()
+  const auth = useAuth()
+  const orgConnected = Boolean(auth.state?.signedIn && auth.state.organization)
 
   async function loadData(): Promise<void> {
     try {
@@ -125,6 +140,21 @@ export default function Team(): React.JSX.Element {
       error(t('toast.loadTeamFailed'))
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function refreshFromRemote(): Promise<void> {
+    await window.api.team.syncNow()
+    await loadData()
+  }
+
+  function reportSync(result: { sync?: string; syncError?: string }): void {
+    if (result.sync === 'failed') {
+      error(`Saved locally, but could not sync: ${result.syncError ?? 'unknown error'}`)
+    } else if (result.sync === 'unlinked') {
+      info(
+        'Saved locally. This member has not joined your organization yet, so they will not see it.',
+      )
     }
   }
 
@@ -165,6 +195,7 @@ export default function Team(): React.JSX.Element {
     })
     if (result.success) {
       success(t('toast.taskAssigned'))
+      reportSync(result)
       setShowAddTask(false)
       setNewTask({
         member_id: members[0]?.id ?? '',
@@ -181,14 +212,23 @@ export default function Team(): React.JSX.Element {
 
   async function handleStatus(
     taskId: string,
-    status: 'pending' | 'completed' | 'blocked',
+    status: TeamTask['status'],
+    reviewNote?: string,
   ): Promise<void> {
-    const result = await window.api.team.updateTaskStatus(taskId, status)
+    const result = await window.api.team.updateTaskStatus(taskId, status, undefined, reviewNote)
     if (result.success) {
+      reportSync(result)
       await loadData()
     } else {
       error(t('toast.statusUpdateFailed'))
     }
+  }
+
+  async function handleReject(taskId: string): Promise<void> {
+    const note = (reviewNoteDrafts[taskId] ?? '').trim()
+    await handleStatus(taskId, 'needs_changes', note)
+    setReviewTaskId(null)
+    success('Sent back for changes')
   }
 
   async function handleSaveNote(taskId: string): Promise<void> {
@@ -197,6 +237,7 @@ export default function Team(): React.JSX.Element {
     const result = await window.api.team.addNote(taskId, note)
     if (result.success) {
       success(t('toast.noteSaved'))
+      reportSync(result)
       setActiveNoteTaskId(null)
       await loadData()
     } else {
@@ -266,15 +307,17 @@ export default function Team(): React.JSX.Element {
           ))}
         </div>
 
+        {tab === 'members' && <LocalDataMigration />}
+        {tab === 'members' && <InvitationsPanel />}
+        {tab === 'members' && <SyncDiagnostics />}
+
         {tab === 'members' && (
           <section>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-[var(--text-primary)]">Team Members</h2>
               <button
                 onClick={() => setShowAddMember(true)}
-                disabled={members.length >= 10}
-                title={members.length >= 10 ? 'Max 10 members' : ''}
-                className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors"
+                className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors"
               >
                 {t('team.addMember')}
               </button>
@@ -296,6 +339,19 @@ export default function Team(): React.JSX.Element {
                           {member.role || '—'}
                         </p>
                         <p className="text-xs text-[var(--text-muted)]">{member.email || '—'}</p>
+                        {orgConnected && (
+                          <p
+                            className={`font-mono text-[10px] mt-1 ${
+                              member.remote_user_id
+                                ? 'text-[var(--accent-green)]'
+                                : 'text-[var(--text-muted)]'
+                            }`}
+                          >
+                            {member.remote_user_id
+                              ? 'Linked to organization account'
+                              : 'Not linked yet — links automatically when they join with this email'}
+                          </p>
+                        )}
                         <p className="font-mono text-xs text-[var(--accent-blue)] mt-2">
                           {count} tasks this week
                         </p>
@@ -319,9 +375,21 @@ export default function Team(): React.JSX.Element {
 
         {tab === 'week' && (
           <section>
-            <p className="font-mono text-xs text-[var(--text-muted)] mb-4">
-              {getWeekRangeLabel(weekStart)}
-            </p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="font-mono text-xs text-[var(--text-muted)]">
+                {getWeekRangeLabel(weekStart)}
+              </p>
+              {orgConnected && (
+                <button
+                  onClick={refreshFromRemote}
+                  className="font-mono text-xs bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] px-2.5 py-1 rounded cursor-pointer transition-colors"
+                >
+                  Refresh
+                </button>
+              )}
+            </div>
+
+            {orgConnected && <SyncStatusBar onChange={loadData} />}
 
             {overdue.length > 0 && (
               <div className="bg-[var(--accent-red)]/5 border border-[var(--accent-red)]/20 rounded p-3 mb-4">
@@ -416,13 +484,41 @@ export default function Team(): React.JSX.Element {
                             className={`font-mono text-[10px] px-1.5 py-0.5 rounded border ${
                               task.status === 'completed'
                                 ? 'bg-[var(--accent-green)]/10 text-[var(--accent-green)] border-[var(--accent-green)]/20'
-                                : task.status === 'blocked'
+                                : task.status === 'blocked' || task.status === 'needs_changes'
                                   ? 'bg-[var(--accent-red)]/10 text-[var(--accent-red)] border-[var(--accent-red)]/20'
-                                  : 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/20'
+                                  : task.status === 'awaiting_review'
+                                    ? 'bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border-[var(--accent-blue)]/20'
+                                    : 'bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/20'
                             }`}
                           >
-                            {task.status}
+                            {task.status.replace('_', ' ')}
                           </span>
+                          {orgConnected && task.sync_status === 'failed' && (
+                            <span
+                              title={task.sync_error ?? ''}
+                              className="font-mono text-[10px] px-1.5 py-0.5 rounded border bg-[var(--accent-red)]/10 text-[var(--accent-red)] border-[var(--accent-red)]/20"
+                            >
+                              sync failed
+                            </span>
+                          )}
+                          {orgConnected && task.sync_status === 'pending' && (
+                            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded border bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/20">
+                              pending sync
+                            </span>
+                          )}
+                          {orgConnected && task.sync_status === 'unlinked' && (
+                            <span
+                              title="The assignee has not joined your organization yet"
+                              className="font-mono text-[10px] px-1.5 py-0.5 rounded border bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] border-[var(--accent-yellow)]/20"
+                            >
+                              not linked
+                            </span>
+                          )}
+                          {orgConnected && task.sync_status === 'synced' && (
+                            <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                              synced
+                            </span>
+                          )}
                         </div>
                         {task.notes && (
                           <p className="text-xs text-[var(--text-secondary)] italic mt-1">
@@ -430,12 +526,31 @@ export default function Team(): React.JSX.Element {
                           </p>
                         )}
                         <div className="flex gap-2 mt-3">
-                          <button
-                            onClick={() => handleStatus(task.id, 'completed')}
-                            className="text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white px-2.5 py-1 rounded cursor-pointer transition-colors"
-                          >
-                            Mark Done
-                          </button>
+                          {task.status === 'awaiting_review' ? (
+                            <>
+                              <button
+                                onClick={() => handleStatus(task.id, 'completed')}
+                                className="text-xs bg-[var(--accent-green)] hover:opacity-90 text-white px-2.5 py-1 rounded cursor-pointer transition-colors"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setReviewTaskId((prev) => (prev === task.id ? null : task.id))
+                                }
+                                className="text-xs bg-transparent border border-[var(--accent-red)]/40 hover:border-[var(--accent-red)] text-[var(--accent-red)] px-2.5 py-1 rounded cursor-pointer transition-colors"
+                              >
+                                Request Changes
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleStatus(task.id, 'completed')}
+                              className="text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white px-2.5 py-1 rounded cursor-pointer transition-colors"
+                            >
+                              Mark Done
+                            </button>
+                          )}
                           <button
                             onClick={() =>
                               setActiveNoteTaskId((prev) => (prev === task.id ? null : task.id))
@@ -451,6 +566,31 @@ export default function Team(): React.JSX.Element {
                             Schedule Follow-up
                           </button>
                         </div>
+                        {reviewTaskId === task.id && (
+                          <div className="mt-2">
+                            <textarea
+                              value={reviewNoteDrafts[task.id] ?? ''}
+                              onChange={(e) =>
+                                setReviewNoteDrafts((prev) => ({
+                                  ...prev,
+                                  [task.id]: e.target.value,
+                                }))
+                              }
+                              rows={2}
+                              placeholder="What needs to change?"
+                              className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-2.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
+                            />
+                            <button
+                              onClick={() => handleReject(task.id)}
+                              className="mt-1 text-xs bg-[var(--accent-red)] hover:opacity-90 text-white px-2.5 py-1 rounded cursor-pointer transition-colors"
+                            >
+                              Send back
+                            </button>
+                          </div>
+                        )}
+                        {orgConnected && (
+                          <TaskHistory taskId={task.id} fetch={window.api.team.taskHistory} />
+                        )}
                         {activeNoteTaskId === task.id && (
                           <div className="mt-2">
                             <textarea

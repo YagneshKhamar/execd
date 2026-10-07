@@ -329,7 +329,13 @@ export default function Goals(): React.JSX.Element {
 
     try {
       const result = await window.api.goals.save(
-        goals.map((g) => ({ title: g.title, type: g.type, month })),
+        goals.map((g) => ({
+          title: g.title,
+          type: g.type,
+          month,
+          ai_validated: g.validationState === 'valid' ? 1 : 0,
+          ai_validation_note: g.validationNote,
+        })),
       )
 
       if (!result.success || !result.ids || result.ids.length !== goals.length) {
