@@ -348,7 +348,8 @@ function hasOpenEntries(db: Database.Database, id: string): boolean {
 
 export function enqueueTaskCreate(db: Database.Database, taskId: string): SyncStatus {
   const stored = getStoredContext(db)
-  if (!stored || isSyncDisabled(db) || stored.role === 'member' || !getTask(db, taskId)) return 'local'
+  if (!stored || isSyncDisabled(db) || stored.role === 'member' || !getTask(db, taskId))
+    return 'local'
   insertEntry(db, stored.userId, 'team_task', taskId, 'create', `created:${taskId}`, {})
   return refreshState(db, 'team_tasks', taskId)
 }
@@ -699,6 +700,68 @@ async function uploadPending(db: Database.Database, ctx: SyncContext): Promise<v
   }
 }
 
+// ── organization members → local team_members ────────────────────────────────────────────
+
+// The assign-task dropdown reads local team_members, so every active organization member
+// needs a linked local row. Managers removed locally stay removed; members who left the
+// organization are soft-deactivated (their task history is kept).
+async function syncOrgMembers(db: Database.Database, ctx: SyncContext): Promise<void> {
+  const { data: members, error: memberError } = await ctx.supabase
+    .from('organization_members')
+    .select('user_id')
+    .eq('organization_id', ctx.organizationId)
+    .eq('status', 'active')
+  if (memberError) throw memberError
+
+  const ids = (members ?? []).map((m) => m.user_id as string)
+  const profileById = new Map<string, { display_name: string; email: string }>()
+  if (ids.length) {
+    const { data: profiles, error: profileError } = await ctx.supabase
+      .from('profiles')
+      .select('id, display_name, email')
+      .in('id', ids)
+    if (profileError) throw profileError
+    for (const p of (profiles ?? []) as { id: string; display_name: string; email: string }[]) {
+      profileById.set(p.id, p)
+    }
+  }
+
+  const findLinked = db.prepare('SELECT id FROM team_members WHERE remote_user_id = ?')
+  const findByEmail = db.prepare(
+    `SELECT id FROM team_members
+     WHERE remote_user_id IS NULL AND lower(trim(email)) = ? ORDER BY active DESC, created_at LIMIT 1`,
+  )
+  const link = db.prepare('UPDATE team_members SET remote_user_id = ? WHERE id = ?')
+  const insert = db.prepare(
+    'INSERT INTO team_members (id, name, role, email, remote_user_id) VALUES (?, ?, ?, ?, ?)',
+  )
+
+  db.transaction(() => {
+    for (const userId of ids) {
+      if (userId === ctx.userId) continue
+      if (findLinked.get(userId)) continue
+
+      const profile = profileById.get(userId)
+      const email = (profile?.email ?? '').trim()
+      const byEmail = email
+        ? (findByEmail.get(email.toLowerCase()) as { id: string } | undefined)
+        : undefined
+      if (byEmail) {
+        link.run(userId, byEmail.id)
+        continue
+      }
+      insert.run(uuidv4(), profile?.display_name?.trim() || email || 'Member', '', email, userId)
+    }
+
+    const placeholders = ids.map(() => '?').join(',')
+    db.prepare(
+      `UPDATE team_members SET active = 0
+       WHERE active = 1 AND remote_user_id IS NOT NULL
+         ${ids.length ? `AND remote_user_id NOT IN (${placeholders})` : ''}`,
+    ).run(...ids)
+  })()
+}
+
 // ── download ──────────────────────────────────────────────────────────────────────────────
 
 function applyRemote(
@@ -922,6 +985,7 @@ async function runCycle(db: Database.Database): Promise<void> {
     }
 
     migrateLegacyState(db, result.ctx.userId)
+    if (result.ctx.role !== 'member') await syncOrgMembers(db, result.ctx)
     await uploadPending(db, result.ctx)
     await downloadChanges(db, result.ctx)
 

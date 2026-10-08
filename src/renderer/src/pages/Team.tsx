@@ -159,7 +159,13 @@ export default function Team(): React.JSX.Element {
   }
 
   useEffect(() => {
-    loadData()
+    async function init(): Promise<void> {
+      await loadData()
+      // Pull in organization members who joined since the last sync.
+      if (orgConnected) await refreshFromRemote()
+    }
+    init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -443,6 +449,7 @@ export default function Team(): React.JSX.Element {
                     member_id: selectedMember ?? members[0]?.id ?? '',
                   }))
                   setShowAddTask(true)
+                  if (orgConnected) refreshFromRemote()
                 }}
                 className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors"
               >
