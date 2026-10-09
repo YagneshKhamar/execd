@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Setup from './pages/Setup'
@@ -83,6 +84,7 @@ function AppLayout({ children }: { children: React.ReactNode }): React.JSX.Eleme
 }
 
 function AppRouter(): React.JSX.Element {
+  const { t } = useTranslation()
   const [startPath, setStartPath] = useState<string | null>(null)
 
   useEffect(() => {
@@ -109,7 +111,7 @@ function AppRouter(): React.JSX.Element {
   if (startPath === null) {
     return (
       <div className="h-screen w-screen bg-[var(--bg-base)] flex items-center justify-center">
-        <div className="text-[var(--text-muted)] text-sm font-mono">loading...</div>
+        <div className="text-[var(--text-muted)] text-sm font-mono">{t('common.loading')}</div>
       </div>
     )
   }

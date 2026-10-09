@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ChevronLeft, Sparkles, Target, Trash2 } from 'lucide-react'
 import { useToast } from '../components/Toast'
 import i18n from '../i18n/index'
+import { localeFor } from '../i18n/locale'
 
 type GoalType = 'business' | 'personal' | 'family'
 type ValidationState = 'idle' | 'validating' | 'valid' | 'invalid'
@@ -63,13 +64,10 @@ function getCurrentMonth(): string {
 }
 
 function getMonthLabel(month: string, language: string): string {
-  return new Date(`${month}-01T00:00:00`).toLocaleDateString(
-    language === 'gu' ? 'gu-IN' : 'en-US',
-    {
-      month: 'long',
-      year: 'numeric',
-    },
-  )
+  return new Date(`${month}-01T00:00:00`).toLocaleDateString(localeFor(language), {
+    month: 'long',
+    year: 'numeric',
+  })
 }
 
 function buildGoalSlots(counts: {
@@ -79,15 +77,12 @@ function buildGoalSlots(counts: {
 }): GoalWithSubgoals[] {
   const placeholders: Record<GoalType, string[]> = {
     business: [
-      'e.g. Launch landing page and get 50 signups',
-      'e.g. Close 3 new paying customers',
-      'e.g. Ship v1 of the mobile app',
+      i18n.t('goals.placeholders.business1'),
+      i18n.t('goals.placeholders.business2'),
+      i18n.t('goals.placeholders.business3'),
     ],
-    personal: ['e.g. Read 2 books on systems thinking', 'e.g. Exercise 4 times per week'],
-    family: [
-      'e.g. Plan and take a weekend trip with family',
-      'e.g. Set weekly family dinner routine',
-    ],
+    personal: [i18n.t('goals.placeholders.personal1'), i18n.t('goals.placeholders.personal2')],
+    family: [i18n.t('goals.placeholders.family1'), i18n.t('goals.placeholders.family2')],
   }
 
   const createForType = (type: GoalType, count: number): GoalInput[] =>
@@ -95,8 +90,10 @@ function buildGoalSlots(counts: {
       id: `${type}-${index}`,
       title: '',
       type,
-      label: `${type.charAt(0).toUpperCase()}${type.slice(1)} Goal ${index + 1}`,
-      placeholder: placeholders[type][index] ?? `e.g. ${type} goal ${index + 1}`,
+      label: i18n.t('goals.goalLabel', { type: i18n.t(`goals.${type}`), n: index + 1 }),
+      placeholder:
+        placeholders[type][index] ??
+        i18n.t('goals.placeholders.generic', { type: i18n.t(`goals.${type}`), n: index + 1 }),
       validationState: 'idle',
       validationNote: '',
     }))
@@ -230,7 +227,7 @@ export default function Goals(): React.JSX.Element {
   async function handleValidateAndContinue(): Promise<void> {
     const empty = goals.filter((g) => !g.title.trim())
     if (empty.length > 0) {
-      info(`All ${goals.length} goals are required.`)
+      info(t('goals.allRequired', { count: goals.length }))
       return
     }
     setValidating(true)
@@ -254,7 +251,7 @@ export default function Goals(): React.JSX.Element {
         updated[i] = {
           ...updated[i],
           validationState: 'valid',
-          validationNote: 'Accepted via AI suggestion.',
+          validationNote: t('goals.acceptedViaAi'),
           lastValidatedTitle: updated[i].title,
           suggestedFix: undefined,
         }
@@ -284,7 +281,7 @@ export default function Goals(): React.JSX.Element {
         updated[i] = {
           ...updated[i],
           validationState: 'invalid',
-          validationNote: 'AI validation failed. Check your API key in Setup.',
+          validationNote: t('goals.aiValidationFailed'),
         }
         setGoals([...updated])
         setValidating(false)
@@ -298,7 +295,7 @@ export default function Goals(): React.JSX.Element {
     setValidating(false)
 
     if (hasInvalid) {
-      info('Fix flagged goals before continuing.')
+      info(t('goals.fixFlagged'))
       return
     }
 
@@ -316,7 +313,7 @@ export default function Goals(): React.JSX.Element {
         }
       } else {
         updated[i] = { ...updated[i], loadingSubgoals: false }
-        error(`Failed to generate subgoals for: ${updated[i].title}`)
+        error(t('goals.subgoalsFailedFor', { title: updated[i].title }))
       }
       setGoals([...updated])
     }
@@ -500,7 +497,7 @@ export default function Goals(): React.JSX.Element {
           </div>
 
           <p className="text-xs text-[var(--text-muted)] text-center mt-6">
-            Goals are locked for this month. Contact support to reset.
+            {t('goals.lockedNote')}
           </p>
         </div>
       </div>
@@ -511,10 +508,10 @@ export default function Goals(): React.JSX.Element {
     return (
       <div className="h-full w-full overflow-y-auto bg-[var(--bg-base)]">
         <div className="max-w-4xl mx-auto px-8 py-8">
-          <p className="font-mono text-xs text-[var(--text-muted)] mb-1">
-            STEP 2 OF 2 - REVIEW SUBGOALS
-          </p>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-6">Review Subgoals</h1>
+          <p className="font-mono text-xs text-[var(--text-muted)] mb-1">{t('goals.step2')}</p>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-6">
+            {t('goals.reviewSubgoals')}
+          </h1>
 
           <div className="space-y-5 mb-6">
             {goals.map((goal, gi) => (
@@ -552,9 +549,9 @@ export default function Goals(): React.JSX.Element {
                           onChange={(e) => updateSubgoal(gi, si, 'priority', e.target.value)}
                           className={`${PRIORITY_COLORS[sub.priority]} outline-none cursor-pointer`}
                         >
-                          <option value="high">high</option>
-                          <option value="medium">medium</option>
-                          <option value="low">low</option>
+                          <option value="high">{t('goals.priority.high')}</option>
+                          <option value="medium">{t('goals.priority.medium')}</option>
+                          <option value="low">{t('goals.priority.low')}</option>
                         </select>
                         <input
                           type="text"
@@ -602,11 +599,9 @@ export default function Goals(): React.JSX.Element {
           className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] cursor-pointer mb-6 flex items-center gap-1"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
-          Back
+          {t('common.back')}
         </button>
-        <p className="font-mono text-xs text-[var(--text-muted)] mb-1">
-          STEP 1 OF 2 - DEFINE GOALS
-        </p>
+        <p className="font-mono text-xs text-[var(--text-muted)] mb-1">{t('goals.step1')}</p>
         <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-6">
           {t('goals.addGoals')}
         </h1>
@@ -659,7 +654,7 @@ export default function Goals(): React.JSX.Element {
                   {goals[index].validationState === 'invalid' && goals[index].suggestedFix && (
                     <div className="mt-2">
                       <p className="inline-flex items-center gap-1 text-xs text-[var(--accent-yellow)]">
-                        <Sparkles className="w-3 h-3" /> AI suggestion
+                        <Sparkles className="w-3 h-3" /> {t('goals.aiSuggestion')}
                       </p>
                       <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded p-3 mt-2 text-xs text-[var(--text-secondary)]">
                         <p className="mb-2">{goals[index].suggestedFix}</p>
@@ -677,7 +672,7 @@ export default function Goals(): React.JSX.Element {
                           }}
                           className="text-[var(--accent-blue)] hover:text-blue-300 cursor-pointer"
                         >
-                          Use this {'->'}
+                          {t('goals.useThis')} {'->'}
                         </button>
                       </div>
                     </div>

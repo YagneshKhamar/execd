@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { translateError } from '../i18n/errors'
 import { useAuth } from './AuthProvider'
 import { useToast } from './Toast'
 
@@ -11,6 +13,7 @@ type Result = Awaited<ReturnType<Window['api']['migration']['run']>>
  * (renews their invitation), and tasks already queued are skipped (see migration.ipc.ts).
  */
 export default function LocalDataMigration(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const { state } = useAuth()
   const { error: toastError } = useToast()
   const [preview, setPreview] = useState<Preview | null>(null)
@@ -42,7 +45,7 @@ export default function LocalDataMigration(): React.JSX.Element | null {
     try {
       const outcome = await window.api.migration.run()
       if (!outcome.success) {
-        toastError(outcome.error ?? 'Import failed')
+        toastError(translateError(t, outcome.error, 'migration.importFailed'))
         return
       }
       setResult(outcome)
@@ -54,28 +57,19 @@ export default function LocalDataMigration(): React.JSX.Element | null {
 
   return (
     <section className="mb-8 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-lg p-4">
-      <h2 className="text-base font-semibold text-[var(--text-primary)]">
-        Bring in your existing local team data
-      </h2>
-      <p className="text-xs text-[var(--text-secondary)] mt-1 mb-3">
-        This organization was created after Execd already had local team members and tasks on this
-        device. Nothing local is deleted or changed by this — it only invites members by email and
-        queues their tasks to sync, same as normal.
-      </p>
+      <h2 className="text-base font-semibold text-[var(--text-primary)]">{t('migration.title')}</h2>
+      <p className="text-xs text-[var(--text-secondary)] mt-1 mb-3">{t('migration.help')}</p>
 
       {hasWork && (
         <ul className="text-xs text-[var(--text-secondary)] mb-3 space-y-0.5">
           {preview.unlinkedMembersWithEmail > 0 && (
-            <li>{preview.unlinkedMembersWithEmail} member(s) will be invited by email</li>
+            <li>{t('migration.willInvite', { count: preview.unlinkedMembersWithEmail })}</li>
           )}
           {preview.unlinkedMembersWithoutEmail > 0 && (
-            <li>
-              {preview.unlinkedMembersWithoutEmail} member(s) have no email on file and can&apos;t
-              be invited — add one on the Members tab first
-            </li>
+            <li>{t('migration.noEmail', { count: preview.unlinkedMembersWithoutEmail })}</li>
           )}
           {preview.legacyTasks > 0 && (
-            <li>{preview.legacyTasks} local task(s) will be queued to sync</li>
+            <li>{t('migration.willQueue', { count: preview.legacyTasks })}</li>
           )}
         </ul>
       )}
@@ -86,18 +80,18 @@ export default function LocalDataMigration(): React.JSX.Element | null {
           disabled={busy}
           className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white text-sm px-4 py-2 rounded cursor-pointer transition-colors"
         >
-          {busy ? 'Importing...' : 'Import now'}
+          {busy ? t('migration.importing') : t('migration.importNow')}
         </button>
       )}
 
       {result && (
         <div className="mt-3 text-xs text-[var(--text-secondary)] bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded p-3">
-          <p className="text-[var(--text-primary)] font-medium mb-1">Import summary</p>
-          <p>{result.invitationsSent} invitation(s) sent</p>
+          <p className="text-[var(--text-primary)] font-medium mb-1">{t('migration.summary')}</p>
+          <p>{t('migration.invitationsSent', { count: result.invitationsSent })}</p>
           {result.invitationsSkippedNoEmail > 0 && (
-            <p>{result.invitationsSkippedNoEmail} member(s) skipped — no email on file</p>
+            <p>{t('migration.skippedNoEmail', { count: result.invitationsSkippedNoEmail })}</p>
           )}
-          <p>{result.tasksQueued} task(s) queued to sync</p>
+          <p>{t('migration.tasksQueued', { count: result.tasksQueued })}</p>
           {result.invitationsFailed.length > 0 && (
             <div className="mt-1 text-[var(--accent-red)]">
               {result.invitationsFailed.map((f, i) => (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Paperclip } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { localeFor } from '../i18n/locale'
 
 type TaskStatus = 'completed' | 'missed' | 'pending' | 'carried' | 'dropped'
 
@@ -46,7 +47,7 @@ function getStatusBorderClass(status: string): string {
 }
 
 export default function History(): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [filterMonth, setFilterMonth] = useState(getCurrentMonth())
   const [filterDate, setFilterDate] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -146,7 +147,7 @@ export default function History(): React.JSX.Element {
                 <button
                   onClick={() => setFilterDate('')}
                   className="text-xs px-2 py-1 rounded border border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)] cursor-pointer transition-colors"
-                  title="Clear date filter"
+                  title={t('history.clearDateFilter')}
                 >
                   ×
                 </button>
@@ -188,7 +189,7 @@ export default function History(): React.JSX.Element {
             {groupedDates.map((date) => (
               <div key={date}>
                 <p className="text-xs font-mono text-[var(--text-muted)] mb-2 mt-4">
-                  {new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
+                  {new Date(`${date}T00:00:00`).toLocaleDateString(localeFor(i18n.language), {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',
@@ -234,7 +235,7 @@ export default function History(): React.JSX.Element {
                             onClick={() =>
                               setOpenProofTaskId((prev) => (prev === task.id ? null : task.id))
                             }
-                            title="Add proof"
+                            title={t('dashboard.addProof')}
                             className={`cursor-pointer transition-colors ${
                               task.proof_value
                                 ? 'text-[var(--accent-blue)]/70 hover:text-[var(--accent-blue)]'

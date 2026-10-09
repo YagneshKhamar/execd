@@ -1,22 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { relativeTime } from '../i18n/relativeTime'
 
 type SyncInfo = Awaited<ReturnType<Window['api']['team']['syncStatus']>>
 
 const POLL_MS = 4000
-
-function relativeTime(iso: string | null, now: number): string {
-  if (!iso) return 'not yet'
-  const seconds = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000))
-  if (seconds < 45) return 'just now'
-  const minutes = Math.round(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.round(minutes / 60)
-  return hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`
-}
-
-function plural(n: number, word: string): string {
-  return `${n} ${word}${n === 1 ? '' : 's'}`
-}
 
 /**
  * Shows connection / queue state for shared-team sync and triggers `onChange` whenever a sync
@@ -27,6 +15,7 @@ export default function SyncStatusBar({
 }: {
   onChange?: () => void
 }): React.JSX.Element | null {
+  const { t } = useTranslation()
   const [info, setInfo] = useState<SyncInfo | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [busy, setBusy] = useState(false)
@@ -81,23 +70,25 @@ export default function SyncStatusBar({
 
   const queued = info.pending + info.waiting
   let tone = 'text-[var(--accent-green)]'
-  let text = `Synced ${relativeTime(info.lastSyncedAt, now)}`
+  let text = info.lastSyncedAt
+    ? t('sync.synced', { when: relativeTime(t, info.lastSyncedAt, now) })
+    : t('sync.syncedNever')
 
   if (info.disabledByUser) {
     tone = 'text-[var(--text-muted)]'
-    text = 'Cloud sync disabled — using local-only data'
+    text = t('sync.disabledLocal')
   } else if (info.failed > 0) {
     tone = 'text-[var(--accent-red)]'
-    text = `${plural(info.failed, 'change')} could not sync`
+    text = t('sync.failedChanges', { count: info.failed })
   } else if (!info.online) {
     tone = 'text-[var(--accent-yellow)]'
-    text = `Offline${queued ? ` — ${plural(queued, 'change')} will sync when reconnected` : ''}`
+    text = queued ? t('sync.offlineQueued', { count: queued }) : t('sync.offline')
   } else if (info.syncing || info.pending > 0) {
     tone = 'text-[var(--accent-yellow)]'
-    text = `Syncing${info.pending ? ` — ${plural(info.pending, 'change')} pending` : '...'}`
+    text = info.pending ? t('sync.syncingPending', { count: info.pending }) : t('sync.syncing')
   } else if (info.waiting > 0) {
     tone = 'text-[var(--accent-yellow)]'
-    text = `${plural(info.waiting, 'task')} waiting for the assignee to join`
+    text = t('sync.waitingForAssignee', { count: info.waiting })
   }
 
   const buttonClass =
@@ -110,10 +101,10 @@ export default function SyncStatusBar({
         <span className={`font-mono text-xs truncate ${tone}`}>{text}</span>
         {info.realtime === 'connected' && (
           <span
-            title="Live: changes from your team appear without a manual refresh"
+            title={t('sync.liveTitle')}
             className="font-mono text-[10px] px-1.5 py-0.5 rounded border bg-[var(--accent-green)]/10 text-[var(--accent-green)] border-[var(--accent-green)]/20"
           >
-            live
+            {t('sync.live')}
           </span>
         )}
         {info.failed === 0 && !info.online && info.lastError && (
@@ -130,14 +121,14 @@ export default function SyncStatusBar({
               disabled={busy}
               className={buttonClass}
             >
-              Retry
+              {t('common.retry')}
             </button>
             <button
               onClick={() => run(window.api.team.discardFailedSync)}
               disabled={busy}
               className={buttonClass}
             >
-              Discard
+              {t('sync.discard')}
             </button>
           </>
         ) : (
@@ -146,7 +137,7 @@ export default function SyncStatusBar({
             disabled={busy}
             className={buttonClass}
           >
-            Sync now
+            {t('sync.syncNow')}
           </button>
         )}
       </div>

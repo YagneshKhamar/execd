@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { translateError } from '../i18n/errors'
 import { useAuth } from './AuthProvider'
 import { useToast } from './Toast'
 
@@ -27,6 +29,7 @@ function Card({
 }
 
 function CredentialsForm(): React.JSX.Element {
+  const { t } = useTranslation()
   const { refresh, continueLocalOnly } = useAuth()
   const toast = useToast()
   const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in')
@@ -47,11 +50,11 @@ function CredentialsForm(): React.JSX.Element {
       if (isSignUp) {
         const result = await window.api.auth.signUp({ email, password, displayName })
         if (!result.success) {
-          toast.error(result.error ?? 'Sign up failed')
+          toast.error(translateError(t, result.error, 'auth.signUpFailed'))
           return
         }
         if (result.needsConfirmation) {
-          toast.info('Check your email to confirm your account, then sign in.')
+          toast.info(t('auth.checkEmail'))
           setMode('sign-in')
           setPassword('')
           return
@@ -59,7 +62,7 @@ function CredentialsForm(): React.JSX.Element {
       } else {
         const result = await window.api.auth.signIn({ email, password })
         if (!result.success) {
-          toast.error(result.error ?? 'Sign in failed')
+          toast.error(translateError(t, result.error, 'auth.signInFailed'))
           return
         }
       }
@@ -70,12 +73,12 @@ function CredentialsForm(): React.JSX.Element {
   }
 
   return (
-    <Card title={isSignUp ? 'Create your account' : 'Sign in to Execd Team'}>
+    <Card title={isSignUp ? t('auth.createYourAccount') : t('auth.signInTitle')}>
       <form onSubmit={submit} className="space-y-2">
         {isSignUp && (
           <input
             type="text"
-            placeholder="Your name"
+            placeholder={t('auth.yourName')}
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             className={INPUT_CLASS}
@@ -83,7 +86,7 @@ function CredentialsForm(): React.JSX.Element {
         )}
         <input
           type="email"
-          placeholder="Email"
+          placeholder={t('auth.email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
@@ -91,14 +94,14 @@ function CredentialsForm(): React.JSX.Element {
         />
         <input
           type="password"
-          placeholder={isSignUp ? 'Password (min 8 characters)' : 'Password'}
+          placeholder={isSignUp ? t('auth.passwordMin') : t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete={isSignUp ? 'new-password' : 'current-password'}
           className={INPUT_CLASS}
         />
         <button type="submit" disabled={!canSubmit} className={`${PRIMARY_BUTTON_CLASS} mt-2`}>
-          {busy ? 'Please wait...' : isSignUp ? 'Create account' : 'Sign in'}
+          {busy ? t('auth.pleaseWait') : isSignUp ? t('auth.createAccount') : t('auth.signIn')}
         </button>
       </form>
       <div className="flex justify-between mt-4">
@@ -106,10 +109,10 @@ function CredentialsForm(): React.JSX.Element {
           onClick={() => setMode(isSignUp ? 'sign-in' : 'sign-up')}
           className={LINK_BUTTON_CLASS}
         >
-          {isSignUp ? 'Have an account? Sign in' : 'New here? Create an account'}
+          {isSignUp ? t('auth.haveAccount') : t('auth.newHere')}
         </button>
         <button onClick={continueLocalOnly} className={LINK_BUTTON_CLASS}>
-          Use local team data only
+          {t('auth.useLocalOnly')}
         </button>
       </div>
     </Card>
@@ -121,6 +124,7 @@ type PendingInvitation = NonNullable<
 >[number]
 
 function CreateOrganizationForm(): React.JSX.Element {
+  const { t } = useTranslation()
   const { refresh, signOut, continueLocalOnly } = useAuth()
   const toast = useToast()
   const { error: toastError } = toast
@@ -132,10 +136,10 @@ function CreateOrganizationForm(): React.JSX.Element {
     async function loadInvitations(): Promise<void> {
       const result = await window.api.invitations.getMine()
       if (result.success) setInvitations(result.invitations ?? [])
-      else toastError(result.error ?? 'Could not check for invitations')
+      else toastError(translateError(t, result.error, 'auth.checkInvitationsFailed'))
     }
     loadInvitations()
-  }, [toastError])
+  }, [toastError, t])
 
   async function accept(id: string): Promise<void> {
     if (busy) return
@@ -143,7 +147,7 @@ function CreateOrganizationForm(): React.JSX.Element {
     try {
       const result = await window.api.invitations.accept(id)
       if (!result.success) {
-        toast.error(result.error ?? 'Could not accept invitation')
+        toast.error(translateError(t, result.error, 'auth.acceptFailed'))
         return
       }
       await refresh()
@@ -159,7 +163,7 @@ function CreateOrganizationForm(): React.JSX.Element {
     try {
       const result = await window.api.auth.createOrganization(name)
       if (!result.success) {
-        toast.error(result.error ?? 'Could not create organization')
+        toast.error(translateError(t, result.error, 'auth.createOrgFailed'))
         return
       }
       await refresh()
@@ -169,11 +173,11 @@ function CreateOrganizationForm(): React.JSX.Element {
   }
 
   return (
-    <Card title="Set up your organization">
+    <Card title={t('auth.setupOrgTitle')}>
       {invitations.length > 0 && (
         <div className="mb-4 space-y-2">
           <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)]">
-            You have been invited
+            {t('auth.youAreInvited')}
           </p>
           {invitations.map((inv) => (
             <div
@@ -185,8 +189,8 @@ function CreateOrganizationForm(): React.JSX.Element {
                   {inv.organizationName}
                 </p>
                 <p className="text-[10px] text-[var(--text-muted)] truncate">
-                  as {inv.role}
-                  {inv.invitedByName ? ` · from ${inv.invitedByName}` : ''}
+                  {t('auth.asRole', { role: t(`roles.${inv.role}`) })}
+                  {inv.invitedByName ? ` · ${t('auth.fromName', { name: inv.invitedByName })}` : ''}
                 </p>
               </div>
               <button
@@ -194,38 +198,33 @@ function CreateOrganizationForm(): React.JSX.Element {
                 disabled={busy}
                 className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white text-xs px-3 py-1.5 rounded cursor-pointer transition-colors"
               >
-                Join
+                {t('auth.join')}
               </button>
             </div>
           ))}
-          <p className="text-[10px] text-[var(--text-muted)]">
-            Or create your own organization below.
-          </p>
+          <p className="text-[10px] text-[var(--text-muted)]">{t('auth.orCreateBelow')}</p>
         </div>
       )}
-      <p className="text-xs text-[var(--text-secondary)] mb-3">
-        Create the organization your team will belong to. You will be its owner. If you were invited
-        to an existing one, accept the invitation instead.
-      </p>
+      <p className="text-xs text-[var(--text-secondary)] mb-3">{t('auth.createOrgHelp')}</p>
       <form onSubmit={submit} className="space-y-2">
         <input
           type="text"
-          placeholder="Organization name"
+          placeholder={t('auth.orgName')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={100}
           className={INPUT_CLASS}
         />
         <button type="submit" disabled={!name.trim() || busy} className={PRIMARY_BUTTON_CLASS}>
-          {busy ? 'Creating...' : 'Create organization'}
+          {busy ? t('auth.creating') : t('auth.createOrganization')}
         </button>
       </form>
       <div className="flex justify-between mt-4">
         <button onClick={signOut} className={LINK_BUTTON_CLASS}>
-          Sign out
+          {t('nav.signOut')}
         </button>
         <button onClick={continueLocalOnly} className={LINK_BUTTON_CLASS}>
-          Use local team data only
+          {t('auth.useLocalOnly')}
         </button>
       </div>
     </Card>
@@ -238,12 +237,13 @@ function CreateOrganizationForm(): React.JSX.Element {
  * team data stays reachable.
  */
 export default function AuthGate({ children }: { children: React.ReactNode }): React.JSX.Element {
+  const { t } = useTranslation()
   const { state, localOnly, refresh, continueLocalOnly } = useAuth()
 
   if (state === null) {
     return (
       <div className="h-full flex items-center justify-center text-[var(--text-muted)] text-sm font-mono">
-        loading...
+        {t('common.loading')}
       </div>
     )
   }
@@ -253,14 +253,14 @@ export default function AuthGate({ children }: { children: React.ReactNode }): R
 
   if (state.error && !state.organization) {
     return (
-      <Card title="Could not load your organization">
+      <Card title={t('auth.loadOrgFailed')}>
         <p className="text-xs text-[var(--text-secondary)] mb-3">{state.error}</p>
         <button onClick={refresh} className={PRIMARY_BUTTON_CLASS}>
-          Retry
+          {t('common.retry')}
         </button>
         <div className="flex justify-end mt-4">
           <button onClick={continueLocalOnly} className={LINK_BUTTON_CLASS}>
-            Use local team data only
+            {t('auth.useLocalOnly')}
           </button>
         </div>
       </Card>

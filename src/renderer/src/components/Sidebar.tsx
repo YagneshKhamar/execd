@@ -79,7 +79,7 @@ export default function Sidebar(): React.JSX.Element {
               <item.icon className="w-4 h-4 shrink-0" />
               <span>{item.label}</span>
               <span className="ml-auto text-[9px] font-mono text-[var(--text-secondary)] bg-[var(--bg-hover)] px-1.5 py-0.5 rounded">
-                soon
+                {t('nav.soon')}
               </span>
             </div>
           ))}
@@ -94,14 +94,14 @@ export default function Sidebar(): React.JSX.Element {
               </p>
               <p className="text-[10px] font-mono text-[var(--text-muted)] truncate">
                 {auth.state.organization
-                  ? `${auth.state.organization.name} · ${auth.state.organization.role}`
+                  ? `${auth.state.organization.name} · ${t(`roles.${auth.state.organization.role}`)}`
                   : auth.state.user.email}
               </p>
             </div>
             <NotificationBell />
             <button
               onClick={auth.signOut}
-              title="Sign out"
+              title={t('nav.signOut')}
               className="bg-transparent border-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer p-1"
             >
               <LogOut className="w-4 h-4" />

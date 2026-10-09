@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronDown, Search } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export interface SelectOption {
   value: string
@@ -32,10 +33,11 @@ export default function SearchableSelect({
   options,
   value,
   onChange,
-  placeholder = 'Select...',
+  placeholder,
   searchable = false,
   disabled = false,
 }: SearchableSelectProps): React.JSX.Element {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [openUpward, setOpenUpward] = useState(false)
   const [query, setQuery] = useState('')
@@ -146,7 +148,7 @@ export default function SearchableSelect({
               <span className="text-[var(--text-primary)] truncate">{selected.label}</span>
             </>
           ) : (
-            <span className="text-[var(--text-muted)]">{placeholder}</span>
+            <span className="text-[var(--text-muted)]">{placeholder ?? t('common.select')}</span>
           )}
         </span>
         <ChevronDown
@@ -172,7 +174,7 @@ export default function SearchableSelect({
                   setQuery(e.target.value)
                   setActiveIndex(0)
                 }}
-                placeholder="Search..."
+                placeholder={t('common.search')}
                 className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
               />
             </div>
@@ -181,7 +183,7 @@ export default function SearchableSelect({
           <div ref={listRef} className="max-h-56 overflow-y-auto">
             {filtered.length === 0 ? (
               <div className="px-3 py-3 text-sm text-[var(--text-muted)] text-center">
-                No results
+                {t('common.noResults')}
               </div>
             ) : (
               filtered.map((option, i) => (

@@ -1009,8 +1009,12 @@ async function runCycle(db: Database.Database): Promise<void> {
 
 export interface HistoryEntry {
   action: string
+  // Raw event type and actor kind let the renderer show the label in the user's language;
+  // `action` / `actor` stay as an English fallback.
+  type: string
   note: string
   actor: string
+  actorKind?: 'you' | 'someone'
   at: string
 }
 
@@ -1055,8 +1059,10 @@ async function fetchRemoteHistory(ctx: SyncContext, taskId: string): Promise<His
     const payload = row.payload as { note?: string } | null
     return {
       action: labelFor(row.event_type as string),
+      type: row.event_type as string,
       note: payload?.note ?? '',
       actor: nameById.get(row.actor_id as string) ?? 'Someone',
+      actorKind: nameById.has(row.actor_id as string) ? undefined : 'someone',
       at: row.created_at as string,
     }
   })
@@ -1072,8 +1078,10 @@ function fetchLocalHistory(db: Database.Database, taskId: string): HistoryEntry[
     .all(taskId) as { action: string; note: string; logged_at: string }[]
   return rows.map((r) => ({
     action: labelFor(r.action),
+    type: r.action,
     note: r.action === 'note' ? '' : r.note,
     actor: 'You',
+    actorKind: 'you',
     at: r.logged_at,
   }))
 }

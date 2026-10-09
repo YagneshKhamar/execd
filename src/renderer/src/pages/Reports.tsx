@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Download } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts'
 import { useTranslation } from 'react-i18next'
+import { localeFor } from '../i18n/locale'
 import { useToast } from '../components/Toast'
 
 type RangeType = '1W' | '1M' | '1Y' | 'custom'
@@ -46,19 +47,19 @@ type ReportsData =
     }
   | { kind: 'custom'; days: DayStat[] }
 
-const MONTH_NAMES = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
+const MONTH_KEYS = [
+  'janShort',
+  'febShort',
+  'marShort',
+  'aprShort',
+  'mayShort',
+  'junShort',
+  'julShort',
+  'augShort',
+  'sepShort',
+  'octShort',
+  'novShort',
+  'decShort',
 ]
 
 function getToday(): string {
@@ -90,7 +91,7 @@ function triggerCsvDownload(csv: string, filename: string): void {
 }
 
 export default function Reports(): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [range, setRange] = useState<RangeType>('1W')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
@@ -216,15 +217,17 @@ export default function Reports(): React.JSX.Element {
     return data.days.map((day) => ({
       label:
         data.kind === 'week'
-          ? new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', { weekday: 'short' })
-          : new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', {
+          ? new Date(`${day.date}T00:00:00`).toLocaleDateString(localeFor(i18n.language), {
+              weekday: 'short',
+            })
+          : new Date(`${day.date}T00:00:00`).toLocaleDateString(localeFor(i18n.language), {
               month: 'numeric',
               day: 'numeric',
             }),
       scorePercent: Math.round(day.execution_score * 100),
       scoreRaw: day.execution_score,
     }))
-  }, [data])
+  }, [data, i18n.language])
 
   const recurringSkips = useMemo(() => {
     if (!data) return [] as MissedPattern[]
@@ -290,14 +293,7 @@ export default function Reports(): React.JSX.Element {
 
         <div className="mb-6">
           <div className="flex items-center gap-2 flex-wrap">
-            {(
-              [
-                ['1W', '1 Week'],
-                ['1M', '1 Month'],
-                ['1Y', '1 Year'],
-                ['custom', 'Custom'],
-              ] as const
-            ).map(([value]) => (
+            {(['1W', '1M', '1Y', 'custom'] as const).map((value) => (
               <button
                 key={value}
                 onClick={() => setRange(value)}
@@ -425,9 +421,12 @@ export default function Reports(): React.JSX.Element {
                     >
                       <div className="flex items-center">
                         <span className="font-mono text-xs text-[var(--text-secondary)] w-10 shrink-0">
-                          {new Date(`${day.date}T00:00:00`).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                          })}
+                          {new Date(`${day.date}T00:00:00`).toLocaleDateString(
+                            localeFor(i18n.language),
+                            {
+                              weekday: 'short',
+                            },
+                          )}
                         </span>
                         <div className="flex-1 h-1 bg-[var(--border-default)] rounded mx-3 overflow-hidden">
                           <div
@@ -459,12 +458,12 @@ export default function Reports(): React.JSX.Element {
                 const fyStart = data.fy_start ?? 1
                 const orderedMonths = Array.from({ length: 12 }, (_, i) => {
                   const monthIndex = (fyStart - 1 + i) % 12
-                  return { name: MONTH_NAMES[monthIndex], index: monthIndex }
+                  return { name: t(`months.${MONTH_KEYS[monthIndex]}`), index: monthIndex }
                 })
                 return (
                   <div className="mb-6">
                     <h2 className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-3">
-                      MONTHLY BREAKDOWN
+                      {t('reports.monthlyBreakdown')}
                     </h2>
                     <div>
                       {orderedMonths.map(({ name, index }) => {
@@ -495,7 +494,9 @@ export default function Reports(): React.JSX.Element {
                               {stat ? `${scorePct}%` : '—'}
                             </span>
                             <span className="font-mono text-[10px] text-[var(--text-muted)] w-14 text-right">
-                              {stat ? `${Number(stat.days_logged)} days` : '—'}
+                              {stat
+                                ? t('reports.daysCount', { count: Number(stat.days_logged) })
+                                : '—'}
                             </span>
                           </div>
                         )

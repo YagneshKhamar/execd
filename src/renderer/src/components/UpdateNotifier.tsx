@@ -50,7 +50,7 @@ export default function UpdateNotifier(): React.JSX.Element | null {
             className="flex items-center gap-2 w-full justify-center bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors"
           >
             <Download className="w-4 h-4" />
-            Download Update
+            {t('updater.download')}
           </button>
         </div>
       )}
@@ -58,7 +58,7 @@ export default function UpdateNotifier(): React.JSX.Element | null {
       {update.status === 'downloading' && (
         <div>
           <p className="text-sm font-medium text-[var(--text-primary)] mb-2">
-            Downloading update...
+            {t('updater.downloading')}
           </p>
           <div className="h-1.5 bg-[var(--border-default)] rounded-full overflow-hidden">
             <div
@@ -85,15 +85,13 @@ export default function UpdateNotifier(): React.JSX.Element | null {
               <X className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-xs text-[var(--text-secondary)] mb-3">
-            Update downloaded. Restart to apply.
-          </p>
+          <p className="text-xs text-[var(--text-secondary)] mb-3">{t('updater.downloaded')}</p>
           <button
             onClick={() => window.api.updater.install()}
             className="flex items-center gap-2 w-full justify-center bg-[var(--accent-green)] hover:bg-[var(--accent-green)]/80 text-white text-sm font-medium px-4 py-2 rounded cursor-pointer transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
-            Restart and Install
+            {t('updater.restartInstall')}
           </button>
         </div>
       )}

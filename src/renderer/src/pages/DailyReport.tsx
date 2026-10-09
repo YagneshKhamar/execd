@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Download } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { localeFor } from '../i18n/locale'
 import { useToast } from '../components/Toast'
 
 interface Task {
@@ -18,8 +19,8 @@ function getToday(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', {
+function formatDate(iso: string, language: string): string {
+  return new Date(iso + 'T00:00:00').toLocaleDateString(localeFor(language), {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -29,7 +30,7 @@ function formatDate(iso: string): string {
 
 export default function DailyReport(): React.JSX.Element {
   const reportRef = useRef<HTMLDivElement>(null)
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [todayTasks, setTodayTasks] = useState<Task[]>([])
   const [dayLog, setDayLog] = useState<{
     execution_score: number
@@ -183,7 +184,7 @@ export default function DailyReport(): React.JSX.Element {
               {t('dailyReport.title')}
             </p>
             <h1 className="text-lg font-semibold text-[var(--text-primary)]">
-              {formatDate(getToday())}
+              {formatDate(getToday(), i18n.language)}
             </h1>
           </div>
           <button

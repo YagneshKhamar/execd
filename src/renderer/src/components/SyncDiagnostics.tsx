@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthProvider'
 import { useToast } from './Toast'
 
@@ -21,6 +22,7 @@ function triggerJsonDownload(json: string, filename: string): void {
  * connection indicator — this panel is for troubleshooting, not routine use.
  */
 export default function SyncDiagnostics(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const { state } = useAuth()
   const { error: toastError, success: toastSuccess } = useToast()
   const [disabled, setDisabled] = useState(false)
@@ -51,18 +53,18 @@ export default function SyncDiagnostics(): React.JSX.Element | null {
   async function toggleDisabled(next: boolean): Promise<void> {
     await window.api.team.setSyncDisabled(next)
     setDisabled(next)
-    toastSuccess(next ? 'Cloud sync disabled — switched to local-only' : 'Cloud sync re-enabled')
+    toastSuccess(next ? t('diagnostics.disabledToast') : t('diagnostics.enabledToast'))
     await load()
   }
 
   async function exportBackup(): Promise<void> {
     const result = await window.api.team.exportData()
     if (!result.success) {
-      toastError('Could not export data')
+      toastError(t('diagnostics.exportFailed'))
       return
     }
     triggerJsonDownload(result.json, result.filename)
-    toastSuccess('Backup downloaded')
+    toastSuccess(t('diagnostics.backupDownloaded'))
   }
 
   return (
@@ -71,7 +73,7 @@ export default function SyncDiagnostics(): React.JSX.Element | null {
         onClick={() => setExpanded((v) => !v)}
         className="text-xs font-semibold text-[var(--text-primary)] bg-transparent border-none cursor-pointer p-0"
       >
-        {expanded ? '▾' : '▸'} Sync diagnostics
+        {expanded ? '▾' : '▸'} {t('diagnostics.title')}
       </button>
 
       {expanded && (
@@ -81,18 +83,17 @@ export default function SyncDiagnostics(): React.JSX.Element | null {
               onClick={exportBackup}
               className="text-xs bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] px-3 py-1.5 rounded cursor-pointer transition-colors"
             >
-              Download local backup (JSON)
+              {t('diagnostics.downloadBackup')}
             </button>
             <p className="text-[10px] text-[var(--text-muted)] mt-1">
-              A snapshot of this device&apos;s local team data. Supabase itself is backed up
-              separately on paid plans — this is an extra copy you keep yourself.
+              {t('diagnostics.backupHelp')}
             </p>
           </div>
 
           {errors.length > 0 && (
             <div>
               <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)] mb-2">
-                Currently failing to sync ({errors.length})
+                {t('diagnostics.failingCount', { count: errors.length })}
               </p>
               <div className="space-y-1">
                 {errors.map((e) => (
@@ -102,7 +103,7 @@ export default function SyncDiagnostics(): React.JSX.Element | null {
                   >
                     <p className="text-[var(--text-primary)]">{e.title}</p>
                     <p className="text-[10px] text-[var(--accent-red)]">
-                      {e.error || e.status} (attempt {e.retryCount})
+                      {e.error || e.status} {t('diagnostics.attempt', { count: e.retryCount })}
                     </p>
                   </div>
                 ))}
@@ -118,7 +119,7 @@ export default function SyncDiagnostics(): React.JSX.Element | null {
               className="cursor-pointer"
             />
             <span className="text-xs text-[var(--text-secondary)]">
-              Disable cloud sync and use local-only team data (troubleshooting)
+              {t('diagnostics.disableSync')}
             </span>
           </label>
         </div>

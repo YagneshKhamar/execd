@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { localeFor } from '../i18n/locale'
 import {
   LineChart,
   Line,
@@ -20,15 +21,15 @@ interface AnalyticsData {
   carryTrend: { date: string; tasks_carried: number }[]
 }
 
-function formatDayLabel(date: string): string {
-  return new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
+function formatDayLabel(date: string, language: string): string {
+  return new Date(`${date}T00:00:00`).toLocaleDateString(localeFor(language), {
     month: 'short',
     day: 'numeric',
   })
 }
 
 export default function Analytics(): React.JSX.Element {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [range, setRange] = useState<7 | 14 | 30>(30)
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -161,7 +162,7 @@ export default function Analytics(): React.JSX.Element {
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{insight.body}</p>
             </>
           ) : (
-            <p className="text-xs text-[var(--text-muted)] font-mono">No insight available.</p>
+            <p className="text-xs text-[var(--text-muted)] font-mono">{t('analytics.noInsight')}</p>
           )}
         </div>
 
@@ -172,7 +173,11 @@ export default function Analytics(): React.JSX.Element {
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={data?.trend ?? []}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
-              <XAxis dataKey="date" tickFormatter={formatDayLabel} interval="preserveStartEnd" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(d: string) => formatDayLabel(d, i18n.language)}
+                interval="preserveStartEnd"
+              />
               <YAxis
                 domain={[0, 1]}
                 tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
@@ -185,7 +190,10 @@ export default function Analytics(): React.JSX.Element {
                   borderRadius: 4,
                   fontSize: 12,
                 }}
-                formatter={(v: unknown) => [`${Math.round(Number(v ?? 0) * 100)}%`, 'Score']}
+                formatter={(v: unknown) => [
+                  `${Math.round(Number(v ?? 0) * 100)}%`,
+                  t('analytics.score'),
+                ]}
                 labelFormatter={(l) => String(l)}
               />
               <Line dataKey="execution_score" stroke="#2563eb" strokeWidth={2} dot={false} />
@@ -200,7 +208,11 @@ export default function Analytics(): React.JSX.Element {
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={data?.trend ?? []}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
-              <XAxis dataKey="date" tickFormatter={formatDayLabel} interval="preserveStartEnd" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(d: string) => formatDayLabel(d, i18n.language)}
+                interval="preserveStartEnd"
+              />
               <YAxis allowDecimals={false} width={30} />
               <Tooltip
                 contentStyle={{
@@ -270,12 +282,16 @@ export default function Analytics(): React.JSX.Element {
 
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded p-5 mb-4">
           <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-widest mb-4">
-            CARRY-OVERS
+            {t('analytics.carryOvers')}
           </p>
           <ResponsiveContainer width="100%" height={120}>
             <LineChart data={data?.carryTrend ?? []}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
-              <XAxis dataKey="date" tickFormatter={formatDayLabel} interval="preserveStartEnd" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(d: string) => formatDayLabel(d, i18n.language)}
+                interval="preserveStartEnd"
+              />
               <YAxis allowDecimals={false} domain={[0, 'auto']} width={30} />
               <Tooltip
                 contentStyle={{

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { relativeTime } from '../i18n/relativeTime'
 import { useAuth } from './AuthProvider'
 
 type Notification = NonNullable<
@@ -8,27 +10,8 @@ type Notification = NonNullable<
 
 const POLL_MS = 15000
 
-const LABELS: Record<Notification['type'], string> = {
-  task_assigned: 'New task',
-  task_due_soon: 'Due soon',
-  task_overdue: 'Overdue',
-  task_completed: 'Completed',
-  task_blocked: 'Blocked',
-  task_approved: 'Approved',
-  task_rejected: 'Changes requested',
-  invitation_accepted: 'Joined',
-}
-
-function relativeTime(iso: string): string {
-  const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
-  if (seconds < 45) return 'just now'
-  const minutes = Math.round(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.round(minutes / 60)
-  return hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`
-}
-
 export default function NotificationBell(): React.JSX.Element | null {
+  const { t } = useTranslation()
   const { state } = useAuth()
   const [items, setItems] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
@@ -79,7 +62,7 @@ export default function NotificationBell(): React.JSX.Element | null {
     <div ref={rootRef} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        title="Notifications"
+        title={t('notifications.title')}
         className="relative flex items-center justify-center bg-transparent border-none text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer p-1"
       >
         <Bell className="w-4 h-4" />
@@ -93,19 +76,21 @@ export default function NotificationBell(): React.JSX.Element | null {
       {open && (
         <div className="absolute bottom-full left-0 mb-2 w-80 max-h-96 overflow-y-auto bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg shadow-lg z-50">
           <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border-subtle)]">
-            <span className="text-xs font-semibold text-[var(--text-primary)]">Notifications</span>
+            <span className="text-xs font-semibold text-[var(--text-primary)]">
+              {t('notifications.title')}
+            </span>
             {unread.length > 0 && (
               <button
                 onClick={() => markRead(null)}
                 className="text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline bg-transparent border-none cursor-pointer"
               >
-                Mark all read
+                {t('notifications.markAllRead')}
               </button>
             )}
           </div>
           {items.length === 0 ? (
             <p className="text-xs text-[var(--text-muted)] px-3 py-4 text-center">
-              No notifications yet
+              {t('notifications.none')}
             </p>
           ) : (
             <div>
@@ -119,10 +104,10 @@ export default function NotificationBell(): React.JSX.Element | null {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[10px] font-mono uppercase tracking-wide text-[var(--text-secondary)]">
-                      {LABELS[n.type]}
+                      {t(`notifications.types.${n.type}`)}
                     </span>
                     <span className="text-[10px] text-[var(--text-muted)] shrink-0">
-                      {relativeTime(n.created_at)}
+                      {relativeTime(t, n.created_at)}
                     </span>
                   </div>
                   <p className="text-xs text-[var(--text-primary)] truncate">{n.title}</p>

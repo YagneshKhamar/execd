@@ -5,19 +5,19 @@ import { useNavigate } from 'react-router-dom'
 import SearchableSelect, { type SelectOption } from '../components/SearchableSelect'
 import { useToast } from '../components/Toast'
 
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+const MONTH_KEYS = [
+  'jan',
+  'feb',
+  'mar',
+  'apr',
+  'may',
+  'jun',
+  'jul',
+  'aug',
+  'sep',
+  'oct',
+  'nov',
+  'dec',
 ]
 
 export default function Setup(): React.JSX.Element {
@@ -72,19 +72,19 @@ export default function Setup(): React.JSX.Element {
 
   function validate(): boolean {
     if (!apiKey.trim()) {
-      setFormError('API key is required.')
+      setFormError(t('settings.errApiKey'))
       return false
     }
     if (workingDays.length === 0) {
-      setFormError('Select at least one working day.')
+      setFormError(t('settings.errWorkingDay'))
       return false
     }
     if (workingStart >= workingEnd) {
-      setFormError('Working end time must be after start time.')
+      setFormError(t('settings.errEndTime'))
       return false
     }
     if (businessGoalCount < 3 || personalGoalCount < 1 || familyGoalCount < 1) {
-      setFormError('Minimum goals: 3 business, 1 personal, 1 family.')
+      setFormError(t('settings.minimumGoals'))
       return false
     }
     setFormError('')
@@ -136,7 +136,7 @@ export default function Setup(): React.JSX.Element {
         return
       }
       triggerCsvDownload(result.csv, result.filename)
-      success('Tasks CSV exported.')
+      success(t('toast.exportTasksSuccess'))
     } catch {
       error(t('toast.exportCsvFailed'))
     }
@@ -146,13 +146,13 @@ export default function Setup(): React.JSX.Element {
     try {
       const result = await window.api.reports.exportSummaryCsv({})
       if (!result.success) {
-        error('Failed to export summary CSV.')
+        error(t('toast.exportSummaryFailed'))
         return
       }
       triggerCsvDownload(result.csv, result.filename)
-      success('Summary CSV exported.')
+      success(t('toast.exportSummarySuccess'))
     } catch {
-      error('Failed to export summary CSV.')
+      error(t('toast.exportSummaryFailed'))
     }
   }
   const fiscalYearEnd = ((fiscalYearStart - 2 + 12) % 12) + 1
@@ -162,7 +162,7 @@ export default function Setup(): React.JSX.Element {
       <div className="mx-auto bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-5 w-full max-w-5xl mb-6">
         <div className="mb-4">
           <p className="font-mono text-xs tracking-widest text-[var(--text-muted)] uppercase mb-1">
-            Execd
+            {t('common.appName')}
           </p>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">
             {t('settings.title')}
@@ -182,24 +182,16 @@ export default function Setup(): React.JSX.Element {
               <SearchableSelect
                 value={String(fiscalYearStart ?? 4)}
                 onChange={(val) => setFiscalYearStart(Number(val))}
-                options={[
-                  { value: '1', label: 'January (Jan – Dec)' },
-                  { value: '2', label: 'February (Feb – Jan)' },
-                  { value: '3', label: 'March (Mar – Feb)' },
-                  { value: '4', label: 'April (Apr – Mar) — Indian FY' },
-                  { value: '5', label: 'May (May – Apr)' },
-                  { value: '6', label: 'June (Jun – May)' },
-                  { value: '7', label: 'July (Jul – Jun)' },
-                  { value: '8', label: 'August (Aug – Jul)' },
-                  { value: '9', label: 'September (Sep – Aug)' },
-                  { value: '10', label: 'October (Oct – Sep)' },
-                  { value: '11', label: 'November (Nov – Oct)' },
-                  { value: '12', label: 'December (Dec – Nov)' },
-                ].map((option): SelectOption => option)}
+                options={MONTH_KEYS.map(
+                  (key, index): SelectOption => ({
+                    value: String(index + 1),
+                    label: `${t(`months.${key}`)} (${t(`months.${key}Short`)} – ${t(`months.${MONTH_KEYS[(index + 11) % 12]}Short`)})${index === 3 ? ` — ${t('settings.indianFy')}` : ''}`,
+                  }),
+                )}
               />
               <p className="text-xs text-[var(--text-muted)] mt-2">
-                {t('settings.financialYearRuns')} {MONTH_NAMES[fiscalYearStart - 1]} →{' '}
-                {MONTH_NAMES[fiscalYearEnd - 1]}
+                {t('settings.financialYearRuns')} {t(`months.${MONTH_KEYS[fiscalYearStart - 1]}`)} →{' '}
+                {t(`months.${MONTH_KEYS[fiscalYearEnd - 1]}`)}
               </p>
             </div>
             <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-4 space-y-3">

@@ -257,7 +257,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
       : targetDiffRatio < 0.05
         ? 'text-[var(--accent-yellow)]'
         : 'text-[var(--accent-red)]'
-  const activeUnitLabel = salesTargetUnitLabel.trim() || 'units'
+  const activeUnitLabel = salesTargetUnitLabel.trim() || t('business.units')
 
   const formContent = (
     <div className={isSetup ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 gap-4'}>
@@ -284,16 +284,16 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
               value={businessType}
               onChange={(val) => setBusinessType(val)}
               options={[
-                { value: '', label: 'Select a business type' },
-                { value: 'textile', label: 'Textile' },
-                { value: 'manufacturing', label: 'Manufacturing' },
-                { value: 'trading_wholesale', label: 'Trading — Wholesaler' },
-                { value: 'trading_retail', label: 'Trading — Retailer' },
-                { value: 'retail', label: 'Retail' },
-                { value: 'services', label: 'Services' },
-                { value: 'it', label: 'IT / Software' },
-                { value: 'ca', label: 'CA / Accounting' },
-                { value: 'other', label: 'Other' },
+                { value: '', label: t('business.selectType') },
+                { value: 'textile', label: t('business.types.textile') },
+                { value: 'manufacturing', label: t('business.types.manufacturing') },
+                { value: 'trading_wholesale', label: t('business.types.trading_wholesale') },
+                { value: 'trading_retail', label: t('business.types.trading_retail') },
+                { value: 'retail', label: t('business.types.retail') },
+                { value: 'services', label: t('business.types.services') },
+                { value: 'it', label: t('business.types.it') },
+                { value: 'ca', label: t('business.types.ca') },
+                { value: 'other', label: t('business.types.other') },
               ].map((option): SelectOption => option)}
             />
             {businessType === 'other' && (
@@ -308,18 +308,16 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
           </div>
           <div>
             <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">
-              Nature of Business
+              {t('business.natureOfBusiness')}
             </label>
             <textarea
               value={businessDescription}
               onChange={(e) => setBusinessDescription(e.target.value)}
-              placeholder="Describe what your business does, who your customers are, how you sell — in any language (English, Gujarati, Hindi)"
+              placeholder={t('business.naturePlaceholder')}
               rows={4}
               className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent-blue)] resize-none transition-colors"
             />
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              Used by AI to generate more relevant tasks and insights for your business.
-            </p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">{t('business.natureHelp')}</p>
           </div>
         </div>
       </section>
@@ -332,9 +330,9 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
             value={language}
             onChange={(val) => setLanguage(val)}
             options={[
-              { value: 'en', label: 'English' },
-              { value: 'gu', label: 'ગુજરાતી' },
-              { value: 'hi', label: 'हिंदी' },
+              { value: 'en', label: t('business.languages.en') },
+              { value: 'gu', label: t('business.languages.gu') },
+              { value: 'hi', label: t('business.languages.hi') },
             ].map((option): SelectOption => option)}
           />
         </div>
@@ -366,7 +364,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
           </div>
           <div>
             <label className="block text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">
-              Departments
+              {t('business.departments')}
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {departments.map((dept) => (
@@ -399,7 +397,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                     setNewDepartment('')
                   }
                 }}
-                placeholder="Add department and press Enter"
+                placeholder={t('business.departmentPlaceholder')}
                 className="flex-1 bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent-blue)] transition-colors"
               />
               <button
@@ -412,11 +410,11 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                 }}
                 className="bg-[var(--bg-elevated)] border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] px-3 py-2 rounded text-sm cursor-pointer transition-colors"
               >
-                Add
+                {t('business.add')}
               </button>
             </div>
             <p className="text-xs text-[var(--text-muted)] mt-1">
-              e.g. Sales, Production, Accounts, HR
+              {t('business.departmentExample')}
             </p>
           </div>
           <div>
@@ -438,7 +436,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
         <label className={sectionLabelClass}>{t('business.targetsSection')}</label>
         <div className="space-y-3">
           <div>
-            <p className="text-xs text-[var(--text-secondary)] mb-2">Target Unit</p>
+            <p className="text-xs text-[var(--text-secondary)] mb-2">{t('business.targetUnit')}</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -449,7 +447,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                     : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
                 }`}
               >
-                ₹ Amount
+                ₹ {t('business.amount')}
               </button>
               <button
                 type="button"
@@ -460,7 +458,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                     : 'bg-[var(--bg-elevated)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--border-active)]'
                 }`}
               >
-                Units
+                {t('business.units')}
               </button>
             </div>
             {salesTargetUnit !== 'amount' && (
@@ -468,7 +466,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                 type="text"
                 value={salesTargetUnitLabel}
                 onChange={(e) => setSalesTargetUnitLabel(e.target.value)}
-                placeholder="e.g. houses, flats, clients, orders"
+                placeholder={t('business.unitLabelPlaceholder')}
                 className="mt-2 w-full bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent-blue)] transition-colors"
               />
             )}
@@ -476,7 +474,9 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <p className="text-xs text-[var(--text-secondary)] mb-1">
-                {salesTargetUnit === 'amount' ? t('business.yearlySalesTarget') : 'Yearly Target'}
+                {salesTargetUnit === 'amount'
+                  ? t('business.yearlySalesTarget')
+                  : t('business.yearlyTarget')}
               </p>
               <div className="flex items-center gap-2">
                 {salesTargetUnit === 'amount' && (
@@ -486,7 +486,11 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
                   type="number"
                   value={monthlySalesTarget}
                   onChange={(e) => setMonthlySalesTarget(e.target.value)}
-                  placeholder={salesTargetUnit === 'amount' ? 'e.g. 12000000' : 'e.g. 50'}
+                  placeholder={
+                    salesTargetUnit === 'amount'
+                      ? t('business.amountPlaceholder')
+                      : t('business.unitsPlaceholder')
+                  }
                   className={inputClass}
                 />
               </div>
@@ -513,7 +517,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
             <>
               {daysRemainingWarning !== null && (
                 <div className="w-full border border-[var(--accent-yellow)]/40 bg-[var(--accent-yellow)]/10 text-[var(--accent-yellow)] rounded px-3 py-2 text-sm">
-                  {daysRemainingWarning} days remaining in this month - target will be prorated.
+                  {t('business.daysRemaining', { count: daysRemainingWarning })}
                 </div>
               )}
               <button
@@ -633,7 +637,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
 
             {!loaded ? (
               <div className="py-8 text-center text-xs font-mono text-[var(--text-muted)]">
-                loading...
+                {t('common.loading')}
               </div>
             ) : (
               <>
@@ -667,7 +671,7 @@ export default function Business({ isSetup = false }: BusinessProps): React.JSX.
 
         {!loaded ? (
           <div className="py-8 text-center text-xs font-mono text-[var(--text-muted)]">
-            loading...
+            {t('common.loading')}
           </div>
         ) : (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-5">

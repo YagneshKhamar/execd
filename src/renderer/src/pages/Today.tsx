@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import SearchableSelect, { type SelectOption } from '../components/SearchableSelect'
 import { useToast } from '../components/Toast'
 import i18n from '../i18n/index'
+import { localeFor } from '../i18n/locale'
 
 interface Task {
   id: string
@@ -592,7 +593,7 @@ export default function Today(): React.JSX.Element {
   if (loading) {
     return (
       <div className="h-full w-full bg-[var(--bg-base)] flex items-center justify-center">
-        <p className="text-[var(--text-muted)] text-sm font-mono">loading...</p>
+        <p className="text-[var(--text-muted)] text-sm font-mono">{t('common.loading')}</p>
       </div>
     )
   }
@@ -604,7 +605,9 @@ export default function Today(): React.JSX.Element {
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-6">
             <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-lg p-6 w-full max-w-sm">
               <h2 className="text-base font-semibold text-[var(--text-primary)] mb-4">
-                Add Task for {addingForDate === 'today' ? 'Today' : 'Tomorrow'}
+                {t('dashboard.addTaskForDay', {
+                  day: addingForDate === 'today' ? t('dashboard.today') : t('dashboard.tomorrow'),
+                })}
               </h2>
               <div className="space-y-3">
                 <input
@@ -615,7 +618,9 @@ export default function Today(): React.JSX.Element {
                   className="w-full bg-[var(--bg-base)] border border-[var(--border-default)] focus:border-[var(--border-active)] rounded px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
                 />
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Effort</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">
+                    {t('dashboard.effort')}
+                  </p>
                   <div className="flex gap-1.5">
                     {(
                       [
@@ -639,13 +644,15 @@ export default function Today(): React.JSX.Element {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Proof type</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">
+                    {t('dashboard.proofType')}
+                  </p>
                   <div className="flex gap-1.5">
                     {(
                       [
-                        { label: 'None', value: 'none' },
-                        { label: 'Comment', value: 'comment' },
-                        { label: 'Link', value: 'link' },
+                        { label: t('dashboard.none'), value: 'none' },
+                        { label: t('dashboard.comment'), value: 'comment' },
+                        { label: t('dashboard.link'), value: 'link' },
                       ] as const
                     ).map((item) => (
                       <button
@@ -663,13 +670,15 @@ export default function Today(): React.JSX.Element {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Time slot</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">
+                    {t('dashboard.timeSlot')}
+                  </p>
                   <div className="flex gap-1.5">
                     {(
                       [
-                        { label: 'Morning', value: 'morning' },
-                        { label: 'Afternoon', value: 'afternoon' },
-                        { label: 'Anytime', value: 'anytime' },
+                        { label: t('dashboard.morning'), value: 'morning' },
+                        { label: t('dashboard.afternoon'), value: 'afternoon' },
+                        { label: t('dashboard.anytime'), value: 'anytime' },
                       ] as const
                     ).map((item) => (
                       <button
@@ -689,10 +698,12 @@ export default function Today(): React.JSX.Element {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-[var(--text-secondary)] mb-1">Subgoal</p>
+                  <p className="text-xs text-[var(--text-secondary)] mb-1">
+                    {t('dashboard.subgoal')}
+                  </p>
                   <SearchableSelect
                     searchable
-                    placeholder="Select subgoal"
+                    placeholder={t('dashboard.selectSubgoal')}
                     value={selectedSubgoalId}
                     onChange={(val) => setSelectedSubgoalId(val)}
                     options={subgoalOptions.map(
@@ -715,14 +726,14 @@ export default function Today(): React.JSX.Element {
                     onClick={() => setShowAddTask(false)}
                     className="flex-1 bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium py-2 rounded text-sm cursor-pointer transition-colors"
                   >
-                    Cancel
+                    {t('dashboard.cancel')}
                   </button>
                   <button
                     onClick={handleAddTask}
                     disabled={!newTask.title.trim() || !selectedSubgoalId || addingTask}
                     className="flex-1 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2 rounded text-sm cursor-pointer transition-colors"
                   >
-                    {addingTask ? 'Adding...' : 'Add Task'}
+                    {addingTask ? t('dashboard.adding') : t('dashboard.addTaskBtn')}
                   </button>
                 </div>
               </div>
@@ -782,13 +793,13 @@ export default function Today(): React.JSX.Element {
         <div className="flex items-start justify-between mb-6">
           <div>
             <h1 className="text-xl font-semibold text-[var(--text-primary)]">
-              {new Date().toLocaleDateString('en-US', {
+              {new Date().toLocaleDateString(localeFor(i18n.language), {
                 month: 'long',
                 day: 'numeric',
               })}
             </h1>
             <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-              {new Date().toLocaleDateString(i18n.language === 'gu' ? 'gu-IN' : 'en-US', {
+              {new Date().toLocaleDateString(localeFor(i18n.language), {
                 weekday: 'long',
               })}
             </p>
@@ -813,7 +824,7 @@ export default function Today(): React.JSX.Element {
                 {t('dashboard.salesCollection')}
               </p>
               <p className="font-mono text-xs text-[var(--text-muted)]">
-                {new Date().toLocaleDateString('en-US', { month: 'long' })}
+                {new Date().toLocaleDateString(localeFor(i18n.language), { month: 'long' })}
               </p>
             </div>
 
@@ -838,8 +849,11 @@ export default function Today(): React.JSX.Element {
                   />
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">
-                  ₹{monthSummary.sales_done.toLocaleString('en-IN')} of ₹
-                  {monthSummary.sales_target.toLocaleString('en-IN')} {t('dashboard.thisMonth')}
+                  {t('dashboard.progressOf', {
+                    done: monthSummary.sales_done.toLocaleString('en-IN'),
+                    target: monthSummary.sales_target.toLocaleString('en-IN'),
+                    period: t('dashboard.thisMonth'),
+                  })}
                 </p>
               </div>
 
@@ -863,9 +877,11 @@ export default function Today(): React.JSX.Element {
                   />
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">
-                  ₹{monthSummary.collection_done.toLocaleString('en-IN')} of ₹
-                  {monthSummary.collection_target.toLocaleString('en-IN')}{' '}
-                  {t('dashboard.thisMonth')}
+                  {t('dashboard.progressOf', {
+                    done: monthSummary.collection_done.toLocaleString('en-IN'),
+                    target: monthSummary.collection_target.toLocaleString('en-IN'),
+                    period: t('dashboard.thisMonth'),
+                  })}
                 </p>
               </div>
             </div>
@@ -875,12 +891,14 @@ export default function Today(): React.JSX.Element {
               disabled={savingSales}
               className="mt-3 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium py-1.5 px-4 rounded cursor-pointer transition-colors"
             >
-              {savingSales ? 'Saving...' : t('dashboard.save')}
+              {savingSales ? t('dashboard.saving') : t('dashboard.save')}
             </button>
             {todaySales && (
               <p className="text-xs text-[var(--text-muted)] mt-1">
-                Today saved: ₹{todaySales.sales_amount.toLocaleString('en-IN')} sales, ₹
-                {todaySales.collection_amount.toLocaleString('en-IN')} collection
+                {t('dashboard.todaySaved', {
+                  sales: todaySales.sales_amount.toLocaleString('en-IN'),
+                  collection: todaySales.collection_amount.toLocaleString('en-IN'),
+                })}
               </p>
             )}
           </div>
@@ -950,7 +968,9 @@ export default function Today(): React.JSX.Element {
         {dayEnded && endDayResult && (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] border-l-2 border-[var(--accent-blue)] rounded-xl p-5 space-y-3 mb-6">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--text-secondary)] text-xs">Execution score</span>
+              <span className="text-[var(--text-secondary)] text-xs">
+                {t('dashboard.executionScoreLabel')}
+              </span>
               <span className="text-[var(--text-primary)] font-bold text-sm">
                 {Math.round(endDayResult.score * 100)}%
               </span>
@@ -962,7 +982,7 @@ export default function Today(): React.JSX.Element {
               onClick={() => navigate('/report/daily')}
               className="text-[var(--accent-blue)] hover:text-[var(--accent-blue-dim)] text-xs cursor-pointer transition-colors"
             >
-              View full report →
+              {t('dashboard.viewReport')}
             </button>
           </div>
         )}
@@ -970,10 +990,8 @@ export default function Today(): React.JSX.Element {
         {/* No tasks state */}
         {tasks.length === 0 && (
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-8 text-center mb-6">
-            <p className="text-[var(--text-secondary)] text-sm mb-1">No tasks for today.</p>
-            <p className="text-[var(--text-muted)] text-xs">
-              Generate your daily plan to get started.
-            </p>
+            <p className="text-[var(--text-secondary)] text-sm mb-1">{t('dashboard.noTasks')}</p>
+            <p className="text-[var(--text-muted)] text-xs">{t('dashboard.noTasksSubtitle')}</p>
           </div>
         )}
 
@@ -985,7 +1003,7 @@ export default function Today(): React.JSX.Element {
           >
             <Users className="w-4 h-4 text-[var(--accent-orange)]" />
             <span className="text-sm text-[var(--accent-orange)]">
-              {followupCount} team follow-up{followupCount !== 1 ? 's' : ''} scheduled for today
+              {t('dashboard.followupsScheduled', { count: followupCount })}
             </span>
           </button>
         )}
@@ -994,7 +1012,7 @@ export default function Today(): React.JSX.Element {
           <div className="mb-6">
             {!isLocked && tasks.length > 0 && (
               <div className="mb-2 border-l-2 border-[var(--accent-yellow)] bg-[var(--bg-elevated)] px-3 py-2 text-xs text-[var(--text-secondary)]">
-                Lock your plan to begin execution
+                {t('dashboard.lockBanner')}
               </div>
             )}
             {tasks.map((task) => (
@@ -1013,9 +1031,9 @@ export default function Today(): React.JSX.Element {
                       disabled={completingId === task.id || !isLocked || isReadOnly}
                       title={
                         !isLocked
-                          ? 'Lock your plan first to start completing tasks'
+                          ? t('dashboard.lockFirst')
                           : isReadOnly
-                            ? 'Day has ended. Tasks are read-only.'
+                            ? t('dashboard.dayEndedReadOnly')
                             : undefined
                       }
                       className={`mt-0.5 w-4 h-4 rounded-sm border border-[var(--border-default)] flex items-center justify-center shrink-0 transition-colors ${
@@ -1055,7 +1073,9 @@ export default function Today(): React.JSX.Element {
                             onClick={() =>
                               setOpenProofTaskId((prev) => (prev === task.id ? null : task.id))
                             }
-                            title={task.proof_value ? 'View proof' : 'Add proof'}
+                            title={
+                              task.proof_value ? t('dashboard.viewProof') : t('dashboard.addProof')
+                            }
                             className={`shrink-0 cursor-pointer transition-colors ${
                               task.proof_value
                                 ? 'text-[var(--accent-blue)]/70'
@@ -1089,7 +1109,7 @@ export default function Today(): React.JSX.Element {
                         }`}
                       >
                         <FileText className="w-3 h-3" />
-                        {task.notes ? 'notes' : 'add note'}
+                        {task.notes ? t('dashboard.notes') : t('dashboard.addNote')}
                       </button>
 
                       {showNotes[task.id] && (
@@ -1113,7 +1133,7 @@ export default function Today(): React.JSX.Element {
                             disabled={savingNotes === task.id}
                             className="mt-1.5 text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white px-3 py-1 rounded cursor-pointer transition-colors"
                           >
-                            {savingNotes === task.id ? 'Saving...' : 'Save'}
+                            {savingNotes === task.id ? t('dashboard.saving') : t('dashboard.save')}
                           </button>
                         </div>
                       )}
@@ -1126,7 +1146,9 @@ export default function Today(): React.JSX.Element {
 
                       {isLocked && task.status === 'pending' && task.proof_type !== 'none' && (
                         <p className="text-xs text-[var(--text-muted)] mt-1">
-                          {task.proof_type === 'link' ? 'requires link' : 'requires comment'}
+                          {task.proof_type === 'link'
+                            ? t('dashboard.requiresLink')
+                            : t('dashboard.requiresComment')}
                         </p>
                       )}
 
@@ -1173,7 +1195,7 @@ export default function Today(): React.JSX.Element {
                       }}
                       className="mt-1.5 text-xs bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 text-white px-3 py-1 rounded cursor-pointer transition-colors"
                     >
-                      Save
+                      {t('dashboard.save')}
                     </button>
                   </div>
                 )}
@@ -1190,7 +1212,7 @@ export default function Today(): React.JSX.Element {
               disabled={generating}
               className="w-full bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
             >
-              {generating ? 'Generating tasks...' : "Generate Today's Tasks"}
+              {generating ? t('dashboard.generating') : t('dashboard.generateTasks')}
             </button>
           )}
 
@@ -1200,7 +1222,7 @@ export default function Today(): React.JSX.Element {
               disabled={locking}
               className="w-full bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
             >
-              {locking ? 'Locking...' : '🔒 Lock Plan & Start Day'}
+              {locking ? t('dashboard.locking') : `🔒 ${t('dashboard.lockPlan')}`}
             </button>
           )}
 
@@ -1215,14 +1237,14 @@ export default function Today(): React.JSX.Element {
                   }}
                   className="bg-transparent border border-[var(--border-default)] hover:border-[var(--accent-blue)] text-[var(--text-secondary)] hover:text-[var(--accent-blue)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
                 >
-                  Add Task Today
+                  {t('dashboard.addTaskToday')}
                 </button>
                 <button
                   onClick={handleReplan}
                   disabled={dayPlan?.replan_used === 1}
                   className="bg-transparent border border-[var(--border-default)] hover:border-[var(--border-active)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  Replan Today
+                  {t('dashboard.replanToday')}
                 </button>
               </div>
             )}
@@ -1237,14 +1259,16 @@ export default function Today(): React.JSX.Element {
                   }}
                   className="bg-transparent border border-[var(--border-subtle)] hover:border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors"
                 >
-                  Add Task Tomorrow
+                  {t('dashboard.addTaskTomorrow')}
                 </button>
                 <button
                   onClick={generateTomorrowTasks}
                   disabled={generatingTomorrow}
                   className="bg-transparent border border-[var(--border-subtle)] hover:border-[var(--accent-blue)] text-[var(--text-muted)] hover:text-[var(--accent-blue)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  {generatingTomorrow ? 'Generating...' : 'Generate Tomorrow'}
+                  {generatingTomorrow
+                    ? t('dashboard.generatingTomorrow')
+                    : t('dashboard.generateTomorrow')}
                 </button>
               </div>
             )}
@@ -1260,7 +1284,7 @@ export default function Today(): React.JSX.Element {
                     disabled={endingDay}
                     className="w-full bg-[var(--accent-red)]/10 border border-[var(--accent-red)]/40 hover:bg-[var(--accent-red)]/20 hover:border-[var(--accent-red)] text-[var(--accent-red)] font-medium py-2.5 rounded text-sm cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {endingDay ? 'Ending day...' : 'End Day'}
+                    {endingDay ? t('dashboard.endingDay') : t('dashboard.endDay')}
                   </button>
                 </div>
               )}

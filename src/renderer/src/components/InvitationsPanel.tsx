@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { translateError } from '../i18n/errors'
+import { localeFor } from '../i18n/locale'
 import { useAuth } from './AuthProvider'
 import { useToast } from './Toast'
 
@@ -14,8 +17,8 @@ const STATUS_STYLES: Record<Invitation['status'], string> = {
   revoked: 'text-[var(--text-muted)]',
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+function formatDate(iso: string, language: string): string {
+  return new Date(iso).toLocaleDateString(localeFor(language), {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -23,6 +26,7 @@ function formatDate(iso: string): string {
 }
 
 export default function InvitationsPanel(): React.JSX.Element | null {
+  const { t, i18n } = useTranslation()
   const { state, refresh } = useAuth()
   const { error: toastError, success: toastSuccess } = useToast()
   const [invitations, setInvitations] = useState<Invitation[]>([])
@@ -39,12 +43,12 @@ export default function InvitationsPanel(): React.JSX.Element | null {
     if (!organizationId) return
     const result = await window.api.invitations.list(organizationId)
     if (!result.success) {
-      toastError(result.error ?? 'Could not load invitations')
+      toastError(translateError(t, result.error, 'invitations.loadFailed'))
       return
     }
     setInvitations(result.invitations ?? [])
     setMembers(result.members ?? [])
-  }, [organizationId, toastError])
+  }, [organizationId, toastError, t])
 
   useEffect(() => {
     async function run(): Promise<void> {
@@ -66,10 +70,10 @@ export default function InvitationsPanel(): React.JSX.Element | null {
         role,
       })
       if (!result.success) {
-        toastError(result.error ?? 'Could not create invitation')
+        toastError(translateError(t, result.error, 'invitations.createFailed'))
         return
       }
-      toastSuccess(`Invitation sent to ${email.trim()}. They can sign up or sign in to Execd with that address.`)
+      toastSuccess(t('invitations.sent', { email: email.trim() }))
       setEmail('')
       await load()
     } finally {
@@ -80,7 +84,7 @@ export default function InvitationsPanel(): React.JSX.Element | null {
   async function revoke(id: string): Promise<void> {
     const result = await window.api.invitations.revoke(id)
     if (!result.success) {
-      toastError(result.error ?? 'Could not revoke invitation')
+      toastError(translateError(t, result.error, 'invitations.revokeFailed'))
       return
     }
     await load()
@@ -95,7 +99,7 @@ export default function InvitationsPanel(): React.JSX.Element | null {
       requireApproval: next,
     })
     if (!result.success) {
-      toastError(result.error ?? 'Could not update the setting')
+      toastError(translateError(t, result.error, 'invitations.settingFailed'))
       return
     }
     await refresh()
@@ -104,12 +108,9 @@ export default function InvitationsPanel(): React.JSX.Element | null {
   return (
     <section className="mb-8 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-lg p-4">
       <h2 className="text-base font-semibold text-[var(--text-primary)]">
-        {organization.name} — organization
+        {t('invitations.orgTitle', { name: organization.name })}
       </h2>
-      <p className="text-xs text-[var(--text-secondary)] mt-1 mb-4">
-        Invite people by email. They join by signing up to Execd with that address and accepting the
-        invitation. Invitations expire after 7 days.
-      </p>
+      <p className="text-xs text-[var(--text-secondary)] mt-1 mb-4">{t('invitations.help')}</p>
 
       <label className="flex items-center gap-2 mb-4 cursor-pointer select-none">
         <input
@@ -119,14 +120,14 @@ export default function InvitationsPanel(): React.JSX.Element | null {
           className="cursor-pointer"
         />
         <span className="text-xs text-[var(--text-secondary)]">
-          Require manager approval before a task counts as done
+          {t('invitations.requireApproval')}
         </span>
       </label>
 
       <form onSubmit={invite} className="flex gap-2 mb-4">
         <input
           type="email"
-          placeholder="Email address"
+          placeholder={t('invitations.emailAddress')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="flex-1 bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-[var(--accent-blue)]"
@@ -136,22 +137,22 @@ export default function InvitationsPanel(): React.JSX.Element | null {
           onChange={(e) => setRole(e.target.value as 'member' | 'manager')}
           className="bg-[var(--bg-base)] border border-[var(--border-default)] rounded px-2 text-sm text-[var(--text-primary)] outline-none"
         >
-          <option value="member">Member</option>
-          <option value="manager">Manager</option>
+          <option value="member">{t('invitations.roleMember')}</option>
+          <option value="manager">{t('invitations.roleManager')}</option>
         </select>
         <button
           type="submit"
           disabled={!email.trim() || busy}
           className="bg-[var(--accent-blue)] hover:bg-[var(--accent-blue-dim)] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm px-4 rounded cursor-pointer transition-colors"
         >
-          Invite
+          {t('invitations.invite')}
         </button>
       </form>
 
       {invitations.length > 0 && (
         <div className="mb-4">
           <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)] mb-2">
-            Invitations
+            {t('invitations.title')}
           </p>
           <div className="space-y-1">
             {invitations.map((inv) => (
@@ -160,15 +161,19 @@ export default function InvitationsPanel(): React.JSX.Element | null {
                 className="flex items-center gap-3 text-sm bg-[var(--bg-base)] border border-[var(--border-subtle)] rounded px-3 py-2"
               >
                 <span className="flex-1 truncate text-[var(--text-primary)]">{inv.email}</span>
-                <span className="text-xs text-[var(--text-secondary)]">{inv.role}</span>
+                <span className="text-xs text-[var(--text-secondary)]">
+                  {t(`roles.${inv.role}`)}
+                </span>
                 <span className={`text-xs font-mono ${STATUS_STYLES[inv.status]}`}>
-                  {inv.status === 'sent' ? 'pending' : inv.status}
+                  {t(`invitations.status.${inv.status === 'sent' ? 'pending' : inv.status}`)}
                 </span>
                 <span className="text-xs text-[var(--text-muted)] w-28 text-right">
                   {inv.status === 'accepted' && inv.accepted_at
-                    ? `joined ${formatDate(inv.accepted_at)}`
+                    ? t('invitations.joined', { date: formatDate(inv.accepted_at, i18n.language) })
                     : isActive(inv)
-                      ? `expires ${formatDate(inv.expires_at)}`
+                      ? t('invitations.expires', {
+                          date: formatDate(inv.expires_at, i18n.language),
+                        })
                       : ''}
                 </span>
                 {isActive(inv) && (
@@ -176,23 +181,20 @@ export default function InvitationsPanel(): React.JSX.Element | null {
                     onClick={() => revoke(inv.id)}
                     className="bg-transparent border-none text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] underline cursor-pointer"
                   >
-                    Revoke
+                    {t('invitations.revoke')}
                   </button>
                 )}
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-[var(--text-muted)] mt-2">
-            To resend or extend an invitation, invite the same email again. Expired or revoked
-            invitations can be re-invited the same way.
-          </p>
+          <p className="text-[10px] text-[var(--text-muted)] mt-2">{t('invitations.resendHelp')}</p>
         </div>
       )}
 
       {members.length > 0 && (
         <div>
           <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--text-secondary)] mb-2">
-            Members ({members.length})
+            {t('invitations.membersCount', { count: members.length })}
           </p>
           <div className="space-y-1">
             {members.map((m) => (
@@ -204,7 +206,9 @@ export default function InvitationsPanel(): React.JSX.Element | null {
                   {m.displayName || m.email}
                 </span>
                 <span className="text-xs text-[var(--text-muted)] truncate">{m.email}</span>
-                <span className="text-xs font-mono text-[var(--text-secondary)]">{m.role}</span>
+                <span className="text-xs font-mono text-[var(--text-secondary)]">
+                  {t(`roles.${m.role}`)}
+                </span>
               </div>
             ))}
           </div>

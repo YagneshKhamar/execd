@@ -12,7 +12,9 @@
     "googleCalendar": "Google Calendar",
     "missionVision": "Mission & Vision",
     "mobileApp": "Mobile App",
-    "settings": "Settings"
+    "settings": "Settings",
+    "soon": "soon",
+    "signOut": "Sign out"
   },
   "dashboard": {
     "executionScore": "EXECUTION SCORE",
@@ -75,7 +77,15 @@
     "salesProgress": "of",
     "thisMonth": "this month",
     "viewReport": "View full report →",
-    "lockFirst": "Lock your plan first to start completing tasks"
+    "lockFirst": "Lock your plan first to start completing tasks",
+    "addTaskForDay": "Add Task for {{day}}",
+    "progressOf": "₹{{done}} of ₹{{target}} {{period}}",
+    "todaySaved": "Today saved: ₹{{sales}} sales, ₹{{collection}} collection",
+    "followupsScheduled_one": "{{count}} team follow-up scheduled for today",
+    "followupsScheduled_other": "{{count}} team follow-ups scheduled for today",
+    "dayEndedReadOnly": "Day has ended. Tasks are read-only.",
+    "notes": "notes",
+    "saving": "Saving..."
   },
   "goals": {
     "title": "Goals",
@@ -100,7 +110,34 @@
     "addSubgoal": "Add subgoal",
     "unvalidated": "unvalidated",
     "validated": "validated",
-    "invalid": "invalid"
+    "invalid": "invalid",
+    "placeholders": {
+      "business1": "e.g. Launch landing page and get 50 signups",
+      "business2": "e.g. Close 3 new paying customers",
+      "business3": "e.g. Ship v1 of the mobile app",
+      "personal1": "e.g. Read 2 books on systems thinking",
+      "personal2": "e.g. Exercise 4 times per week",
+      "family1": "e.g. Plan and take a weekend trip with family",
+      "family2": "e.g. Set weekly family dinner routine",
+      "generic": "e.g. {{type}} goal {{n}}"
+    },
+    "goalLabel": "{{type}} Goal {{n}}",
+    "allRequired": "All {{count}} goals are required.",
+    "acceptedViaAi": "Accepted via AI suggestion.",
+    "aiValidationFailed": "AI validation failed. Check your API key in Setup.",
+    "fixFlagged": "Fix flagged goals before continuing.",
+    "subgoalsFailedFor": "Failed to generate subgoals for: {{title}}",
+    "lockedNote": "Goals are locked for this month. Contact support to reset.",
+    "step1": "STEP 1 OF 2 - DEFINE GOALS",
+    "step2": "STEP 2 OF 2 - REVIEW SUBGOALS",
+    "reviewSubgoals": "Review Subgoals",
+    "priority": {
+      "high": "high",
+      "medium": "medium",
+      "low": "low"
+    },
+    "aiSuggestion": "AI suggestion",
+    "useThis": "Use this"
   },
   "business": {
     "title": "Business Profile",
@@ -143,13 +180,33 @@
       "trading": "Trading",
       "retail": "Retail",
       "services": "Services",
-      "other": "Other"
+      "other": "Other",
+      "trading_wholesale": "Trading — Wholesaler",
+      "trading_retail": "Trading — Retailer",
+      "it": "IT / Software",
+      "ca": "CA / Accounting"
     },
     "languages": {
       "en": "English",
       "hi": "हिंदी",
       "gu": "ગુજરાતી"
-    }
+    },
+    "selectType": "Select a business type",
+    "natureOfBusiness": "Nature of Business",
+    "naturePlaceholder": "Describe what your business does, who your customers are, how you sell — in any language (English, Gujarati, Hindi)",
+    "natureHelp": "Used by AI to generate more relevant tasks and insights for your business.",
+    "departments": "Departments",
+    "departmentPlaceholder": "Add department and press Enter",
+    "add": "Add",
+    "departmentExample": "e.g. Sales, Production, Accounts, HR",
+    "targetUnit": "Target Unit",
+    "amount": "Amount",
+    "units": "Units",
+    "unitLabelPlaceholder": "e.g. houses, flats, clients, orders",
+    "yearlyTarget": "Yearly Target",
+    "amountPlaceholder": "e.g. 12000000",
+    "unitsPlaceholder": "e.g. 50",
+    "daysRemaining": "{{count}} days remaining in this month - target will be prorated."
   },
   "settings": {
     "title": "Setup",
@@ -173,7 +230,11 @@
     "saveSettings": "Save Settings",
     "data": "Data",
     "downloadTaskHistory": "Download Task History",
-    "downloadDailySummary": "Download Daily Summary"
+    "downloadDailySummary": "Download Daily Summary",
+    "errApiKey": "API key is required.",
+    "errWorkingDay": "Select at least one working day.",
+    "errEndTime": "Working end time must be after start time.",
+    "indianFy": "Indian FY"
   },
   "dailyReport": {
     "title": "Daily Report",
@@ -201,7 +262,10 @@
     "dailyTasks": "DAILY TASKS",
     "byEffort": "BY EFFORT",
     "byTimeSlot": "BY TIME SLOT",
-    "analyzing": "Analyzing..."
+    "analyzing": "Analyzing...",
+    "noInsight": "No insight available.",
+    "score": "Score",
+    "carryOvers": "CARRY-OVERS"
   },
   "team": {
     "members": "Members",
@@ -216,7 +280,55 @@
     "cancel": "Cancel",
     "save": "Save",
     "noMembers": "No team members yet.",
-    "addMember": "Add Member"
+    "addMember": "Add Member",
+    "effort": {
+      "light": "light",
+      "medium": "medium",
+      "heavy": "heavy"
+    },
+    "status": {
+      "pending": "pending",
+      "completed": "completed",
+      "blocked": "blocked",
+      "awaiting_review": "awaiting review",
+      "needs_changes": "needs changes"
+    },
+    "sync": {
+      "failed": "sync failed",
+      "pending": "pending sync",
+      "notLinked": "not linked",
+      "synced": "synced"
+    },
+    "markDone": "Mark Done",
+    "remove": "Remove",
+    "approve": "Approve",
+    "requestChanges": "Request Changes",
+    "addNote": "Add Note",
+    "scheduleFollowup": "Schedule Follow-up",
+    "sendBack": "Send back",
+    "teamMembers": "Team Members",
+    "savedLocallySyncFailed": "Saved locally, but could not sync: {{error}}",
+    "unknownError": "unknown error",
+    "savedLocallyUnlinked": "Saved locally. This member has not joined your organization yet, so they will not see it.",
+    "sentBack": "Sent back for changes",
+    "linked": "Linked to organization account",
+    "notLinkedYet": "Not linked yet — links automatically when they join with this email",
+    "tasksThisWeek_one": "{{count}} task this week",
+    "tasksThisWeek_other": "{{count}} tasks this week",
+    "overdueNeedAttention_one": "{{count}} overdue task needs attention",
+    "overdueNeedAttention_other": "{{count}} overdue tasks need attention",
+    "daysOverdue_one": "{{count}} day overdue",
+    "daysOverdue_other": "{{count}} days overdue",
+    "tasksCount_one": "{{count}} task",
+    "tasksCount_other": "{{count}} tasks",
+    "assigneeNotJoined": "The assignee has not joined your organization yet",
+    "whatNeedsChange": "What needs to change?",
+    "noFollowups": "No follow-ups scheduled for today",
+    "name": "Name",
+    "selectDepartment": "Select department / role",
+    "otherType": "Other (type below)",
+    "role": "Role",
+    "followupNote": "Follow-up note"
   },
   "months": {
     "jan": "January",
@@ -268,7 +380,13 @@
     "edit": "Edit",
     "delete": "Delete",
     "back": "Back",
-    "to": "to"
+    "to": "to",
+    "appName": "Execd",
+    "search": "Search...",
+    "noResults": "No results",
+    "select": "Select...",
+    "retry": "Retry",
+    "refresh": "Refresh"
   },
   "history": {
     "title": "History",
@@ -286,7 +404,8 @@
     "noTasksSubtitle": "Adjust filters to see results",
     "pasteLinkPlaceholder": "Paste link...",
     "addNotePlaceholder": "Add note...",
-    "proofOptional": "Proof (optional)"
+    "proofOptional": "Proof (optional)",
+    "clearDateFilter": "Clear date filter"
   },
   "reports": {
     "title": "Reports",
@@ -304,12 +423,19 @@
     "recurringSkips": "RECURRING SKIPS",
     "export": "EXPORT",
     "downloadTaskHistory": "Download Task History CSV",
-    "downloadSummary": "Download Daily Summary CSV"
+    "downloadSummary": "Download Daily Summary CSV",
+    "monthlyBreakdown": "MONTHLY BREAKDOWN",
+    "daysCount_one": "{{count}} day",
+    "daysCount_other": "{{count}} days"
   },
   "updater": {
     "available": "Update available",
     "readyToInstall": "Ready to install",
-    "checkFailed": "Update check failed"
+    "checkFailed": "Update check failed",
+    "download": "Download Update",
+    "downloading": "Downloading update...",
+    "downloaded": "Update downloaded. Restart to apply.",
+    "restartInstall": "Restart and Install"
   },
   "toast": {
     "settingsSaved": "Settings saved.",
@@ -361,5 +487,195 @@
     "exportCsvFailed": "Failed to export tasks CSV.",
     "replanSuccess": "Plan unlocked. Pending tasks cleared — generate new tasks for today.",
     "replanFailed": "Failed to replan today."
+  },
+  "roles": {
+    "owner": "owner",
+    "manager": "manager",
+    "member": "member"
+  },
+  "errors": {
+    "notConfigured": "Supabase is not configured",
+    "invalidEmail": "Enter a valid email address",
+    "passwordShort": "Password must be at least 8 characters",
+    "enterName": "Enter your name",
+    "enterCredentials": "Enter your email and password",
+    "orgNameLength": "Organization name must be 1-100 characters",
+    "invalidRequest": "Invalid request",
+    "invalidOrganization": "Invalid organization",
+    "invalidInvitation": "Invalid invitation",
+    "invalidRole": "Role must be manager or member",
+    "invalidUpdate": "Invalid update",
+    "invalidLogin": "Invalid email or password",
+    "emailNotConfirmed": "Email not confirmed. Check your inbox for the confirmation link.",
+    "userExists": "An account with this email already exists"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "auth": {
+    "signUpFailed": "Sign up failed",
+    "signInFailed": "Sign in failed",
+    "checkEmail": "Check your email to confirm your account, then sign in.",
+    "createYourAccount": "Create your account",
+    "signInTitle": "Sign in to Execd Team",
+    "yourName": "Your name",
+    "email": "Email",
+    "password": "Password",
+    "passwordMin": "Password (min 8 characters)",
+    "pleaseWait": "Please wait...",
+    "createAccount": "Create account",
+    "signIn": "Sign in",
+    "haveAccount": "Have an account? Sign in",
+    "newHere": "New here? Create an account",
+    "useLocalOnly": "Use local team data only",
+    "checkInvitationsFailed": "Could not check for invitations",
+    "acceptFailed": "Could not accept invitation",
+    "createOrgFailed": "Could not create organization",
+    "setupOrgTitle": "Set up your organization",
+    "youAreInvited": "You have been invited",
+    "asRole": "as {{role}}",
+    "fromName": "from {{name}}",
+    "join": "Join",
+    "orCreateBelow": "Or create your own organization below.",
+    "createOrgHelp": "Create the organization your team will belong to. You will be its owner. If you were invited to an existing one, accept the invitation instead.",
+    "orgName": "Organization name",
+    "creating": "Creating...",
+    "createOrganization": "Create organization",
+    "loadOrgFailed": "Could not load your organization"
+  },
+  "invitations": {
+    "loadFailed": "Could not load invitations",
+    "createFailed": "Could not create invitation",
+    "sent": "Invitation sent to {{email}}. They can sign up or sign in to Execd with that address.",
+    "revokeFailed": "Could not revoke invitation",
+    "settingFailed": "Could not update the setting",
+    "orgTitle": "{{name}} — organization",
+    "help": "Invite people by email. They join by signing up to Execd with that address and accepting the invitation. Invitations expire after 7 days.",
+    "requireApproval": "Require manager approval before a task counts as done",
+    "emailAddress": "Email address",
+    "roleMember": "Member",
+    "roleManager": "Manager",
+    "invite": "Invite",
+    "title": "Invitations",
+    "status": {
+      "pending": "pending",
+      "sent": "pending",
+      "accepted": "accepted",
+      "expired": "expired",
+      "revoked": "revoked"
+    },
+    "joined": "joined {{date}}",
+    "expires": "expires {{date}}",
+    "revoke": "Revoke",
+    "resendHelp": "To resend or extend an invitation, invite the same email again. Expired or revoked invitations can be re-invited the same way.",
+    "membersCount": "Members ({{count}})"
+  },
+  "myTasks": {
+    "loadFailed": "Could not load your tasks",
+    "updateFailed": "Could not update the task",
+    "markedDone": "Marked as done",
+    "sentForReview": "Sent for review",
+    "due": "due {{date}}",
+    "proof": "Proof: {{value}}",
+    "changesRequested": "Your manager requested changes — see history below, then resubmit.",
+    "proofPlaceholder": "Proof, comment or link (optional)",
+    "submitForReview": "Submit for Review",
+    "unblock": "Unblock",
+    "markBlocked": "Mark Blocked",
+    "waitingReview": "Waiting for manager review",
+    "title": "My tasks",
+    "subtitle": "Tasks assigned to you in {{name}}.",
+    "empty": "Nothing assigned to you yet.",
+    "completed": "Completed"
+  },
+  "sync": {
+    "synced": "Synced {{when}}",
+    "syncedNever": "Not synced yet",
+    "disabledLocal": "Cloud sync disabled — using local-only data",
+    "failedChanges_one": "{{count}} change could not sync",
+    "failedChanges_other": "{{count}} changes could not sync",
+    "offline": "Offline",
+    "offlineQueued_one": "Offline — {{count}} change will sync when reconnected",
+    "offlineQueued_other": "Offline — {{count}} changes will sync when reconnected",
+    "syncing": "Syncing...",
+    "syncingPending_one": "Syncing — {{count}} change pending",
+    "syncingPending_other": "Syncing — {{count}} changes pending",
+    "waitingForAssignee_one": "{{count}} task waiting for the assignee to join",
+    "waitingForAssignee_other": "{{count}} tasks waiting for the assignee to join",
+    "liveTitle": "Live: changes from your team appear without a manual refresh",
+    "live": "live",
+    "discard": "Discard",
+    "syncNow": "Sync now"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "none": "No notifications yet",
+    "types": {
+      "task_assigned": "New task",
+      "task_due_soon": "Due soon",
+      "task_overdue": "Overdue",
+      "task_completed": "Completed",
+      "task_blocked": "Blocked",
+      "task_approved": "Approved",
+      "task_rejected": "Changes requested",
+      "invitation_accepted": "Joined"
+    }
+  },
+  "taskHistory": {
+    "loadFailed": "Could not load history",
+    "hide": "Hide history",
+    "show": "History",
+    "loading": "Loading...",
+    "none": "No history yet",
+    "you": "You",
+    "someone": "Someone",
+    "events": {
+      "created": "Task created",
+      "completed": "Marked done",
+      "approved": "Approved",
+      "rejected": "Changes requested",
+      "status": "Status changed",
+      "note": "Note added",
+      "pending": "Reopened",
+      "blocked": "Marked blocked",
+      "awaiting_review": "Submitted for review",
+      "needs_changes": "Changes requested"
+    }
+  },
+  "migration": {
+    "importFailed": "Import failed",
+    "title": "Bring in your existing local team data",
+    "help": "This organization was created after Execd already had local team members and tasks on this device. Nothing local is deleted or changed by this — it only invites members by email and queues their tasks to sync, same as normal.",
+    "willInvite_one": "{{count}} member will be invited by email",
+    "willInvite_other": "{{count}} members will be invited by email",
+    "noEmail_one": "{{count}} member has no email on file and can't be invited — add one on the Members tab first",
+    "noEmail_other": "{{count}} members have no email on file and can't be invited — add one on the Members tab first",
+    "willQueue_one": "{{count}} local task will be queued to sync",
+    "willQueue_other": "{{count}} local tasks will be queued to sync",
+    "importing": "Importing...",
+    "importNow": "Import now",
+    "summary": "Import summary",
+    "invitationsSent_one": "{{count}} invitation sent",
+    "invitationsSent_other": "{{count}} invitations sent",
+    "skippedNoEmail_one": "{{count}} member skipped — no email on file",
+    "skippedNoEmail_other": "{{count}} members skipped — no email on file",
+    "tasksQueued_one": "{{count}} task queued to sync",
+    "tasksQueued_other": "{{count}} tasks queued to sync"
+  },
+  "diagnostics": {
+    "disabledToast": "Cloud sync disabled — switched to local-only",
+    "enabledToast": "Cloud sync re-enabled",
+    "exportFailed": "Could not export data",
+    "backupDownloaded": "Backup downloaded",
+    "title": "Sync diagnostics",
+    "downloadBackup": "Download local backup (JSON)",
+    "backupHelp": "A snapshot of this device's local team data. Supabase itself is backed up separately on paid plans — this is an extra copy you keep yourself.",
+    "failingCount": "Currently failing to sync ({{count}})",
+    "attempt": "(attempt {{count}})",
+    "disableSync": "Disable cloud sync and use local-only team data (troubleshooting)"
   }
 }

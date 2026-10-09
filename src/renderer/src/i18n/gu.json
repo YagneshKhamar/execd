@@ -9,10 +9,12 @@
     "analytics": "વિશ્લેષણ",
     "team": "ટીમ",
     "comingSoon": "ટૂંક સમયમાં",
-    "googleCalendar": "Google Calendar",
+    "googleCalendar": "ગૂગલ કેલેન્ડર",
     "missionVision": "ધ્યેય અને દ્રષ્ટિ",
     "mobileApp": "મોબાઇલ એપ",
-    "settings": "સેટિંગ્સ"
+    "settings": "સેટિંગ્સ",
+    "soon": "જલ્દી",
+    "signOut": "સાઇન આઉટ"
   },
   "dashboard": {
     "executionScore": "કામગીરી સ્કોર",
@@ -75,7 +77,15 @@
     "salesProgress": "માંથી",
     "thisMonth": "આ મહિનામાં",
     "viewReport": "પૂરો અહેવાલ જુઓ →",
-    "lockFirst": "કામ પૂરું કરવા પહેલાં પ્લાન લૉક કરો"
+    "lockFirst": "કામ પૂરું કરવા પહેલાં પ્લાન લૉક કરો",
+    "addTaskForDay": "{{day}} માટે કામ ઉમેરો",
+    "progressOf": "₹{{target}} માંથી ₹{{done}} {{period}}",
+    "todaySaved": "આજે સાચવ્યું: વેચાણ ₹{{sales}}, વસૂલાત ₹{{collection}}",
+    "followupsScheduled_one": "આજ માટે {{count}} ટીમ ફૉલો-અપ નક્કી છે",
+    "followupsScheduled_other": "આજ માટે {{count}} ટીમ ફૉલો-અપ નક્કી છે",
+    "dayEndedReadOnly": "દિવસ પૂરો થયો છે. કામ ફક્ત વાંચવા માટે છે.",
+    "notes": "નોંધ",
+    "saving": "સાચવાઈ રહ્યું છે..."
   },
   "goals": {
     "title": "લક્ષ્યો",
@@ -100,7 +110,34 @@
     "addSubgoal": "ઉપ-લક્ષ્ય ઉમેરો",
     "unvalidated": "ચકાસ્યું નથી",
     "validated": "ચકાસ્યું",
-    "invalid": "અમાન્ય"
+    "invalid": "અમાન્ય",
+    "placeholders": {
+      "business1": "દા.ત. લૅન્ડિંગ પેજ શરૂ કરો અને ૫૦ સાઇન-અપ મેળવો",
+      "business2": "દા.ત. ૩ નવા ચૂકવણી કરનારા ગ્રાહકો મેળવો",
+      "business3": "દા.ત. મોબાઇલ એપનું પહેલું વર્ઝન રિલીઝ કરો",
+      "personal1": "દા.ત. સિસ્ટમ્સ થિંકિંગ પર ૨ પુસ્તકો વાંચો",
+      "personal2": "દા.ત. અઠવાડિયામાં ૪ વાર કસરત કરો",
+      "family1": "દા.ત. પરિવાર સાથે વીકએન્ડ ટ્રિપનું આયોજન કરો",
+      "family2": "દા.ત. સાપ્તાહિક પારિવારિક ડિનરની નિયમિતતા બનાવો",
+      "generic": "દા.ત. {{type}} લક્ષ્ય {{n}}"
+    },
+    "goalLabel": "{{type}} લક્ષ્ય {{n}}",
+    "allRequired": "બધાં {{count}} લક્ષ્યો જરૂરી છે.",
+    "acceptedViaAi": "AI સૂચન દ્વારા સ્વીકાર્યું.",
+    "aiValidationFailed": "AI ચકાસણી નિષ્ફળ. સેટઅપમાં તમારી API key તપાસો.",
+    "fixFlagged": "આગળ વધતાં પહેલાં ચિહ્નિત લક્ષ્યો સુધારો.",
+    "subgoalsFailedFor": "આ માટે ઉપ-લક્ષ્યો બનાવી શકાયા નહીં: {{title}}",
+    "lockedNote": "આ મહિના માટે લક્ષ્યો લૉક છે. રીસેટ કરવા સપોર્ટનો સંપર્ક કરો.",
+    "step1": "પગલું ૧ / ૨ - લક્ષ્યો નક્કી કરો",
+    "step2": "પગલું ૨ / ૨ - ઉપ-લક્ષ્યો તપાસો",
+    "reviewSubgoals": "ઉપ-લક્ષ્યો તપાસો",
+    "priority": {
+      "high": "ઊંચી",
+      "medium": "મધ્યમ",
+      "low": "નીચી"
+    },
+    "aiSuggestion": "AI સૂચન",
+    "useThis": "આ વાપરો"
   },
   "business": {
     "title": "વ્યવસાય પ્રોફાઇલ",
@@ -143,13 +180,33 @@
       "trading": "વ્યાપાર",
       "retail": "છૂટક",
       "services": "સેવાઓ",
-      "other": "અન્ય"
+      "other": "અન્ય",
+      "trading_wholesale": "વ્યાપાર — જથ્થાબંધ",
+      "trading_retail": "વ્યાપાર — છૂટક",
+      "it": "આઇટી / સૉફ્ટવેર",
+      "ca": "સીએ / એકાઉન્ટિંગ"
     },
     "languages": {
       "en": "English",
       "hi": "हिंदी",
       "gu": "ગુજરાતી"
-    }
+    },
+    "selectType": "વ્યવસાયનો પ્રકાર પસંદ કરો",
+    "natureOfBusiness": "વ્યવસાયનું સ્વરૂપ",
+    "naturePlaceholder": "તમારો વ્યવસાય શું કરે છે, તમારા ગ્રાહકો કોણ છે, તમે કેવી રીતે વેચો છો તે લખો — કોઈપણ ભાષામાં (અંગ્રેજી, ગુજરાતી, હિન્દી)",
+    "natureHelp": "AI દ્વારા તમારા વ્યવસાય માટે વધુ યોગ્ય કામ અને સૂચનો બનાવવા માટે વપરાય છે.",
+    "departments": "વિભાગો",
+    "departmentPlaceholder": "વિભાગ ઉમેરો અને Enter દબાવો",
+    "add": "ઉમેરો",
+    "departmentExample": "દા.ત. વેચાણ, ઉત્પાદન, હિસાબ, એચઆર",
+    "targetUnit": "લક્ષ્યાંકનો એકમ",
+    "amount": "રકમ",
+    "units": "એકમ",
+    "unitLabelPlaceholder": "દા.ત. મકાન, ફ્લેટ, ગ્રાહક, ઓર્ડર",
+    "yearlyTarget": "વાર્ષિક લક્ષ્યાંક",
+    "amountPlaceholder": "દા.ત. ૧૨૦૦૦૦૦૦",
+    "unitsPlaceholder": "દા.ત. ૫૦",
+    "daysRemaining": "આ મહિનામાં {{count}} દિવસ બાકી છે - લક્ષ્યાંક પ્રમાણસર ગણાશે."
   },
   "settings": {
     "title": "સેટઅપ",
@@ -173,7 +230,11 @@
     "saveSettings": "સેટિંગ્સ સાચવો",
     "data": "ડેટા",
     "downloadTaskHistory": "કામ ઇતિહાસ ડાઉનલોડ કરો",
-    "downloadDailySummary": "દૈનિક સારાંશ ડાઉનલોડ કરો"
+    "downloadDailySummary": "દૈનિક સારાંશ ડાઉનલોડ કરો",
+    "errApiKey": "API key જરૂરી છે.",
+    "errWorkingDay": "ઓછામાં ઓછો એક કામનો દિવસ પસંદ કરો.",
+    "errEndTime": "કામ પૂરું થવાનો સમય શરૂઆતના સમય પછી હોવો જોઈએ.",
+    "indianFy": "ભારતીય નાણાકીય વર્ષ"
   },
   "dailyReport": {
     "title": "દૈનિક અહેવાલ",
@@ -201,7 +262,10 @@
     "dailyTasks": "દૈનિક કામ",
     "byEffort": "પ્રયાસ પ્રમાણે",
     "byTimeSlot": "સમય પ્રમાણે",
-    "analyzing": "વિશ્લેષણ ચાલુ છે..."
+    "analyzing": "વિશ્લેષણ ચાલુ છે...",
+    "noInsight": "કોઈ સૂચન ઉપલબ્ધ નથી.",
+    "score": "સ્કોર",
+    "carryOvers": "આગળ લઈ ગયેલાં કામ"
   },
   "team": {
     "members": "સભ્યો",
@@ -216,7 +280,55 @@
     "cancel": "રદ કરો",
     "save": "સાચવો",
     "noMembers": "હજુ કોઈ ટીમ સભ્ય નથી.",
-    "addMember": "સભ્ય ઉમેરો"
+    "addMember": "સભ્ય ઉમેરો",
+    "effort": {
+      "light": "હળવું",
+      "medium": "મધ્યમ",
+      "heavy": "ભારે"
+    },
+    "status": {
+      "pending": "બાકી",
+      "completed": "પૂર્ણ",
+      "blocked": "અવરોધિત",
+      "awaiting_review": "સમીક્ષાની રાહ",
+      "needs_changes": "ફેરફાર જરૂરી"
+    },
+    "sync": {
+      "failed": "સિંક નિષ્ફળ",
+      "pending": "સિંક બાકી",
+      "notLinked": "જોડાયેલ નથી",
+      "synced": "સિંક થયું"
+    },
+    "markDone": "પૂર્ણ કરો",
+    "remove": "કાઢી નાખો",
+    "approve": "મંજૂર કરો",
+    "requestChanges": "ફેરફાર માંગો",
+    "addNote": "નોંધ ઉમેરો",
+    "scheduleFollowup": "ફૉલો-અપ નક્કી કરો",
+    "sendBack": "પાછું મોકલો",
+    "teamMembers": "ટીમ સભ્યો",
+    "savedLocallySyncFailed": "સ્થાનિક રીતે સાચવ્યું, પણ સિંક થઈ શક્યું નહીં: {{error}}",
+    "unknownError": "અજ્ઞાત ભૂલ",
+    "savedLocallyUnlinked": "સ્થાનિક રીતે સાચવ્યું. આ સભ્ય હજુ તમારી સંસ્થામાં જોડાયા નથી, તેથી તેમને આ દેખાશે નહીં.",
+    "sentBack": "ફેરફાર માટે પાછું મોકલ્યું",
+    "linked": "સંસ્થાના ખાતા સાથે જોડાયેલ",
+    "notLinkedYet": "હજુ જોડાયેલ નથી — તેઓ આ ઇમેઇલથી જોડાશે ત્યારે આપોઆપ જોડાઈ જશે",
+    "tasksThisWeek_one": "આ અઠવાડિયે {{count}} કામ",
+    "tasksThisWeek_other": "આ અઠવાડિયે {{count}} કામ",
+    "overdueNeedAttention_one": "{{count}} મુદત વીતેલા કામ પર ધ્યાન જરૂરી છે",
+    "overdueNeedAttention_other": "{{count}} મુદત વીતેલાં કામ પર ધ્યાન જરૂરી છે",
+    "daysOverdue_one": "{{count}} દિવસ મોડું",
+    "daysOverdue_other": "{{count}} દિવસ મોડું",
+    "tasksCount_one": "{{count}} કામ",
+    "tasksCount_other": "{{count}} કામ",
+    "assigneeNotJoined": "જેને સોંપ્યું તે હજુ તમારી સંસ્થામાં જોડાયા નથી",
+    "whatNeedsChange": "શું બદલવાની જરૂર છે?",
+    "noFollowups": "આજ માટે કોઈ ફૉલો-અપ નક્કી નથી",
+    "name": "નામ",
+    "selectDepartment": "વિભાગ / ભૂમિકા પસંદ કરો",
+    "otherType": "અન્ય (નીચે લખો)",
+    "role": "ભૂમિકા",
+    "followupNote": "ફૉલો-અપ નોંધ"
   },
   "months": {
     "jan": "જાન્યુઆરી",
@@ -268,7 +380,13 @@
     "edit": "ફેરફાર કરો",
     "delete": "કાઢો",
     "back": "પાછળ",
-    "to": "થી"
+    "to": "થી",
+    "appName": "Execd",
+    "search": "શોધો...",
+    "noResults": "કોઈ પરિણામ નથી",
+    "select": "પસંદ કરો...",
+    "retry": "ફરી પ્રયાસ કરો",
+    "refresh": "તાજું કરો"
   },
   "history": {
     "title": "ઇતિહાસ",
@@ -286,7 +404,8 @@
     "noTasksSubtitle": "પરિણામ જોવા ફિલ્ટર બદલો",
     "pasteLinkPlaceholder": "લિંક પેસ્ટ કરો...",
     "addNotePlaceholder": "નોંધ ઉમેરો...",
-    "proofOptional": "પુરાવો (ઐચ્છિક)"
+    "proofOptional": "પુરાવો (ઐચ્છિક)",
+    "clearDateFilter": "તારીખ ફિલ્ટર હટાવો"
   },
   "reports": {
     "title": "અહેવાલો",
@@ -304,12 +423,19 @@
     "recurringSkips": "વારંવાર ચૂકાયેલાં",
     "export": "નિકાસ",
     "downloadTaskHistory": "કામ ઇતિહાસ CSV ડાઉનલોડ કરો",
-    "downloadSummary": "દૈનિક સારાંશ CSV ડાઉનલોડ કરો"
+    "downloadSummary": "દૈનિક સારાંશ CSV ડાઉનલોડ કરો",
+    "monthlyBreakdown": "માસિક વિભાજન",
+    "daysCount_one": "{{count}} દિવસ",
+    "daysCount_other": "{{count}} દિવસ"
   },
   "updater": {
     "available": "અપડેટ ઉપલબ્ધ છે",
     "readyToInstall": "ઇન્સ્ટૉલ કરવા તૈયાર",
-    "checkFailed": "અપડેટ તપાસ નિષ્ફળ"
+    "checkFailed": "અપડેટ તપાસ નિષ્ફળ",
+    "download": "અપડેટ ડાઉનલોડ કરો",
+    "downloading": "અપડેટ ડાઉનલોડ થઈ રહ્યું છે...",
+    "downloaded": "અપડેટ ડાઉનલોડ થયું. લાગુ કરવા ફરી શરૂ કરો.",
+    "restartInstall": "ફરી શરૂ કરો અને ઇન્સ્ટૉલ કરો"
   },
   "toast": {
     "settingsSaved": "સેટિંગ્સ સાચવાઈ ગઈ.",
@@ -361,5 +487,195 @@
     "exportCsvFailed": "CSV નિકાસ કરી શકાઈ નહીં.",
     "replanSuccess": "પ્લાન અનલૉક થઈ ગયો. નવા ટાસ્ક જનરેટ કરો.",
     "replanFailed": "રિપ્લાન નિષ્ફળ. ફરી પ્રયાસ કરો."
+  },
+  "roles": {
+    "owner": "માલિક",
+    "manager": "મેનેજર",
+    "member": "સભ્ય"
+  },
+  "errors": {
+    "notConfigured": "Supabase ગોઠવાયેલું નથી",
+    "invalidEmail": "માન્ય ઇમેઇલ સરનામું દાખલ કરો",
+    "passwordShort": "પાસવર્ડ ઓછામાં ઓછા ૮ અક્ષરનો હોવો જોઈએ",
+    "enterName": "તમારું નામ દાખલ કરો",
+    "enterCredentials": "તમારો ઇમેઇલ અને પાસવર્ડ દાખલ કરો",
+    "orgNameLength": "સંસ્થાનું નામ ૧-૧૦૦ અક્ષરનું હોવું જોઈએ",
+    "invalidRequest": "અમાન્ય વિનંતી",
+    "invalidOrganization": "અમાન્ય સંસ્થા",
+    "invalidInvitation": "અમાન્ય આમંત્રણ",
+    "invalidRole": "ભૂમિકા મેનેજર અથવા સભ્ય હોવી જોઈએ",
+    "invalidUpdate": "અમાન્ય અપડેટ",
+    "invalidLogin": "ઇમેઇલ અથવા પાસવર્ડ ખોટો છે",
+    "emailNotConfirmed": "ઇમેઇલ ચકાસાયો નથી. કન્ફર્મેશન લિંક માટે તમારું ઇનબૉક્સ તપાસો.",
+    "userExists": "આ ઇમેઇલ સાથે ખાતું પહેલેથી અસ્તિત્વમાં છે"
+  },
+  "time": {
+    "justNow": "હમણાં જ",
+    "minutesAgo": "{{count}} મિનિટ પહેલાં",
+    "hoursAgo": "{{count}} કલાક પહેલાં",
+    "daysAgo": "{{count}} દિવસ પહેલાં"
+  },
+  "auth": {
+    "signUpFailed": "સાઇન અપ નિષ્ફળ",
+    "signInFailed": "સાઇન ઇન નિષ્ફળ",
+    "checkEmail": "તમારું ખાતું કન્ફર્મ કરવા ઇમેઇલ તપાસો, પછી સાઇન ઇન કરો.",
+    "createYourAccount": "તમારું ખાતું બનાવો",
+    "signInTitle": "Execd ટીમમાં સાઇન ઇન કરો",
+    "yourName": "તમારું નામ",
+    "email": "ઇમેઇલ",
+    "password": "પાસવર્ડ",
+    "passwordMin": "પાસવર્ડ (ઓછામાં ઓછા ૮ અક્ષર)",
+    "pleaseWait": "કૃપા કરી રાહ જુઓ...",
+    "createAccount": "ખાતું બનાવો",
+    "signIn": "સાઇન ઇન",
+    "haveAccount": "ખાતું છે? સાઇન ઇન કરો",
+    "newHere": "નવા છો? ખાતું બનાવો",
+    "useLocalOnly": "ફક્ત સ્થાનિક ટીમ ડેટા વાપરો",
+    "checkInvitationsFailed": "આમંત્રણ તપાસી શકાયા નહીં",
+    "acceptFailed": "આમંત્રણ સ્વીકારી શકાયું નહીં",
+    "createOrgFailed": "સંસ્થા બનાવી શકાઈ નહીં",
+    "setupOrgTitle": "તમારી સંસ્થા સેટ કરો",
+    "youAreInvited": "તમને આમંત્રણ મળ્યું છે",
+    "asRole": "{{role}} તરીકે",
+    "fromName": "{{name}} તરફથી",
+    "join": "જોડાઓ",
+    "orCreateBelow": "અથવા નીચે તમારી પોતાની સંસ્થા બનાવો.",
+    "createOrgHelp": "તમારી ટીમ જે સંસ્થાની હશે તે બનાવો. તમે તેના માલિક બનશો. જો તમને કોઈ હાલની સંસ્થામાં આમંત્રણ મળ્યું હોય તો તે સ્વીકારો.",
+    "orgName": "સંસ્થાનું નામ",
+    "creating": "બનાવી રહ્યા છીએ...",
+    "createOrganization": "સંસ્થા બનાવો",
+    "loadOrgFailed": "તમારી સંસ્થા લોડ કરી શકાઈ નહીં"
+  },
+  "invitations": {
+    "loadFailed": "આમંત્રણ લોડ કરી શકાયા નહીં",
+    "createFailed": "આમંત્રણ બનાવી શકાયું નહીં",
+    "sent": "{{email}} ને આમંત્રણ મોકલ્યું. તેઓ આ સરનામાથી Execd માં સાઇન અપ અથવા સાઇન ઇન કરી શકે છે.",
+    "revokeFailed": "આમંત્રણ રદ કરી શકાયું નહીં",
+    "settingFailed": "સેટિંગ અપડેટ કરી શકાઈ નહીં",
+    "orgTitle": "{{name}} — સંસ્થા",
+    "help": "ઇમેઇલથી લોકોને આમંત્રિત કરો. તેઓ તે સરનામાથી Execd માં સાઇન અપ કરીને અને આમંત્રણ સ્વીકારીને જોડાય છે. આમંત્રણ ૭ દિવસ પછી સમાપ્ત થાય છે.",
+    "requireApproval": "કામ પૂર્ણ ગણાય તે પહેલાં મેનેજરની મંજૂરી જરૂરી રાખો",
+    "emailAddress": "ઇમેઇલ સરનામું",
+    "roleMember": "સભ્ય",
+    "roleManager": "મેનેજર",
+    "invite": "આમંત્રણ આપો",
+    "title": "આમંત્રણો",
+    "status": {
+      "pending": "બાકી",
+      "sent": "બાકી",
+      "accepted": "સ્વીકાર્યું",
+      "expired": "સમાપ્ત",
+      "revoked": "રદ"
+    },
+    "joined": "{{date}} ના રોજ જોડાયા",
+    "expires": "{{date}} ના રોજ સમાપ્ત",
+    "revoke": "રદ કરો",
+    "resendHelp": "આમંત્રણ ફરી મોકલવા અથવા લંબાવવા માટે એ જ ઇમેઇલને ફરી આમંત્રિત કરો. સમાપ્ત અથવા રદ થયેલાં આમંત્રણ પણ એ જ રીતે ફરી આપી શકાય.",
+    "membersCount": "સભ્યો ({{count}})"
+  },
+  "myTasks": {
+    "loadFailed": "તમારાં કામ લોડ કરી શકાયાં નહીં",
+    "updateFailed": "કામ અપડેટ કરી શકાયું નહીં",
+    "markedDone": "પૂર્ણ તરીકે ચિહ્નિત",
+    "sentForReview": "સમીક્ષા માટે મોકલ્યું",
+    "due": "{{date}} સુધી",
+    "proof": "પુરાવો: {{value}}",
+    "changesRequested": "તમારા મેનેજરે ફેરફાર માંગ્યા છે — નીચેનો ઇતિહાસ જુઓ, પછી ફરી સબમિટ કરો.",
+    "proofPlaceholder": "પુરાવો, ટિપ્પણી અથવા લિંક (ઐચ્છિક)",
+    "submitForReview": "સમીક્ષા માટે સબમિટ કરો",
+    "unblock": "અવરોધ હટાવો",
+    "markBlocked": "અવરોધિત ચિહ્નિત કરો",
+    "waitingReview": "મેનેજરની સમીક્ષાની રાહ છે",
+    "title": "મારાં કામ",
+    "subtitle": "{{name}} માં તમને સોંપેલાં કામ.",
+    "empty": "હજુ તમને કંઈ સોંપાયું નથી.",
+    "completed": "પૂર્ણ"
+  },
+  "sync": {
+    "synced": "{{when}} સિંક થયું",
+    "syncedNever": "હજુ સિંક થયું નથી",
+    "disabledLocal": "ક્લાઉડ સિંક બંધ — ફક્ત સ્થાનિક ડેટા વપરાય છે",
+    "failedChanges_one": "{{count}} ફેરફાર સિંક થઈ શક્યો નહીં",
+    "failedChanges_other": "{{count}} ફેરફાર સિંક થઈ શક્યા નહીં",
+    "offline": "ઑફલાઇન",
+    "offlineQueued_one": "ઑફલાઇન — ફરી જોડાતાં {{count}} ફેરફાર સિંક થશે",
+    "offlineQueued_other": "ઑફલાઇન — ફરી જોડાતાં {{count}} ફેરફાર સિંક થશે",
+    "syncing": "સિંક થઈ રહ્યું છે...",
+    "syncingPending_one": "સિંક થઈ રહ્યું છે — {{count}} ફેરફાર બાકી",
+    "syncingPending_other": "સિંક થઈ રહ્યું છે — {{count}} ફેરફાર બાકી",
+    "waitingForAssignee_one": "{{count}} કામ સોંપાયેલ વ્યક્તિના જોડાવાની રાહ જુએ છે",
+    "waitingForAssignee_other": "{{count}} કામ સોંપાયેલ વ્યક્તિના જોડાવાની રાહ જુએ છે",
+    "liveTitle": "લાઇવ: તમારી ટીમના ફેરફાર જાતે રિફ્રેશ કર્યા વિના દેખાય છે",
+    "live": "લાઇવ",
+    "discard": "કાઢી નાખો",
+    "syncNow": "હમણાં સિંક કરો"
+  },
+  "notifications": {
+    "title": "સૂચનાઓ",
+    "markAllRead": "બધી વાંચેલી ગણો",
+    "none": "હજુ કોઈ સૂચના નથી",
+    "types": {
+      "task_assigned": "નવું કામ",
+      "task_due_soon": "જલ્દી મુદત",
+      "task_overdue": "મુદત વીતી",
+      "task_completed": "પૂર્ણ",
+      "task_blocked": "અવરોધિત",
+      "task_approved": "મંજૂર",
+      "task_rejected": "ફેરફાર માંગ્યા",
+      "invitation_accepted": "જોડાયા"
+    }
+  },
+  "taskHistory": {
+    "loadFailed": "ઇતિહાસ લોડ કરી શકાયો નહીં",
+    "hide": "ઇતિહાસ છુપાવો",
+    "show": "ઇતિહાસ",
+    "loading": "લોડ થઈ રહ્યું છે...",
+    "none": "હજુ કોઈ ઇતિહાસ નથી",
+    "you": "તમે",
+    "someone": "કોઈ",
+    "events": {
+      "created": "કામ બનાવ્યું",
+      "completed": "પૂર્ણ ચિહ્નિત",
+      "approved": "મંજૂર",
+      "rejected": "ફેરફાર માંગ્યા",
+      "status": "સ્થિતિ બદલાઈ",
+      "note": "નોંધ ઉમેરી",
+      "pending": "ફરી ખોલ્યું",
+      "blocked": "અવરોધિત ચિહ્નિત",
+      "awaiting_review": "સમીક્ષા માટે મોકલ્યું",
+      "needs_changes": "ફેરફાર માંગ્યા"
+    }
+  },
+  "migration": {
+    "importFailed": "આયાત નિષ્ફળ",
+    "title": "તમારો હાલનો સ્થાનિક ટીમ ડેટા લાવો",
+    "help": "આ સંસ્થા બની તે પહેલાં Execd માં આ ડિવાઇસ પર સ્થાનિક ટીમ સભ્યો અને કામ હતાં. આનાથી સ્થાનિક કંઈ કાઢી નખાતું કે બદલાતું નથી — તે ફક્ત સભ્યોને ઇમેઇલથી આમંત્રિત કરે છે અને તેમનાં કામ સામાન્ય રીતે સિંક માટે કતારમાં મૂકે છે.",
+    "willInvite_one": "{{count}} સભ્યને ઇમેઇલથી આમંત્રણ મળશે",
+    "willInvite_other": "{{count}} સભ્યોને ઇમેઇલથી આમંત્રણ મળશે",
+    "noEmail_one": "{{count}} સભ્યનો ઇમેઇલ નથી તેથી આમંત્રણ આપી શકાતું નથી — પહેલાં સભ્યો ટૅબમાં ઇમેઇલ ઉમેરો",
+    "noEmail_other": "{{count}} સભ્યોનો ઇમેઇલ નથી તેથી આમંત્રણ આપી શકાતું નથી — પહેલાં સભ્યો ટૅબમાં ઇમેઇલ ઉમેરો",
+    "willQueue_one": "{{count}} સ્થાનિક કામ સિંક માટે કતારમાં મુકાશે",
+    "willQueue_other": "{{count}} સ્થાનિક કામ સિંક માટે કતારમાં મુકાશે",
+    "importing": "આયાત થઈ રહ્યું છે...",
+    "importNow": "હમણાં આયાત કરો",
+    "summary": "આયાત સારાંશ",
+    "invitationsSent_one": "{{count}} આમંત્રણ મોકલ્યું",
+    "invitationsSent_other": "{{count}} આમંત્રણ મોકલ્યાં",
+    "skippedNoEmail_one": "{{count}} સભ્ય છોડ્યા — ઇમેઇલ નથી",
+    "skippedNoEmail_other": "{{count}} સભ્યો છોડ્યા — ઇમેઇલ નથી",
+    "tasksQueued_one": "{{count}} કામ સિંક માટે કતારમાં",
+    "tasksQueued_other": "{{count}} કામ સિંક માટે કતારમાં"
+  },
+  "diagnostics": {
+    "disabledToast": "ક્લાઉડ સિંક બંધ — ફક્ત સ્થાનિક પર ફેરવ્યું",
+    "enabledToast": "ક્લાઉડ સિંક ફરી ચાલુ",
+    "exportFailed": "ડેટા નિકાસ કરી શકાયો નહીં",
+    "backupDownloaded": "બૅકઅપ ડાઉનલોડ થયું",
+    "title": "સિંક નિદાન",
+    "downloadBackup": "સ્થાનિક બૅકઅપ ડાઉનલોડ કરો (JSON)",
+    "backupHelp": "આ ડિવાઇસના સ્થાનિક ટીમ ડેટાનો સ્નેપશૉટ. પેઇડ પ્લાનમાં Supabase નું બૅકઅપ અલગથી લેવાય છે — આ તમારી પોતાની વધારાની નકલ છે.",
+    "failingCount": "હાલ સિંક નિષ્ફળ ({{count}})",
+    "attempt": "(પ્રયાસ {{count}})",
+    "disableSync": "ક્લાઉડ સિંક બંધ કરો અને ફક્ત સ્થાનિક ટીમ ડેટા વાપરો (સમસ્યા નિવારણ)"
   }
 }

@@ -8,6 +8,7 @@
   "scripts": {
     "format": "npx prettier --write .",
     "lint": "eslint --cache .",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",

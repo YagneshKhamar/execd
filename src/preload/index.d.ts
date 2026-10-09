@@ -25,8 +25,10 @@ export interface SyncErrorEntry {
 
 export interface TaskHistoryEntry {
   action: string
+  type: string
   note: string
   actor: string
+  actorKind?: 'you' | 'someone'
   at: string
 }
 
