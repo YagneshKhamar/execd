@@ -382,7 +382,7 @@ export default function Goals(): React.JSX.Element {
   if (view === 'empty') {
     return (
       <div className="h-full w-full flex items-center justify-center bg-[var(--bg-base)] px-6">
-        <div className="w-full max-w-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-8 text-center shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+        <div className="w-full max-w-xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-8 text-center shadow-[0_10px_30px_rgba(15,23,42,0.12)]">
           <div className="w-14 h-14 rounded-full border border-[var(--border-default)] bg-[var(--bg-elevated)] mx-auto mb-5 flex items-center justify-center">
             <Target className="w-7 h-7 text-[var(--text-muted)]" />
           </div>

@@ -14,7 +14,9 @@
     "mobileApp": "Mobile App",
     "settings": "Settings",
     "soon": "soon",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "darkMode": "Dark mode (Violet)",
+    "lightMode": "Light mode"
   },
   "dashboard": {
     "executionScore": "EXECUTION SCORE",

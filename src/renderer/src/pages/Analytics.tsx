@@ -172,7 +172,7 @@ export default function Analytics(): React.JSX.Element {
           </p>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={data?.trend ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(d: string) => formatDayLabel(d, i18n.language)}
@@ -185,8 +185,8 @@ export default function Analytics(): React.JSX.Element {
               />
               <Tooltip
                 contentStyle={{
-                  background: '#111',
-                  border: '1px solid #2a2a2a',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-default)',
                   borderRadius: 4,
                   fontSize: 12,
                 }}
@@ -207,7 +207,7 @@ export default function Analytics(): React.JSX.Element {
           </p>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={data?.trend ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(d: string) => formatDayLabel(d, i18n.language)}
@@ -216,13 +216,13 @@ export default function Analytics(): React.JSX.Element {
               <YAxis allowDecimals={false} width={30} />
               <Tooltip
                 contentStyle={{
-                  background: '#111',
-                  border: '1px solid #2a2a2a',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-default)',
                   borderRadius: 4,
                   fontSize: 12,
                 }}
               />
-              <Bar dataKey="tasks_completed" fill="#16a34a" name="Done" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="tasks_completed" fill="#15803d" name="Done" radius={[2, 2, 0, 0]} />
               <Bar dataKey="tasks_missed" fill="#dc2626" name="Missed" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -234,7 +234,7 @@ export default function Analytics(): React.JSX.Element {
           </p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={effortData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="effort"
                 tickFormatter={(v: string) => `${v.charAt(0).toUpperCase()}${v.slice(1)}`}
@@ -242,13 +242,13 @@ export default function Analytics(): React.JSX.Element {
               <YAxis allowDecimals={false} width={30} />
               <Tooltip
                 contentStyle={{
-                  background: '#111',
-                  border: '1px solid #2a2a2a',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-default)',
                   borderRadius: 4,
                   fontSize: 12,
                 }}
               />
-              <Bar dataKey="completed" fill="#16a34a" name="Done" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="completed" fill="#15803d" name="Done" radius={[2, 2, 0, 0]} />
               <Bar dataKey="missed" fill="#dc2626" name="Missed" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -260,7 +260,7 @@ export default function Analytics(): React.JSX.Element {
           </p>
           <ResponsiveContainer width="100%" height={140}>
             <BarChart data={slotData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="slot"
                 tickFormatter={(v: string) => `${v.charAt(0).toUpperCase()}${v.slice(1)}`}
@@ -268,13 +268,13 @@ export default function Analytics(): React.JSX.Element {
               <YAxis allowDecimals={false} width={30} />
               <Tooltip
                 contentStyle={{
-                  background: '#111',
-                  border: '1px solid #2a2a2a',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-default)',
                   borderRadius: 4,
                   fontSize: 12,
                 }}
               />
-              <Bar dataKey="completed" fill="#16a34a" name="Done" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="completed" fill="#15803d" name="Done" radius={[2, 2, 0, 0]} />
               <Bar dataKey="missed" fill="#dc2626" name="Missed" radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -286,7 +286,7 @@ export default function Analytics(): React.JSX.Element {
           </p>
           <ResponsiveContainer width="100%" height={120}>
             <LineChart data={data?.carryTrend ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
               <XAxis
                 dataKey="date"
                 tickFormatter={(d: string) => formatDayLabel(d, i18n.language)}
@@ -295,13 +295,13 @@ export default function Analytics(): React.JSX.Element {
               <YAxis allowDecimals={false} domain={[0, 'auto']} width={30} />
               <Tooltip
                 contentStyle={{
-                  background: '#111',
-                  border: '1px solid #2a2a2a',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-default)',
                   borderRadius: 4,
                   fontSize: 12,
                 }}
               />
-              <Line dataKey="tasks_carried" stroke="#ea580c" strokeWidth={2} dot={false} />
+              <Line dataKey="tasks_carried" stroke="#c2410c" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

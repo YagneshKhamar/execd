@@ -6,6 +6,9 @@ import { HashRouter } from 'react-router-dom'
 import App from './App'
 import { ToastProvider } from './components/Toast'
 import i18n from './i18n/index'
+import { applyTheme, getStoredTheme } from './theme'
+
+applyTheme(getStoredTheme())
 
 async function initApp(): Promise<void> {
   try {

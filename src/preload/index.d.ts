@@ -460,6 +460,9 @@ export interface IElectronAPI {
     preview: () => Promise<MigrationPreview>
     run: () => Promise<MigrationResult>
   }
+  window: {
+    setTitleBar: (color: string, symbolColor: string) => Promise<void>
+  }
   overlay: {
     openMain: () => Promise<void>
     hide: () => Promise<void>

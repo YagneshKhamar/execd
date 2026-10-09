@@ -49,8 +49,8 @@ function createMainWindow(): BrowserWindow {
     frame: false,
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#0a0a0a',
-      symbolColor: '#666666',
+      color: '#eef1f5',
+      symbolColor: '#475569',
       height: 40,
     },
     webPreferences: {
@@ -423,6 +423,12 @@ app.whenReady().then(async () => {
   ipcMain.handle('overlay:open-main', () => {
     mainWindow?.show()
     mainWindow?.focus()
+  })
+
+  ipcMain.handle('window:set-title-bar', (_, color: string, symbolColor: string) => {
+    if (process.platform !== 'darwin') {
+      mainWindow?.setTitleBarOverlay({ color, symbolColor, height: 40 })
+    }
   })
 
   ipcMain.handle('overlay:hide', () => {

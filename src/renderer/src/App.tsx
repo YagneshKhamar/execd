@@ -10,9 +10,10 @@ import Reports from './pages/Reports'
 import History from './pages/History'
 import Business from './pages/Business'
 import Analytics from './pages/Analytics'
+import ThemeToggle from './components/ThemeToggle'
 import UpdateNotifier from './components/UpdateNotifier'
 import TeamRoute from './components/TeamRoute'
-import { AuthProvider } from './components/AuthProvider'
+import { AuthProvider, useAuth } from './components/AuthProvider'
 
 function AutoEodHandler(): React.JSX.Element | null {
   const navigate = useNavigate()
@@ -30,6 +31,9 @@ function AutoEodHandler(): React.JSX.Element | null {
 }
 
 function TitleBar(): React.JSX.Element {
+  const auth = useAuth()
+  const user = auth.state?.signedIn ? auth.state.user : null
+  const userName = user?.displayName || user?.email
   return (
     <div
       className="drag-region flex items-center gap-2 h-10 px-4 shrink-0 bg-[var(--bg-base)]"
@@ -60,6 +64,22 @@ function TitleBar(): React.JSX.Element {
       >
         EXECD
       </span>
+      <div
+        className="ml-auto flex items-center gap-3 select-none no-drag"
+        style={{ marginRight: 140, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      >
+        <ThemeToggle />
+        {userName && (
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-[var(--accent-blue)] text-white text-[10px] font-medium flex items-center justify-center">
+              {userName.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-xs text-[var(--text-primary)] max-w-[160px] truncate">
+              {userName}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

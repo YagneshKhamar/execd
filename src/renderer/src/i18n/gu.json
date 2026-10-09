@@ -14,7 +14,9 @@
     "mobileApp": "મોબાઇલ એપ",
     "settings": "સેટિંગ્સ",
     "soon": "જલ્દી",
-    "signOut": "સાઇન આઉટ"
+    "signOut": "સાઇન આઉટ",
+    "darkMode": "ડાર્ક મોડ (વાયોલેટ)",
+    "lightMode": "લાઇટ મોડ"
   },
   "dashboard": {
     "executionScore": "કામગીરી સ્કોર",

@@ -366,7 +366,7 @@ export default function Team(): React.JSX.Element {
                           await window.api.team.removeMember(member.id)
                           await loadData()
                         }}
-                        className="text-xs text-[var(--accent-red)] hover:text-red-300 cursor-pointer transition-colors"
+                        className="text-xs text-[var(--accent-red)] hover:opacity-80 cursor-pointer transition-colors"
                       >
                         {t('team.remove')}
                       </button>

@@ -31,8 +31,8 @@ const ICONS = {
 }
 
 const STYLES = {
-  error: 'border-[var(--accent-red)]/50 bg-[#1a0a0a] text-[var(--accent-red)]',
-  success: 'border-[var(--accent-green)]/50 bg-[#0a1a0a] text-[var(--accent-green)]',
+  error: 'border-[var(--accent-red)]/50 bg-[var(--bg-surface)] text-[var(--accent-red)]',
+  success: 'border-[var(--accent-green)]/50 bg-[var(--bg-surface)] text-[var(--accent-green)]',
   info: 'border-[var(--border-active)] bg-[var(--bg-elevated)] text-[var(--text-secondary)]',
 }
 
@@ -59,7 +59,7 @@ function ToastItem({
 
   return (
     <div
-      className={`flex items-start gap-3 px-4 py-3 rounded border text-sm max-w-sm w-full shadow-[0_8px_32px_rgba(0,0,0,0.6)] backdrop-blur-sm ${STYLES[item.type]}`}
+      className={`flex items-start gap-3 px-4 py-3 rounded border text-sm max-w-sm w-full shadow-[0_8px_32px_rgba(15,23,42,0.15)] backdrop-blur-sm ${STYLES[item.type]}`}
       style={{ animation: 'slideIn 0.15s ease-out' }}
     >
       <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${iconStyle}`} />

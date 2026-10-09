@@ -166,6 +166,10 @@ contextBridge.exposeInMainWorld('api', {
     preview: () => ipcRenderer.invoke('migration:preview'),
     run: () => ipcRenderer.invoke('migration:run'),
   },
+  window: {
+    setTitleBar: (color: string, symbolColor: string) =>
+      ipcRenderer.invoke('window:set-title-bar', color, symbolColor),
+  },
   overlay: {
     openMain: () => ipcRenderer.invoke('overlay:open-main'),
     hide: () => ipcRenderer.invoke('overlay:hide'),

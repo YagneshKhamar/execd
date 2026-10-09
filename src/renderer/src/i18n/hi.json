@@ -14,7 +14,9 @@
     "mobileApp": "मोबाइल ऐप",
     "settings": "सेटिंग्स",
     "soon": "जल्द",
-    "signOut": "साइन आउट"
+    "signOut": "साइन आउट",
+    "darkMode": "डार्क मोड (वायलेट)",
+    "lightMode": "लाइट मोड"
   },
   "dashboard": {
     "executionScore": "निष्पादन स्कोर",

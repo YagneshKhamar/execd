@@ -12,7 +12,7 @@ type OrgMember = NonNullable<ListResult['members']>[number]
 const STATUS_STYLES: Record<Invitation['status'], string> = {
   pending: 'text-[var(--accent-blue)]',
   sent: 'text-[var(--accent-blue)]',
-  accepted: 'text-green-400',
+  accepted: 'text-[var(--accent-green)]',
   expired: 'text-[var(--text-muted)]',
   revoked: 'text-[var(--text-muted)]',
 }
